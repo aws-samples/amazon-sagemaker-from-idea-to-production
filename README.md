@@ -1,7 +1,7 @@
 # Amazon SageMaker MLOps: from idea to production in six steps
 This repository contains a sequence of simple notebooks demonstrating how to move from an ML idea to production by using [Amazon SageMaker](https://aws.amazon.com/sagemaker).
 
-The notebooks make use of SageMaker MLOps features such as [SageMaker Pipelines](https://aws.amazon.com/sagemaker/pipelines/), [SageMaker Feature Store](https://aws.amazon.com/sagemaker/feature-store/), [SageMaker Model Registry](https://docs.aws.amazon.com/sagemaker/latest/dg/model-registry.html), and [SageMaker Model Monitor](https://aws.amazon.com/sagemaker/model-monitor/).
+The notebooks make use of SageMaker [processing](https://docs.aws.amazon.com/sagemaker/latest/dg/processing-job.html) and [training](https://docs.aws.amazon.com/sagemaker/latest/dg/train-model.html) jobs, and SageMaker MLOps features such as [SageMaker Pipelines](https://aws.amazon.com/sagemaker/pipelines/), [SageMaker Feature Store](https://aws.amazon.com/sagemaker/feature-store/), [SageMaker Model Registry](https://docs.aws.amazon.com/sagemaker/latest/dg/model-registry.html), and [SageMaker Model Monitor](https://aws.amazon.com/sagemaker/model-monitor/).
 
 You start with a simple notebook with basic ML code for data preprocessing, feature engineering, and model training. Each subsequent notebook builds on top of the previous and introduce one or several SageMaker features:
 
@@ -17,6 +17,10 @@ You follow along the six notebooks and develop your ML idea from an experimental
 
 ### Prerequisites
 You need an **AWS account**. If you don't already have an account, follow the [Setting Up Your AWS Environment](https://aws.amazon.com/getting-started/guides/setup-environment/) getting started guide for a quick overview.
+
+### AWS Instructor-led workshop
+If you participating in an AWS Immersion Day and would like to use a provided AWS account, please follow this [instructions](https://catalog.us-east-1.prod.workshops.aws/workshops/63069e26-921c-4ce1-9cc7-dd882ff62575/en-US/prerequisites/option1) how to claim your AWS account via Event Engine and how to start SageMaker Studio. 
+❗ Skip the steps **Set up Amazon SageMaker Studio domain** and **Deploy CloudFormation template** if you use Event Engine and AWS-provisioned account.
 
 ### Set up Amazon SageMaker Studio domain
 To run the notebooks you can use [SageMaker Studio](https://aws.amazon.com/sagemaker/studio/) which requires a [SageMaker Studio domain](https://docs.aws.amazon.com/sagemaker/latest/dg/studio-entity-status.html).
@@ -39,7 +43,10 @@ On the **CloudFormation** pane, choose **Stacks**. It takes about 10 minutes for
 ![](img/cfn-stack.png)
 
 ### Start SageMaker Studio
-Follow [Log In from the Amazon SageMaker console](https://docs.aws.amazon.com/sagemaker/latest/dg/notebooks-get-started.html) instructions to open Studio.
+If you deployed the CloudFormation template, follow [Log In from the Amazon SageMaker console](https://docs.aws.amazon.com/sagemaker/latest/dg/notebooks-get-started.html) instructions to open Studio.
+Use `studio-user` user profile to launch Studio:
+
+![](img/launch-studio.png)
 
 ### Download notebooks into your Studio environment
 To use the provided notebooks you must clone the source code repository into your Studio environment.
@@ -71,7 +78,6 @@ The following list presents some useful hands-on resources to help you to get st
 - [Amazon SageMaker End to End Workshop](https://github.com/aws-samples/sagemaker-end-to-end-workshop)
 - [End to end Machine Learning with Amazon SageMaker](https://github.com/aws-samples/amazon-sagemaker-build-train-deploy)
 - [A curated list of awesome references for Amazon SageMaker](https://github.com/aws-samples/awesome-sagemaker)
-
 
 Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 SPDX-License-Identifier: MIT-0
