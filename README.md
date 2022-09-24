@@ -1,4 +1,4 @@
-# Amazon SageMaker MLOps: from idea to production in six steps
+# Amazon SageMaker MLOps: from idea to production in six steps
 This repository contains a sequence of simple notebooks demonstrating how to move from an ML idea to production by using [Amazon SageMaker](https://aws.amazon.com/sagemaker).
 
 The notebooks make use of SageMaker MLOps features such as [SageMaker Pipelines](https://aws.amazon.com/sagemaker/pipelines/), [SageMaker Feature Store](https://aws.amazon.com/sagemaker/feature-store/), [SageMaker Model Registry](https://docs.aws.amazon.com/sagemaker/latest/dg/model-registry.html), and [SageMaker Model Monitor](https://aws.amazon.com/sagemaker/model-monitor/).
