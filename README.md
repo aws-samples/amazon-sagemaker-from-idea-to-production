@@ -15,7 +15,7 @@ You follow along the six notebooks and develop your ML idea from an experimental
 
 ## Getting started
 
-### Prerequisites
+### Prerequisites
 You need an **AWS account**. If you don't already have an account, follow the [Setting Up Your AWS Environment](https://aws.amazon.com/getting-started/guides/setup-environment/) getting started guide for a quick overview.
 
 ### Set up Amazon SageMaker Studio domain
