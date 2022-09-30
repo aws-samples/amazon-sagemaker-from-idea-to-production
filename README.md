@@ -62,12 +62,14 @@ git clone https://github.com/aws-samples/amazon-sagemaker-from-idea-to-productio
 The code repository will be downloaded and saved in your home directory in Studio.
 
 ### Start exploring
-Go to the Studio file browser inside the folder `amazon-sagemaker-from-idea-to-production`. Open `00-start-here.ipynb` notebook and follow the instructions.
+Navigate to the Studio file browser inside the folder `amazon-sagemaker-from-idea-to-production`. Open `00-start-here.ipynb` notebook and follow the instructions.
 
 ## Clean-up
 To avoid charges, you must remove all project-provisioned and generated resources from your AWS account. 
 Run all steps in the provided [clean-up notebook](99-clean-up.ipynb).
 If you provisioned a Studio domain for this workshop, and don't need the domain, you can delete the domain by following [this instructions](https://docs.aws.amazon.com/sagemaker/latest/dg/gs-studio-delete-domain.html).
+
+You don't need to perform a clean-up if you run an AWS-instructor led workshop.
 
 ## Dataset
 This example uses the [direct marketing dataset](https://archive.ics.uci.edu/ml/datasets/bank+marketing) from UCI's ML Repository:
