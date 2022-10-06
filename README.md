@@ -86,5 +86,10 @@ The following list presents some useful hands-on resources to help you to get st
 - [End to end Machine Learning with Amazon SageMaker](https://github.com/aws-samples/amazon-sagemaker-build-train-deploy)
 - [A curated list of awesome references for Amazon SageMaker](https://github.com/aws-samples/awesome-sagemaker)
 
+## QR code for this repository
+You can use the following QR code to link this repository.
+
+![](img/github-repo-qrcode.png)
+
 Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 SPDX-License-Identifier: MIT-0
