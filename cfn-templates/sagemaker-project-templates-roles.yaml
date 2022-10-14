@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT-0
 
 AWSTemplateFormatVersion: 2010-09-09
-Description: This templates created the required IAM roles for SageMaker project templates
+Description: This template creates the required IAM roles for SageMaker project templates
 
 Outputs:
   AmazonSageMakerServiceCatalogProductsLaunchRoleArn:
