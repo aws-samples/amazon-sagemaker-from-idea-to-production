@@ -16,7 +16,7 @@ The following roles are required to use the provided SageMaker project templates
 - SageMaker use role: `arn:aws:iam:::role/service-role/AmazonSageMakerServiceCatalogProductsExecutionRole`
 
 ## Provision the required roles
-There are two options how to provision the required roles.
+There are two options to provision the required roles.
 
 ### Option 1 - SageMaker console
 If you don't have a SageMaker domain in your account, you must create a new one. You must enable all options on the **SageMaker Projects and JumpStart** pane:
@@ -25,7 +25,7 @@ If you don't have a SageMaker domain in your account, you must create a new one.
 
 The SageMaker domain creates the required roles automatically.
 
-If you have a SageMaker domain in your account, follow [Shut Down and Update SageMaker Studio and Studio Apps](https://docs.aws.amazon.com/sagemaker/latest/dg/studio-tasks-update.html) instructions to update the domain. You must shutdown both JupyterServer and KernelGateway apps. After you shutdown all apps, go to Amazon SageMaker **Control Panel**, choose **Configure app** on the **App** card. Maker sure all options enabled on on the **SageMaker Projects and JumpStart** pane. Click through all **Next** in configuration panes and choose **Submit**. This will update the domain and create all needed project roles automatically.
+If you already have a SageMaker domain in your account, follow [Shut Down and Update SageMaker Studio and Studio Apps](https://docs.aws.amazon.com/sagemaker/latest/dg/studio-tasks-update.html) instructions to update the domain. You must shutdown both JupyterServer and KernelGateway apps. After you shutdown all apps, go to Amazon SageMaker **Control Panel**, choose **Configure app** on the **App** card. Make sure all options enabled on on the **SageMaker Projects and JumpStart** pane. Click through all **Next** in configuration panes and choose **Submit**. This will update the domain and create all needed project roles automatically.
 
 ### Option 2 - use CloudFormation template
 Deploy the provided CloudFormation template [`cfn-templates/sagemaker-project-templates-roles.yaml`](cfn-templates/sagemaker-project-templates-roles.yaml). Run the following command in the command terminal from the project repository directory:
