@@ -47,6 +47,41 @@ Outputs:
       - !GetAtt EventsRole.Arn
       - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/service-role/AmazonSageMakerServiceCatalogProductsEventsRole'
 
+  AmazonSageMakerServiceCatalogProductsApiGatewayRoleArn:
+    Description: ApiGatewayRole ARN
+    Value: !If
+      - ApiGatewayRoleCondition
+      - !GetAtt ApiGatewayRole.Arn
+      - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/service-role/AmazonSageMakerServiceCatalogProductsApiGatewayRole'
+
+  AmazonSageMakerServiceCatalogProductsFirehoseRoleArn:
+    Description: FirehoseRole ARN
+    Value: !If
+      - FirehoseRoleCondition
+      - !GetAtt FirehoseRole.Arn
+      - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/service-role/AmazonSageMakerServiceCatalogProductsFirehoseRole'
+
+  AmazonSageMakerServiceCatalogProductsGlueRoleArn:
+    Description: GlueRole ARN
+    Value: !If
+      - GlueRoleCondition
+      - !GetAtt GlueRole.Arn
+      - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/service-role/AmazonSageMakerServiceCatalogProductsGlueRole'
+
+  AmazonSageMakerServiceCatalogProductsLambdaRoleArn:
+    Description: LambdaRole ARN
+    Value: !If
+      - LambdaRoleCondition
+      - !GetAtt LambdaRole.Arn
+      - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/service-role/AmazonSageMakerServiceCatalogProductsLambdaRole'
+
+  AmazonSageMakerServiceCatalogProductsExecutionRoleArn:
+    Description: ProductsExecutionRole ARN
+    Value: !If
+      - ProductsExecutionRoleCondition
+      - !GetAtt ProductsExecutionRole.Arn
+      - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/service-role/AmazonSageMakerServiceCatalogProductsExecutionRole'
+
 Parameters:
 
   CreateProductsLaunchRole:
@@ -697,24 +732,6 @@ Resources:
       ManagedPolicyArns:
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonSageMakerServiceCatalogProductsCodePipelineServiceRolePolicy"
 
-  ProductsExecutionRole:
-    Type: "AWS::IAM::Role"
-    Condition: ProductsExecutionRoleCondition
-    Properties:
-      RoleName: AmazonSageMakerServiceCatalogProductsExecutionRole
-      Description: "ProductsExecutionRole"
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: "Allow"
-            Principal:
-              Service: "sagemaker.amazonaws.com"
-            Action: "sts:AssumeRole"
-      Path: "/service-role/"
-      MaxSessionDuration: 3600
-      ManagedPolicyArns:
-        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonSageMakerFullAccess"
-
   EventsRole:
     Type: "AWS::IAM::Role"
     Condition: EventsRoleCondition
@@ -732,3 +749,93 @@ Resources:
       MaxSessionDuration: 3600
       ManagedPolicyArns:
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonSageMakerServiceCatalogProductsEventsServiceRolePolicy"
+
+  ApiGatewayRole:
+    Type: "AWS::IAM::Role"
+    Condition: ApiGatewayRoleCondition
+    Properties:
+      RoleName: AmazonSageMakerServiceCatalogProductsApiGatewayRole
+      Description: "ApiGatewayRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "apigateway.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Path: "/service-role/"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonSageMakerServiceCatalogProductsApiGatewayServiceRolePolicy"
+
+  FirehoseRole:
+    Type: "AWS::IAM::Role"
+    Condition: FirehoseRoleCondition
+    Properties:
+      RoleName: AmazonSageMakerServiceCatalogProductsFirehoseRole
+      Description: "FirehoseRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "firehose.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Path: "/service-role/"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonSageMakerServiceCatalogProductsFirehoseServiceRolePolicy"
+
+  GlueRole:
+    Type: "AWS::IAM::Role"
+    Condition: GlueRoleCondition
+    Properties:
+      RoleName: AmazonSageMakerServiceCatalogProductsGlueRole
+      Description: "GlueRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "glue.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Path: "/service-role/"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonSageMakerServiceCatalogProductsGlueServiceRolePolicy"
+
+  LambdaRole:
+    Type: "AWS::IAM::Role"
+    Condition: LambdaRoleCondition
+    Properties:
+      RoleName: AmazonSageMakerServiceCatalogProductsLambdaRole
+      Description: "LambdaRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "lambda.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Path: "/service-role/"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonSageMakerServiceCatalogProductsLambdaServiceRolePolicy"
+
+  ProductsExecutionRole:
+    Type: "AWS::IAM::Role"
+    Condition: ProductsExecutionRoleCondition
+    Properties:
+      RoleName: AmazonSageMakerServiceCatalogProductsExecutionRole
+      Description: "ProductsExecutionRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "sagemaker.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Path: "/service-role/"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonSageMakerFullAccess"
