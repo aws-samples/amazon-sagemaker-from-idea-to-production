@@ -83,7 +83,9 @@ The following list presents some useful hands-on resources to help you to get st
 - [Amazon SageMaker 101 workshop code repository](https://github.com/aws-samples/sagemaker-101-workshop)
 - [Amazon SageMaker Immersion Day](https://catalog.us-east-1.prod.workshops.aws/workshops/63069e26-921c-4ce1-9cc7-dd882ff62575/en-US)
 - [Amazon SageMaker End to End Workshop](https://github.com/aws-samples/sagemaker-end-to-end-workshop)
+- [Amazon SageMaker workshop with BYOM and BYOC examples](https://sagemaker-workshop.com/)
 - [End to end Machine Learning with Amazon SageMaker](https://github.com/aws-samples/amazon-sagemaker-build-train-deploy)
+- [SageMaker MLOps Workshop](https://catalog.us-east-1.prod.workshops.aws/workshops/1bb7ba03-e533-464f-8726-91a74513b1a1/en-US)
 - [A curated list of awesome references for Amazon SageMaker](https://github.com/aws-samples/awesome-sagemaker)
 
 ## QR code for this repository
