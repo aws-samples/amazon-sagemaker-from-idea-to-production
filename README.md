@@ -1,13 +1,13 @@
 # Amazon SageMaker MLOps: from idea to production in six steps
 This repository contains a sequence of simple notebooks demonstrating how to move from an ML idea to production by using [Amazon SageMaker](https://aws.amazon.com/sagemaker).
 
-The notebooks make use of SageMaker [processing](https://docs.aws.amazon.com/sagemaker/latest/dg/processing-job.html) and [training](https://docs.aws.amazon.com/sagemaker/latest/dg/train-model.html) jobs, and SageMaker MLOps features such as [SageMaker Pipelines](https://aws.amazon.com/sagemaker/pipelines/), [SageMaker Feature Store](https://aws.amazon.com/sagemaker/feature-store/), [SageMaker Model Registry](https://docs.aws.amazon.com/sagemaker/latest/dg/model-registry.html), and [SageMaker Model Monitor](https://aws.amazon.com/sagemaker/model-monitor/).
+The notebooks make use of SageMaker [processing](https://docs.aws.amazon.com/sagemaker/latest/dg/processing-job.html) and [training](https://docs.aws.amazon.com/sagemaker/latest/dg/train-model.html) jobs, and SageMaker MLOps features such as [SageMaker Pipelines](https://aws.amazon.com/sagemaker/pipelines/), [SageMaker Feature Store](https://aws.amazon.com/sagemaker/feature-store/), [SageMaker Model Registry](https://docs.aws.amazon.com/sagemaker/latest/dg/model-registry.html), [SageMaker Experiments](https://docs.aws.amazon.com/sagemaker/latest/dg/experiments.html), and [SageMaker Model Monitor](https://aws.amazon.com/sagemaker/model-monitor/).
 
-You start with a simple notebook with basic ML code for data preprocessing, feature engineering, and model training. Each subsequent notebook builds on top of the previous and introduce one or several SageMaker features:
+You start with a simple notebook with basic ML code for data preprocessing, feature engineering, and model training, all local to the notebook. Each subsequent notebook builds on top of the previous and introduces one or several SageMaker MLOps features:
 
 ![](img/sagemaker-mlops-building-blocks.png)
 
-Each notebook also provides links to useful SageMaker hands-on resources and proposes some ideas for additional development.
+Each notebook also provides links to useful hands-on resources and proposes real-world ideas for additional development.
 
 You follow along the six notebooks and develop your ML idea from an experimental notebook to a production-ready solution following the recommended MLOps practices:
 
@@ -19,13 +19,14 @@ You follow along the six notebooks and develop your ML idea from an experimental
 You need an **AWS account**. If you don't already have an account, follow the [Setting Up Your AWS Environment](https://aws.amazon.com/getting-started/guides/setup-environment/) getting started guide for a quick overview.
 
 ### AWS Instructor-led workshop
-If you participating in an AWS Immersion Day and would like to use a provided AWS account, please follow this [instructions](https://catalog.us-east-1.prod.workshops.aws/workshops/63069e26-921c-4ce1-9cc7-dd882ff62575/en-US/prerequisites/option1) how to claim your AWS account via Event Engine and how to start SageMaker Studio. 
-❗ Skip the steps **Set up Amazon SageMaker Studio domain** and **Deploy CloudFormation template** if you use Event Engine and AWS-provisioned account.
+If you participating in an AWS Immersion Day or a similar instructor-led event and would like to use a provided AWS account, please follow this [instructions](https://catalog.us-east-1.prod.workshops.aws/workshops/63069e26-921c-4ce1-9cc7-dd882ff62575/en-US/prerequisites/option1) how to claim your AWS account via Event Engine and how to start SageMaker Studio. 
+
+❗ Skip the following steps **Set up Amazon SageMaker Studio domain** and **Deploy CloudFormation template** if you use Event Engine and AWS-provisioned account.
 
 ### Set up Amazon SageMaker Studio domain
-To run the notebooks you can use [SageMaker Studio](https://aws.amazon.com/sagemaker/studio/) which requires a [SageMaker Studio domain](https://docs.aws.amazon.com/sagemaker/latest/dg/studio-entity-status.html).
+To run the notebooks you must use [SageMaker Studio](https://aws.amazon.com/sagemaker/studio/) which requires a [SageMaker Studio domain](https://docs.aws.amazon.com/sagemaker/latest/dg/studio-entity-status.html).
 
-An AWS account can have only one SageMaker Studio domain per Region. If you already have a SageMaker Studio domain in the US East (N. Virginia) Region, follow the [SageMaker Studio setup guide](https://aws.amazon.com/getting-started/hands-on/machine-learning-tutorial-set-up-sagemaker-studio-account-permissions/) to attach the required AWS IAM policies to your SageMaker Studio account. Skip the next step.
+An AWS account can have only one SageMaker Studio domain per Region. If you already have a SageMaker Studio domain, follow the [SageMaker Studio setup guide](https://aws.amazon.com/getting-started/hands-on/machine-learning-tutorial-set-up-sagemaker-studio-account-permissions/) to attach the required AWS IAM policies to the IAM execution role used by your Studio user profile. This workshop assumes the execution role has the `AmazonSageMakerFullAccess` AWS managed policy attached.
 
 #### Deploy CloudFormation template
 If you don't have an existing SageMaker Studio domain, you must deploy an AWS CloudFormation template that creates a SageMaker Studio domain and adds the permissions required for running the provided notebooks.
@@ -63,6 +64,26 @@ The code repository will be downloaded and saved in your home directory in Studi
 
 ### Start exploring
 Navigate to the Studio file browser inside the folder `amazon-sagemaker-from-idea-to-production`. Open `00-start-here.ipynb` notebook and follow the instructions.
+
+## How to use this workshop
+You can do this workshop in two ways:
+- Go through the provided notebooks, execute code cells sequentially, and follow the instructions and execution
+- Do hands-on assignments where you have to write your own code
+
+### Execution mode
+Use this mode if you're not familiar with Python programming and new to Jupyter notebooks. You follow each notebook `00-...`, `01-...`, ..., `06-...`and execute all code cells with `Shift` + `Enter`. The given instructions explain what is code is doing and why. You need about two and half hours to run through all code cells in all notebooks. 
+All notebooks and all code cells are idempotent. Make sure you run all code cells sequentially, top to bottom.
+
+### Assignment mode
+Use this mode if you have experience working with Jupyter notebooks and would like to write own code to have a deeper hands-on experience and learn how to use SageMaker features.
+Each foundational instruction notebook `00-...`, `01-...`, ..., `06-...` in the workshop root folder has a corresponding "assignment" notebook in the `assignments` folder. First, go through the instructions in the root folder notebook and then complete the exercises in the corresponding assignment notebook. The notebooks are mapped as follows:
+- `00-start-here` > `./assignments/00-assignment-setup`
+- `01-idea-development` > `./assignments/01-assignment-local-development`
+- `02-sagemaker-containers` > `./assignments/02-assignment-sagemaker-containers`
+- `03-sagemaker-pipeline` > `./assignments/03-assignment-sagemaker-pipeline`
+- `04-sagemaker-projects` > `./assignments/04-assignment-sagemaker-project`
+- `05-deploy` > `./assignments/05-assignment-deploy`
+- `06-monitoring` > `./assignments/06-assignment-monitoring`
 
 ## Clean-up
 To avoid charges, you must remove all project-provisioned and generated resources from your AWS account. 
