@@ -67,16 +67,16 @@ Navigate to the Studio file browser inside the folder `amazon-sagemaker-from-ide
 
 ## How to use this workshop
 You can do this workshop in two ways:
-- Go through the provided notebooks, execute code cells sequentially, and follow the instructions and execution
-- Do hands-on assignments where you have to write your own code
+- Go through the provided notebooks, execute code cells sequentially, and follow the instructions and execution flow
+- Write your own code with hands-on assignments and exercises
 
 ### Execution mode
-Use this mode if you're not familiar with Python programming and new to Jupyter notebooks. You follow each notebook `00-...`, `01-...`, ..., `06-...`and execute all code cells with `Shift` + `Enter`. The given instructions explain what is code is doing and why. You need about two and half hours to run through all code cells in all notebooks. 
+Use this mode if you're not familiar with Python programming and new to Jupyter notebooks. You follow each notebook `00-...`, `01-...`, ..., `06-...`and execute all code cells with `Shift` + `Enter`. The given instructions explain what code is doing and why. You need about two and half hours to run through all code cells in all notebooks. 
 All notebooks and all code cells are idempotent. Make sure you run all code cells sequentially, top to bottom.
 
 ### Assignment mode
-Use this mode if you have experience working with Jupyter notebooks and would like to write own code to have a deeper hands-on experience and learn how to use SageMaker features.
-Each foundational instruction notebook `00-...`, `01-...`, ..., `06-...` in the workshop root folder has a corresponding "assignment" notebook in the `assignments` folder. First, go through the instructions in the root folder notebook and then complete the exercises in the corresponding assignment notebook. The notebooks are mapped as follows:
+Use this mode if you have experience working with Jupyter notebooks and would like to write own code to have a deeper hands-on understanding of SageMaker features and SageMaker Python SDK.
+Each foundational instruction notebook `00-...`, `01-...`, ..., `06-...` in the workshop root folder has a corresponding "assignment" notebook with exercises in the `assignments` folder. First, go through the instructions in the root folder notebook and then complete the exercises in the corresponding assignment notebook. The notebooks are mapped as follows:
 - `00-start-here` > `./assignments/00-assignment-setup`
 - `01-idea-development` > `./assignments/01-assignment-local-development`
 - `02-sagemaker-containers` > `./assignments/02-assignment-sagemaker-containers`
