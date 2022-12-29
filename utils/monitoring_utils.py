@@ -33,18 +33,21 @@ def get_file_name(url):
     a = urlparse(url)
     return os.path.basename(a.path)
 
-def run_model_monitor_job(region,
-                                    instance_type,
-                                    role,
-                                    data_capture_path,
-                                    statistics_path,
-                                    constraints_path,
-                                    reports_path,
-                                    instance_count=1,
-                                    preprocessor_path=None,
-                                    postprocessor_path=None,
-                                    publish_cloudwatch_metrics='Disabled'
-                                   ):
+def run_model_monitor_job(
+    region,
+    instance_type,
+    role,
+    data_capture_path,
+    statistics_path,
+    constraints_path,
+    reports_path,
+    instance_count=1,
+    preprocessor_path=None,
+    postprocessor_path=None,
+    publish_cloudwatch_metrics='Disabled',
+    wait=True,
+    logs=True,
+):
     
     data_capture_sub_path = data_capture_path[data_capture_path.rfind('datacapture') :]
     data_capture_sub_path = data_capture_sub_path[data_capture_sub_path.find('/') + 1 :]
@@ -111,5 +114,6 @@ def run_model_monitor_job(region,
 
     return processor.run(inputs=inputs, 
                          outputs=[outputs],
-                         logs=True
+                         wait=wait,
+                         logs=logs,
                         )
