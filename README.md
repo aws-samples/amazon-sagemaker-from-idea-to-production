@@ -24,23 +24,26 @@ You need an **AWS account**. If you don't already have an account, follow the [S
 ### AWS Instructor-led workshop
 If you participating in an AWS Immersion Day or a similar instructor-led event and would like to use a provided AWS account, please follow this [instructions](https://catalog.us-east-1.prod.workshops.aws/workshops/63069e26-921c-4ce1-9cc7-dd882ff62575/en-US/prerequisites/option1) how to claim your AWS account via Event Engine and how to start SageMaker Studio. 
 
-❗ Skip the following steps **Set up Amazon SageMaker Studio domain** and **Deploy CloudFormation template** if you use an AWS-provisioned account.
+❗ Skip the following steps **Set up Amazon SageMaker domain** and **Deploy CloudFormation template** if you use an AWS-provisioned account.
 
-### Set up Amazon SageMaker Studio domain
-To run the notebooks you must use [SageMaker Studio](https://aws.amazon.com/sagemaker/studio/) which requires a [SageMaker Studio domain](https://docs.aws.amazon.com/sagemaker/latest/dg/studio-entity-status.html).
+### Set up Amazon SageMaker domain
+To run the notebooks you must use [SageMaker Studio](https://aws.amazon.com/sagemaker/studio/) which requires a [SageMaker domain](https://docs.aws.amazon.com/sagemaker/latest/dg/studio-entity-status.html).
 
-If you already have a SageMaker Studio domain, follow the [SageMaker Studio setup guide](https://aws.amazon.com/getting-started/hands-on/machine-learning-tutorial-set-up-sagemaker-studio-account-permissions/) to attach the required AWS IAM policies to the IAM execution role used by your Studio user profile. This workshop assumes the execution role has the `AmazonSageMakerFullAccess` AWS managed policy attached.
+If you already have a SageMaker domain, follow the [SageMaker Studio setup guide](https://aws.amazon.com/getting-started/hands-on/machine-learning-tutorial-set-up-sagemaker-studio-account-permissions/) to attach the required AWS IAM policies to the IAM execution role used by your Studio user profile. This workshop assumes the execution role has the `AmazonSageMakerFullAccess` AWS managed policy attached.
 
 #### Deploy CloudFormation template
-If you don't have an existing SageMaker Studio domain, you must deploy an AWS CloudFormation template that creates a SageMaker Studio domain and adds the permissions required for running the provided notebooks.
+If you don't have an existing SageMaker domain, you must deploy an AWS CloudFormation template that creates a SageMaker domain and adds the permissions required for running the provided notebooks.
 
-Choose this [AWS CloudFormation stack](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/quickcreate?templateURL=https://sagemaker-sample-files.s3.amazonaws.com/libraries/sagemaker-user-journey-tutorials/CFN-SM-IM-Lambda-catalog.yaml&stackName=CFN-SM-IM-Lambda-Catalog) link. The link opens the AWS CloudFormation console in your AWS account and creates your SageMaker Studio domain and a user profile named `studio-user`. It also adds the required permissions to your SageMaker Studio domain. In the CloudFormation console, confirm that **US East (N. Virginia)** is the Region displayed in the upper right corner. Stack name should be `CFN-SM-IM-Lambda-catalog`, and should not be changed. This stack takes about 10 minutes to create all the resources.
+Choose this [AWS CloudFormation stack](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/quickcreate?templateURL=https://github.com/aws-samples/amazon-sagemaker-from-idea-to-production/blob/master/cfn-templates/sagemaker-domain.yaml&stackName=sagemaker-from-idea-to-prod) link. The link opens the AWS CloudFormation console in your AWS account and creates your SageMaker domain and a user profile named `studio-user`. It also adds the required IAM execution roles to your SageMaker domain. 
+Check the deployment region and change it if needed.
 
 ❗ This stack assumes that you already have a public VPC set up in your account. If you do not have a public VPC, see [VPC with a single public subnet](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Scenario1.html) to learn how to create a public VPC. 
 
 Select **I acknowledge that AWS CloudFormation might create IAM resources**, and then choose **Create stack**.
 
 ![](img/cfn-ack.png)
+
+This stack takes about 10 minutes to create all the resources.
 
 On the **CloudFormation** pane, choose **Stacks**. It takes about 10 minutes for the stack to be created. When the stack is created, the status of the stack changes from `CREATE_IN_PROGRESS` to `CREATE_COMPLETE`. 
 
@@ -94,14 +97,14 @@ Each foundational instruction notebook `00-...`, `01-...`, ..., `06-...` in the 
 To avoid charges, you must remove all project-provisioned and generated resources from your AWS account. 
 
 First, run all steps in the provided [clean-up notebook](99-clean-up.ipynb).
-Second, if you used the AWS Console to provision a Studio domain for this workshop, and don't need the domain, you can delete the domain by following [this instructions](https://docs.aws.amazon.com/sagemaker/latest/dg/gs-studio-delete-domain.html). 
+Second, if you used the AWS Console to provision a domain for this workshop, and don't need the domain, you can delete the domain by following [this instructions](https://docs.aws.amazon.com/sagemaker/latest/dg/gs-studio-delete-domain.html). 
 
-If you provisioned a Studio domain use a CloudFormation template, you can delete the CloudFormation stack in the AWS console.
+If you provisioned a domain use a CloudFormation template, you can delete the CloudFormation stack in the AWS console.
 
 ### Delete EFS
 ❗ Delete the SageMaker EFS only if you provisioned a new SageMaker domain in your account. Do not delete your own existing EFS!
 
-The deployment of Studio creates a new EFS in your account. This EFS is shared with all users of Studio and contains home directories for Studio users and may contain your data. When you delete the data science environment stack, the Studio domain, user profile and Apps are also deleted. However, the EFS **is not deleted** and kept "as is" in your account. Additional resources are created by Studio and retained upon deletion together with the EFS:
+The deployment of Studio creates a new EFS in your account. This EFS is shared with all users of Studio and contains home directories for Studio users and may contain your data. When you delete the data science environment stack, the domain, user profile and Apps are also deleted. However, the EFS **is not deleted** and kept "as is" in your account. Additional resources are created by Studio and retained upon deletion together with the EFS:
 - EFS mounting points in each private subnet of your VPC
 - ENI for each mounting point
 - Security groups for EFS inbound and outbound traffic
