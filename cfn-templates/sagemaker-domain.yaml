@@ -25,55 +25,7 @@ Mappings:
     us-west-1: 
       datascience: "arn:aws:sagemaker:us-west-1:742091327244:image/jupyter-server-3"
       datawrangler: "arn:aws:sagemaker:us-west-1:926135532090:image/sagemaker-data-wrangler-1.0"
-    us-west-2: 
-      datascience: "arn:aws:sagemaker:us-west-2:236514542706:image/datascience-1.0"
-      datawrangler: "arn:aws:sagemaker:us-west-2:174368400705:image/sagemaker-data-wrangler-1.0"
-    af-south-1:
-      datascience: "arn:aws:sagemaker:af-south-1:559312083959:image/datascience-1.0"
-      datawrangler: "arn:aws:sagemaker:af-south-1:143210264188:image/sagemaker-data-wrangler-1.0"    
-    ap-east-1:
-      datascience: "arn:aws:sagemaker:ap-east-1:493642496378:image/datascience-1.0"
-      datawrangler: "arn:aws:sagemaker:ap-east-1:707077482487:image/sagemaker-data-wrangler-1.0"
-    ap-south-1:
-      datascience: "arn:aws:sagemaker:ap-south-1:394103062818:image/datascience-1.0"
-      datawrangler: "arn:aws:sagemaker:ap-south-1:089933028263:image/sagemaker-data-wrangler-1.0"  
-    ap-northeast-2:
-      datascience: "arn:aws:sagemaker:ap-northeast-2:806072073708:image/datascience-1.0"
-      datawrangler: "arn:aws:sagemaker:ap-northeast-2:131546521161:image/sagemaker-data-wrangler-1.0"
-    ap-southeast-1:
-      datascience: "arn:aws:sagemaker:ap-southeast-1:492261229750:image/datascience-1.0"
-      datawrangler: "arn:aws:sagemaker:ap-southeast-1:119527597002:image/sagemaker-data-wrangler-1.0"      
-    ap-southeast-2:
-      datascience: "arn:aws:sagemaker:ap-southeast-2:452832661640:image/datascience-1.0"
-      datawrangler: "arn:aws:sagemaker:ap-southeast-2:422173101802:image/sagemaker-data-wrangler-1.0"
-    ap-northeast-1: 
-      datascience: "arn:aws:sagemaker:ap-northeast-1:102112518831:image/datascience-1.0"
-      datawrangler: "arn:aws:sagemaker:ap-northeast-1:649008135260:image/sagemaker-data-wrangler-1.0"
-    ca-central-1:
-      datascience: "arn:aws:sagemaker:ca-central-1:310906938811:image/datascience-1.0"
-      datawrangler: "arn:aws:sagemaker:ca-central-1:557239378090:image/sagemaker-data-wrangler-1.0"
-    eu-central-1: 
-      datascience: "arn:aws:sagemaker:eu-central-1:936697816551:image/datascience-1.0"
-      datawrangler: "arn:aws:sagemaker:eu-central-1:024640144536:image/sagemaker-data-wrangler-1.0"
-    eu-west-1:
-      datascience: "arn:aws:sagemaker:eu-west-1:470317259841:image/datascience-1.0"
-      datawrangler: "arn:aws:sagemaker:eu-west-1:245179582081:image/sagemaker-data-wrangler-1.0"
-    eu-west-2:
-      datascience: "arn:aws:sagemaker:eu-west-2:712779665605:image/datascience-1.0"
-      datawrangler: "arn:aws:sagemaker:eu-west-2:894491911112:image/sagemaker-data-wrangler-1.0"
-    eu-west-3:
-      datascience: "arn:aws:sagemaker:eu-west-3:615547856133:image/datascience-1.0"
-      datawrangler: "arn:aws:sagemaker:eu-west-3:807237891255:image/sagemaker-data-wrangler-1.0"
-    eu-north-1:
-      datascience: "arn:aws:sagemaker:eu-north-1:243637512696:image/datascience-1.0"
-      datawrangler: "arn:aws:sagemaker:eu-north-1:054986407534:image/sagemaker-data-wrangler-1.0"
-    eu-south-1:
-      datascience: "arn:aws:sagemaker:eu-south-1:488287956546:image/sagemaker-data-wrangler-1.0"
-      datawrangler: "arn:aws:sagemaker:eu-south-1:592751261982:image/datascience-1.0"
-    sa-east-1:
-      datascience: "arn:aws:sagemaker:sa-east-1:782484402741:image/datascience-1.0"
-      datawrangler: "arn:aws:sagemaker:sa-east-1:424196993095:image/sagemaker-data-wrangler-1.0"
-
+  
 Resources:
   LambdaExecutionRole:
     Type: "AWS::IAM::Role"
@@ -98,18 +50,6 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       Policies: 
-        - PolicyName: s3-access
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - 
-                Effect: Allow
-                Action:
-                  - s3:GetObject
-                  - s3:PutObject
-                  - s3:DeleteObject
-                  - s3:ListBucket
-                Resource: arn:aws:s3:::*
         - PolicyName: iam-access
           PolicyDocument:
             Version: 2012-10-17
@@ -119,8 +59,21 @@ Resources:
                 Action:
                   - iam:GetRole
                   - iam:GetRolePolicy
-                  - iam:PassRole
                 Resource: '*'
+        - PolicyName: pass-role
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - 
+                Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource: 'arn:aws:iam::*:role/*'
+                Condition:
+                  StringLike:
+                    iam:PassedToService:
+                      - sagemaker.amazonaws.com
+                      - events.amazonaws.com
         - PolicyName: kms-access
           PolicyDocument:
             Version: 2012-10-17
@@ -141,6 +94,79 @@ Resources:
                 Action:
                   - sagemaker:ListTags
                 Resource: '*'
+        - PolicyName: headless-execution-permissions
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+            - 
+              Effect: Allow
+              Action:
+                - events:TagResource
+                - events:DeleteRule
+                - events:PutTargets
+                - events:DescribeRule
+                - events:PutRule
+                - events:RemoveTargets
+                - events:DisableRule
+                - events:EnableRule
+              Resource: "*"
+              Condition:
+                StringEquals:
+                  'aws:ResourceTag/sagemaker:is-scheduling-notebook-job': 'true'
+            -
+              Effect: Allow
+              Action: 
+                - s3:CreateBucket
+                - s3:PutBucketVersioning
+                - s3:PutEncryptionConfiguration
+              Resource: 'arn:aws:s3:::sagemaker-automated-execution-*'
+            - 
+              Effect: Allow
+              Action: 
+                - sagemaker:AddTags
+              Resource: 
+                - 'arn:aws:sagemaker:*:*:training-job/*'
+                - 'arn:aws:sagemaker:*:*:pipeline/*'
+            - 
+              Effect: Allow
+              Action: 
+                - ec2:CreateNetworkInterface
+                - ec2:CreateNetworkInterfacePermission
+                - ec2:CreateVpcEndpoint
+                - ec2:DeleteNetworkInterface
+                - ec2:DeleteNetworkInterfacePermission
+                - ec2:DescribeDhcpOptions
+                - ec2:DescribeNetworkInterfaces
+                - ec2:DescribeRouteTables
+                - ec2:DescribeSecurityGroups
+                - ec2:DescribeSubnets
+                - ec2:DescribeVpcEndpoints
+                - ec2:DescribeVpcs
+                - ecr:BatchCheckLayerAvailability
+                - ecr:BatchGetImage
+                - ecr:GetDownloadUrlForLayer
+                - ecr:GetAuthorizationToken
+                - s3:ListBucket
+                - s3:GetBucketLocation
+                - s3:GetEncryptionConfiguration
+                - s3:PutObject
+                - s3:DeleteObject
+                - s3:GetObject
+                - sagemaker:DescribeDomain
+                - sagemaker:DescribeUserProfile
+                - sagemaker:DescribeSpace
+                - sagemaker:DescribeStudioLifecycleConfig
+                - sagemaker:DescribeImageVersion
+                - sagemaker:DescribeAppImageConfig
+                - sagemaker:CreateTrainingJob
+                - sagemaker:DescribeTrainingJob
+                - sagemaker:StopTrainingJob
+                - sagemaker:Search
+                - sagemaker:CreatePipeline
+                - sagemaker:DescribePipeline
+                - sagemaker:DeletePipeline
+                - sagemaker:StartPipelineExecution
+              Resource: "*"
       AssumeRolePolicyDocument: 
         Version: 2012-10-17
         Statement:
@@ -149,6 +175,8 @@ Resources:
             Principal: 
               Service: 
                 - sagemaker.amazonaws.com
+                - events.amazonaws.com
+                - forecast.amazonaws.com
             Action: 
               - sts:AssumeRole
           -

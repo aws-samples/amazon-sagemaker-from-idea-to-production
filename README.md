@@ -29,31 +29,63 @@ If you participating in an AWS Immersion Day or a similar instructor-led event a
 ### Set up Amazon SageMaker domain
 To run the notebooks you must use [SageMaker Studio](https://aws.amazon.com/sagemaker/studio/) which requires a [SageMaker domain](https://docs.aws.amazon.com/sagemaker/latest/dg/studio-entity-status.html).
 
-If you already have a SageMaker domain, follow the [SageMaker Studio setup guide](https://aws.amazon.com/getting-started/hands-on/machine-learning-tutorial-set-up-sagemaker-studio-account-permissions/) to attach the required AWS IAM policies to the IAM execution role used by your Studio user profile. This workshop assumes the execution role has the `AmazonSageMakerFullAccess` AWS managed policy attached.
+#### Existing SageMaker domain
+If you already have a SageMaker domain and would like to use it to run the workshop, follow the [SageMaker Studio setup guide](https://aws.amazon.com/getting-started/hands-on/machine-learning-tutorial-set-up-sagemaker-studio-account-permissions/) to attach the required AWS IAM policies to the IAM execution role used by your Studio user profile. For this workshop you must attach the following managed IAM policies to the IAM execution role of the user profile you use to run the workshop:
+- `AmazonSageMakerFullAccess`
+- `AWSCloudFormationFullAccess`
+- `AWSCodePipeline_FullAccess`
+- `AmazonSageMakerPipelinesIntegrations`
 
-#### Deploy CloudFormation template
-If you don't have an existing SageMaker domain, you must deploy an AWS CloudFormation template that creates a SageMaker domain and adds the permissions required for running the provided notebooks.
+You can also [create a new user profile](https://docs.aws.amazon.com/sagemaker/latest/dg/domain-user-profile-add-remove.html) with a dedicated IAM execution role to use for this workshop.
 
-Choose this [AWS CloudFormation stack](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/quickcreate?templateURL=https://github.com/aws-samples/amazon-sagemaker-from-idea-to-production/blob/master/cfn-templates/sagemaker-domain.yaml&stackName=sagemaker-from-idea-to-prod) link. The link opens the AWS CloudFormation console in your AWS account and creates your SageMaker domain and a user profile named `studio-user`. It also adds the required IAM execution roles to your SageMaker domain. 
-Check the deployment region and change it if needed.
+#### Provision a new SageMaker domain
+If you don't have a SageMaker domain or would like to use a dedicated domain for the workshop, you must create a new domain.
+
+❗ If you have more than one domain in your account, consider the limit of the active domains in a Region in an account.
+
+To create a new domain, you can follow the onboarding [instructions](https://docs.aws.amazon.com/sagemaker/latest/dg/gs-studio-onboard.html) in the Developer Guide or use the provided AWS CloudFormation [template](https://github.com/aws-samples/amazon-sagemaker-from-idea-to-production/blob/master/cfn-templates/sagemaker-domain.yaml) that creates a SageMaker domain, a user profile, and adds the IAM roles required for executing the provided notebooks.
+
+❗ If you create a new domain via AWS Console, make sure you attach the following policies to the IAM execution role of the user profile:
+- `AmazonSageMakerFullAccess`
+- `AWSCloudFormationFullAccess`
+- `AWSCodePipeline_FullAccess`
+- `AmazonSageMakerPipelinesIntegrations`
+
+❗ If you use the provided CloudFormation template for domain creation, the template creates an IAM execution role with the following policies attached:
+- `AmazonSageMakerFullAccess`
+- `AmazonS3FullAccess`
+- `AWSCloudFormationFullAccess`
+- `AWSCodePipeline_FullAccess`
+- `AmazonSageMakerPipelinesIntegrations`
+
+Download the [`sagemaker-domain.yaml` CloudFormation template](https://github.com/aws-samples/amazon-sagemaker-from-idea-to-production/blob/master/cfn-templates/sagemaker-domain.yaml).
+
+This template creates a new SageMaker domain and a user profile named `studio-user`. It also creates the required IAM execution role for the domain. 
 
 ❗ This stack assumes that you already have a public VPC set up in your account. If you do not have a public VPC, see [VPC with a single public subnet](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Scenario1.html) to learn how to create a public VPC. 
 
-Select **I acknowledge that AWS CloudFormation might create IAM resources**, and then choose **Create stack**.
+❗ The template supports only `us-east-1`, `us-east-2`, and `us-west-1` Regions. Select one of those regions for deployment.
+
+Open [AWS CloudFormation console](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create). The link opens the AWS CloudFormation console in your AWS account. Check the selected region and change it if needed. 
+- Select **Upload a template file** and upload the downloaded CloudFormation template, click **Next** 
+- Enter the stack name, for example `sagemaker-from-idea-to-prod`, click **Next**
+- Leave all defaults on this pane, click **Next**
+- Select **I acknowledge that AWS CloudFormation might create IAM resources**, click **Submit**
 
 ![](img/cfn-ack.png)
 
-This stack takes about 10 minutes to create all the resources.
-
-On the **CloudFormation** pane, choose **Stacks**. It takes about 10 minutes for the stack to be created. When the stack is created, the status of the stack changes from `CREATE_IN_PROGRESS` to `CREATE_COMPLETE`. 
+On the **CloudFormation** pane, choose **Stacks**. It takes about 15 minutes for the stack to be created. When the stack is created, the status of the stack changes from `CREATE_IN_PROGRESS` to `CREATE_COMPLETE`. 
 
 ![](img/cfn-stack.png)
 
 ### Start SageMaker Studio
-If you deployed the CloudFormation template, follow [Log In from the Amazon SageMaker console](https://docs.aws.amazon.com/sagemaker/latest/dg/notebooks-get-started.html) instructions to open Studio.
-Use `studio-user` user profile to launch Studio:
+After signing into the AWS account, follow [Launch Studio Using the Amazon SageMaker Console](https://docs.aws.amazon.com/sagemaker/latest/dg/studio-launch.html#studio-launch-console) instructions to open Studio.
+
+If you deployed the CloudFormation template or participate in an instructor-led event, use `studio-user` user profile to launch Studio:
 
 ![](img/launch-studio.png)
+
+Otherwise start Studio with a corresponding user profile which you'd like to use for this workshop.
 
 ### Download notebooks into your Studio environment
 To use the provided notebooks you must clone the source code repository into your Studio environment.
