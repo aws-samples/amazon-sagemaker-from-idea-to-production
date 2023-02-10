@@ -24,12 +24,12 @@ You need an **AWS account**. If you don't already have an account, follow the [S
 ### AWS Instructor-led workshop
 If you participating in an AWS Immersion Day or a similar instructor-led event and would like to use a provided AWS account, please follow this [instructions](https://catalog.us-east-1.prod.workshops.aws/workshops/63069e26-921c-4ce1-9cc7-dd882ff62575/en-US/prerequisites/option1) how to claim your AWS account via Event Engine and how to start SageMaker Studio. 
 
-❗ Skip the following steps **Set up Amazon SageMaker Studio domain** and **Deploy CloudFormation template** if you use Event Engine and AWS-provisioned account.
+❗ Skip the following steps **Set up Amazon SageMaker Studio domain** and **Deploy CloudFormation template** if you use an AWS-provisioned account.
 
 ### Set up Amazon SageMaker Studio domain
 To run the notebooks you must use [SageMaker Studio](https://aws.amazon.com/sagemaker/studio/) which requires a [SageMaker Studio domain](https://docs.aws.amazon.com/sagemaker/latest/dg/studio-entity-status.html).
 
-An AWS account can have only one SageMaker Studio domain per Region. If you already have a SageMaker Studio domain, follow the [SageMaker Studio setup guide](https://aws.amazon.com/getting-started/hands-on/machine-learning-tutorial-set-up-sagemaker-studio-account-permissions/) to attach the required AWS IAM policies to the IAM execution role used by your Studio user profile. This workshop assumes the execution role has the `AmazonSageMakerFullAccess` AWS managed policy attached.
+If you already have a SageMaker Studio domain, follow the [SageMaker Studio setup guide](https://aws.amazon.com/getting-started/hands-on/machine-learning-tutorial-set-up-sagemaker-studio-account-permissions/) to attach the required AWS IAM policies to the IAM execution role used by your Studio user profile. This workshop assumes the execution role has the `AmazonSageMakerFullAccess` AWS managed policy attached.
 
 #### Deploy CloudFormation template
 If you don't have an existing SageMaker Studio domain, you must deploy an AWS CloudFormation template that creates a SageMaker Studio domain and adds the permissions required for running the provided notebooks.
@@ -54,7 +54,7 @@ Use `studio-user` user profile to launch Studio:
 
 ### Download notebooks into your Studio environment
 To use the provided notebooks you must clone the source code repository into your Studio environment.
-Open a system terminal in Studio in the **Launcher** window:
+In Studio open the Launcher window and start the system terminal:
 
 ![](img/studio-system-terminal.png)
 
@@ -89,11 +89,38 @@ Each foundational instruction notebook `00-...`, `01-...`, ..., `06-...` in the 
 - `06-monitoring` > `./assignments/06-assignment-monitoring`
 
 ## Clean-up
-To avoid charges, you must remove all project-provisioned and generated resources from your AWS account. 
-Run all steps in the provided [clean-up notebook](99-clean-up.ipynb).
-If you provisioned a Studio domain for this workshop, and don't need the domain, you can delete the domain by following [this instructions](https://docs.aws.amazon.com/sagemaker/latest/dg/gs-studio-delete-domain.html).
+❗ You don't need to perform a clean-up if you run an AWS-instructor led workshop.
 
-You don't need to perform a clean-up if you run an AWS-instructor led workshop.
+To avoid charges, you must remove all project-provisioned and generated resources from your AWS account. 
+
+First, run all steps in the provided [clean-up notebook](99-clean-up.ipynb).
+Second, if you used the AWS Console to provision a Studio domain for this workshop, and don't need the domain, you can delete the domain by following [this instructions](https://docs.aws.amazon.com/sagemaker/latest/dg/gs-studio-delete-domain.html). 
+
+If you provisioned a Studio domain use a CloudFormation template, you can delete the CloudFormation stack in the AWS console.
+
+### Delete EFS
+❗ Delete the SageMaker EFS only if you provisioned a new SageMaker domain in your account. Do not delete your own existing EFS!
+
+The deployment of Studio creates a new EFS in your account. This EFS is shared with all users of Studio and contains home directories for Studio users and may contain your data. When you delete the data science environment stack, the Studio domain, user profile and Apps are also deleted. However, the EFS **is not deleted** and kept "as is" in your account. Additional resources are created by Studio and retained upon deletion together with the EFS:
+- EFS mounting points in each private subnet of your VPC
+- ENI for each mounting point
+- Security groups for EFS inbound and outbound traffic
+
+❗ To delete the EFS and EFS-related resources in your AWS account created by the deployment of this solution, do the following steps **after** deleting the CloudFormation stack.
+
+❗ **This is a destructive action. All data on the EFS will be deleted (SageMaker home directories). You may want to backup the EFS before deletion.** ❗
+  
+**From AWS console**  
+Got to the [EFS console](https://console.aws.amazon.com/efs/home?#/file-systems) and delete the SageMaker EFS. You may want to backup the EFS before deletion.
+
+To find the SageMaker EFS, click on the file system ID and then on the Tags tab. You see a tag with the Tag Key `ManagedByAmazonSageMakerResource`. Its Tag Value contains the SageMaker domain ID:
+![efs-tags](/img/efs-tags.png)
+
+❗ If you have multiple EFS, double check that you selected the correct domain ID.
+
+Click on the **Delete** button to delete this EFS.
+
+If you provisioned a new VPC for the domain, go to the [VPC console](https://console.aws.amazon.com/vpc/home?#vpcs) and delete the provisioned VPC.
 
 ## Dataset
 This example uses the [direct marketing dataset](https://archive.ics.uci.edu/ml/datasets/bank+marketing) from UCI's ML Repository:
