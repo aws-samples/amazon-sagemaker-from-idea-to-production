@@ -426,6 +426,8 @@ Resources:
   StudioBucket:
     Type: AWS::S3::Bucket
     Properties:
+      VersioningConfiguration:
+        Status: Enabled
       BucketName: !Join
         - "-"
         - - "sagemaker-studio"
