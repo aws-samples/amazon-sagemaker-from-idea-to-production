@@ -108,6 +108,10 @@ You can do this workshop in two ways:
 - Go through the provided notebooks, execute code cells sequentially, and follow the instructions and execution flow
 - Write your own code with hands-on assignments and exercises
 
+The following diagram shows the possible flows of the workshop:
+
+![](design/workshop-flow.drawio.svg)
+
 ### Execution mode
 Use this mode if you're not familiar with Python programming and new to Jupyter notebooks. You follow each notebook `00-...`, `01-...`, ..., `06-...`and execute all code cells with `Shift` + `Enter`. The given instructions explain what code is doing and why. You need about two and half hours to run through all code cells in all notebooks. 
 All notebooks and all code cells are idempotent. Make sure you run all code cells sequentially, top to bottom.
