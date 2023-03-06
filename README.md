@@ -186,7 +186,7 @@ Use the following QR code to link this repository.
 ![](img/github-repo-qrcode.png)
 
 ## QR code for the workshop
-Use the following QR code to link the public AWS [workshop](https://catalog.us-east-1.prod.workshops.aws/workshops/741835d3-a2bf-4cb6-81f0-d0bb4a62edca/en-US).
+Use the following QR code to link the public AWS [workshop](https://catalog.workshops.aws/mlops-from-idea-to-production/en-US).
 
 ![](img/workshop-qrcode.png)
 
