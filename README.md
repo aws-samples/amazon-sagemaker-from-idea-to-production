@@ -185,10 +185,14 @@ Use the following QR code to link this repository.
 
 ![](img/github-repo-qrcode.png)
 
+[https://bit.ly/3KkhzYW](https://bit.ly/3KkhzYW)
+
 ## QR code for the workshop
 Use the following QR code to link the public AWS [workshop](https://catalog.workshops.aws/mlops-from-idea-to-production/en-US).
 
 ![](img/workshop-qrcode.png)
+
+[https://bit.ly/3zjk07S](https://bit.ly/3zjk07S)
 
 Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 SPDX-License-Identifier: MIT-0
