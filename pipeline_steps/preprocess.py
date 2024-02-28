@@ -32,7 +32,7 @@ def preprocess(
         axis=1,
     )
 
-    df_model_data = pd.get_dummies(df_model_data)  # Convert categorical variables to sets of indicators
+    df_model_data = pd.get_dummies(df_model_data, dtype=int)  # Convert categorical variables to sets of indicators
 
     # Replace "y_no" and "y_yes" with a single label column, and bring it to the front:
     df_model_data = pd.concat(
@@ -42,7 +42,7 @@ def preprocess(
         ],
         axis=1,
     )
-
+    
     # Shuffle and splitting dataset
     train_data, validation_data, test_data = np.split(
         df_model_data.sample(frac=1, random_state=1729),
@@ -54,7 +54,8 @@ def preprocess(
     # Save datasets locally
     train_data.to_csv("train.csv", index=False, header=False)
     validation_data.to_csv("validation.csv", index=False, header=False)
-    test_data.to_csv("test.csv", index=False, header=False)
+    test_data[target_col].to_csv('test_y.csv', index=False, header=False)
+    test_data.drop([target_col], axis=1).to_csv('test_x.csv', index=False, header=False)
     
     # Save the baseline dataset for model monitoring
     df_model_data.drop([target_col], axis=1).to_csv("baseline.csv", index=False, header=False)
@@ -62,12 +63,14 @@ def preprocess(
     # Upload datasets to S3
     train_data_output_s3_path = f"{output_s3_prefix}/train/train.csv"
     validation_data_output_s3_path = f"{output_s3_prefix}/validation/validation.csv"
-    test_data_output_s3_path = f"{output_s3_prefix}/test/test.csv"
+    test_x_data_output_s3_path = f"{output_s3_prefix}/test/test_x.csv"
+    test_y_data_output_s3_path = f"{output_s3_prefix}/test/test_y.csv"
     baseline_data_output_s3_path = f"{output_s3_prefix}/baseline/baseline.csv"
     
     s3.upload_file("train.csv", *parse_s3_url(train_data_output_s3_path))
     s3.upload_file("validation.csv", *parse_s3_url(validation_data_output_s3_path))
-    s3.upload_file("test.csv", *parse_s3_url(test_data_output_s3_path))
+    s3.upload_file("test_x.csv", *parse_s3_url(test_x_data_output_s3_path))
+    s3.upload_file("test_y.csv", *parse_s3_url(test_y_data_output_s3_path))
     s3.upload_file("baseline.csv", *parse_s3_url(baseline_data_output_s3_path))
     
     
@@ -76,6 +79,9 @@ def preprocess(
     return {
         "train_data":train_data_output_s3_path,
         "validation_data":validation_data_output_s3_path,
-        "test_data":test_data_output_s3_path,
+        "test_x_data":test_x_data_output_s3_path,
+        "test_y_data":test_y_data_output_s3_path,
         "baseline_data":baseline_data_output_s3_path
     }
+
+

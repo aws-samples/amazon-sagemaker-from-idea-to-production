@@ -105,36 +105,67 @@ If you're participating in an AWS-led workshop or used the provided CloudFormati
 
 The public GitHub repository [Amazon SageMaker MLOps: from idea to production in six steps](https://github.com/aws-samples/amazon-sagemaker-from-idea-to-production) contains all source code.
 
-#### Open and execute a setup notebook
+### Open and execute a setup notebook
 Navigate to the Studio Classic _file browser_ inside the folder `amazon-sagemaker-from-idea-to-production`. Open `00-start-here.ipynb` notebook and follow the instructions:
 
-![](/img/studio-open-notebook.png)
+![](/static/img/studio-open-notebook.png)
 
 If you don't have the workshop folder in the file browser, follow the instructions in the section **Download notebooks into your Studio environment** to clone the content.
 
 Select `Data Science 3.0` image in **Set up environment for "00-start-here-ipynb"**:
 
-![](/img/setup-notebook-environment.png)
+![](/static/img/setup-notebook-environment.png)
 
+:::alert{header="Long operation"}
 Wait until notebook kernel finishes starting.
+:::
 
+:::alert{header="Setup your environment"}
 You must run the `00-start-here.ipynb` notebook to setup the environment and be able to execute other notebooks.
+:::
 
-After executing the `00-start-here.ipynb` notebook, you can move to the first notebook [`01-idea-development`](01-idea-development.ipynb).
+After executing the `00-start-here.ipynb` notebook, you can move to the [Lab 1](/content/01-lab-01/index.en.md).
 
-#### Download notebooks into your Studio environment
+### Download notebooks into your Studio environment
 You need to clone the [source code](https://github.com/aws-samples/amazon-sagemaker-from-idea-to-production) for the workshop only if you don't have it on the Studio EFS volume.
 
 After you open Studio Classic select **File** in the top menu, then **New**, then **Terminal**:
 
-![](/img/studio-system-terminal-via-menu.png)
+![](/static/img/studio-system-terminal-via-menu.png)
+
+Run the following command in the terminal:
+:::code{language=sh showCopyAction=true}
+git clone https://github.com/aws-samples/amazon-sagemaker-from-idea-to-production.git
+:::
+
+The code repository will be downloaded and saved in your home directory on the EFS in Studio.
+
+---
+
+### Start SageMaker Studio
+After signing into the AWS account, follow [Launch Studio Using the Amazon SageMaker Console](https://docs.aws.amazon.com/sagemaker/latest/dg/studio-launch.html#studio-launch-console) instructions to open Studio.
+
+If you deployed the CloudFormation template or participate in an instructor-led event, use `studio-user-<UUID>` user profile to launch Studio:
+
+![](img/launch-studio.png)
+
+Otherwise start Studio with a corresponding user profile which you'd like to use for this workshop.
+
+### Download notebooks into your Studio environment
+To use the provided notebooks you must clone the source code repository into your Studio environment.
+In Studio open the Launcher window and start the system terminal:
+
+![](img/studio-system-terminal.png)
 
 Run the following command in the terminal:
 ```sh
 git clone https://github.com/aws-samples/amazon-sagemaker-from-idea-to-production.git
 ```
 
-The code repository will be downloaded and saved in your home directory on the EFS in Studio.
+The code repository will be downloaded and saved in your home directory in Studio.
+
+### Start exploring
+Navigate to the Studio file browser inside the folder `amazon-sagemaker-from-idea-to-production`. Open `00-start-here.ipynb` notebook and follow the instructions.
 
 ## How to use this workshop
 You can do this workshop in two ways:
@@ -213,8 +244,6 @@ The following list presents some useful hands-on resources to help you to get st
 - [Amazon SageMaker MLOps Workshop](https://catalog.us-east-1.prod.workshops.aws/workshops/7acdc7d8-0ac0-44de-bd9b-e3407147a59c/en-US)
 - [A curated list of awesome references for Amazon SageMaker](https://github.com/aws-samples/awesome-sagemaker)
 
----
-
 ## QR code for this repository
 Use the following QR code to link this repository.
 
@@ -228,8 +257,6 @@ Use the following QR code to link the public AWS [workshop](https://catalog.work
 ![](img/workshop-qrcode.png)
 
 [https://bit.ly/3zjk07S](https://bit.ly/3zjk07S)
-
----
 
 Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 SPDX-License-Identifier: MIT-0
