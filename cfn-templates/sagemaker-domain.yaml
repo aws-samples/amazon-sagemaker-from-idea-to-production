@@ -105,6 +105,15 @@ Resources:
                 Action:
                   - sagemaker:ListTags
                 Resource: '*'
+        - PolicyName: get-service-quotas
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+            - 
+              Effect: Allow
+              Action:
+                - servicequotas:GetServiceQuota
+              Resource: !Sub 'arn:${AWS::Partition}:servicequotas:${AWS::Region}:${AWS::AccountId}:sagemaker/*'
         - PolicyName: headless-execution-permissions
           PolicyDocument:
             Version: 2012-10-17

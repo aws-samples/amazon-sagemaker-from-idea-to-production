@@ -16,7 +16,7 @@ def preprocess_handler(inference_record):
     if input_enc_type == "CSV":
         # don't include output data in the record for data quality monitor
         outputs = input_data
-        return { str(f"_c{i}") : d for i, d in enumerate(outputs.split(",")) }
+        return { f'_c{i}' : float(d) if i in [0,1,2] else int(float(d)) for i, d in enumerate(outputs.split(",")) }
     else:
         raise ValueError(f"encoding type {input_enc_type} is not supported") 
         
