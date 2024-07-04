@@ -114,6 +114,21 @@ Resources:
               Action:
                 - servicequotas:GetServiceQuota
               Resource: !Sub 'arn:${AWS::Partition}:servicequotas:${AWS::Region}:${AWS::AccountId}:sagemaker/*'
+        - PolicyName: mlflow-permissions
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+            -
+              Effect: Allow
+              Action:
+                - sagemaker-mlflow:*
+                - sagemaker:CreateMlflowTrackingServer
+                - sagemaker:UpdateMlflowTrackingServer
+                - sagemaker:DeleteMlflowTrackingServer
+                - sagemaker:StartMlflowTrackingServer
+                - sagemaker:StopMlflowTrackingServer
+                - sagemaker:CreatePresignedMlflowTrackingServerUrl
+              Resource: "*"
         - PolicyName: headless-execution-permissions
           PolicyDocument:
             Version: 2012-10-17
