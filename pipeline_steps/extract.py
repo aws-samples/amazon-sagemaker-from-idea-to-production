@@ -1,14 +1,16 @@
 import boto3
 import pandas as pd
 import numpy as np
+import mlflow
+from mlflow.data.pandas_dataset import PandasDataset
+from time import gmtime, strftime
 from sagemaker.session import Session
 from sagemaker.feature_store.feature_store import FeatureStore
 from sagemaker.feature_store.feature_group import FeatureGroup
-from sagemaker.s3_utils import parse_s3_url
 
 def extract_features(
     feature_group_name,
-    output_location,
+    query_output_s3_path,
 ):
     region = boto3.Session().region_name
     boto_session = boto3.Session(region_name=region)
@@ -30,7 +32,7 @@ def extract_features(
     builder = feature_store.create_dataset(
         base=dataset_feature_group,
         # included_feature_names=inlcuded_feature_names,
-        output_path=output_location,
+        output_path=query_output_s3_path,
     ).with_number_of_recent_records_by_record_identifier(1)
     
     df_dataset, query = builder.to_dataframe()
@@ -40,55 +42,82 @@ def extract_features(
 def prepare_datasets(
     feature_group_name,
     output_s3_prefix,
+    query_output_s3_path,
+    tracking_server_arn,
+    experiment_name=None,
+    pipeline_run_name=None,
+    run_id=None,
 ):
-    target_col = "y"
-    feature_store_col = ['event_time', 'record_id']
-    
-    df_model_data = extract_features(
-        feature_group_name, 
-        f"{output_s3_prefix}//offline-store/query_results/"
-    ).drop(feature_store_col, axis=1)
-    
-    print(f"Extracted {len(df_model_data)} rows from the feature group {feature_group_name}")
+    try:
+        suffix = strftime('%d-%H-%M-%S', gmtime())
+        mlflow.set_tracking_uri(tracking_server_arn)
+        experiment = mlflow.set_experiment(experiment_name=experiment_name if experiment_name else f"{prepare_datasets.__name__ }-{suffix}")
+        pipeline_run = mlflow.start_run(run_name=pipeline_run_name) if pipeline_run_name else None            
+        run = mlflow.start_run(run_id=run_id) if run_id else mlflow.start_run(run_name=f"feature-extraction-{suffix}", nested=True)
 
-     # Shuffle and splitting dataset
-    train_data, validation_data, test_data = np.split(
-        df_model_data.sample(frac=1, random_state=1729),
-        [int(0.7 * len(df_model_data)), int(0.9 * len(df_model_data))],
-    )
-
-    print(f"Data split > train:{train_data.shape} | validation:{validation_data.shape} | test:{test_data.shape}")
-    
-    # Save datasets locally
-    train_data.to_csv("train.csv", index=False, header=False)
-    validation_data.to_csv("validation.csv", index=False, header=False)
-    test_data[target_col].to_csv('test_y.csv', index=False, header=False)
-    test_data.drop([target_col], axis=1).to_csv('test_x.csv', index=False, header=False)
-    
-    # Save the baseline dataset for model monitoring
-    df_model_data.drop([target_col], axis=1).to_csv("baseline.csv", index=False, header=False)
-    
-    s3 = boto3.client("s3")
+        target_col = "y"
+        feature_store_col = ['event_time', 'record_id']
         
-    # Upload datasets to S3
-    train_data_output_s3_path = f"{output_s3_prefix}/train/train.csv"
-    validation_data_output_s3_path = f"{output_s3_prefix}/validation/validation.csv"
-    test_x_data_output_s3_path = f"{output_s3_prefix}/test/test_x.csv"
-    test_y_data_output_s3_path = f"{output_s3_prefix}/test/test_y.csv"
-    baseline_data_output_s3_path = f"{output_s3_prefix}/baseline/baseline.csv"
+        df_model_data = extract_features(
+            feature_group_name, 
+            query_output_s3_path,
+        ).drop(feature_store_col, axis=1)
+        
+        print(f"Extracted {len(df_model_data)} rows from the feature group {feature_group_name}")
+
+        # log dataset
+        input_dataset = mlflow.data.from_pandas(df_model_data, source=output_s3_prefix)
+        mlflow.log_input(input_dataset, context="featureset")
     
-    s3.upload_file("train.csv", *parse_s3_url(train_data_output_s3_path))
-    s3.upload_file("validation.csv", *parse_s3_url(validation_data_output_s3_path))
-    s3.upload_file("test_x.csv", *parse_s3_url(test_x_data_output_s3_path))
-    s3.upload_file("test_y.csv", *parse_s3_url(test_y_data_output_s3_path))
-    s3.upload_file("baseline.csv", *parse_s3_url(baseline_data_output_s3_path))
+         # Shuffle and splitting dataset
+        train_data, validation_data, test_data = np.split(
+            df_model_data.sample(frac=1, random_state=1729),
+            [int(0.7 * len(df_model_data)), int(0.9 * len(df_model_data))],
+        )
     
-    print("Created datasets. Exiting.")
+        print(f"Data split > train:{train_data.shape} | validation:{validation_data.shape} | test:{test_data.shape}")
+
+        mlflow.log_params(
+            {
+                "full_dataset": df_model_data.shape,
+                "train": train_data.shape,
+                "validate": validation_data.shape,
+                "test": test_data.shape
+            }
+        )
+
+        # Set S3 upload paths
+        train_data_output_s3_path = f"{output_s3_prefix}/train/train.csv"
+        validation_data_output_s3_path = f"{output_s3_prefix}/validation/validation.csv"
+        test_x_data_output_s3_path = f"{output_s3_prefix}/test/test_x.csv"
+        test_y_data_output_s3_path = f"{output_s3_prefix}/test/test_y.csv"
+        baseline_data_output_s3_path = f"{output_s3_prefix}/baseline/baseline.csv"
+        
+        # Upload datasets to S3
+        train_data.to_csv(train_data_output_s3_path, index=False, header=False)
+        validation_data.to_csv(validation_data_output_s3_path, index=False, header=False)
+        test_data[target_col].to_csv(test_y_data_output_s3_path, index=False, header=False)
+        test_data.drop([target_col], axis=1).to_csv(test_x_data_output_s3_path, index=False, header=False)
+        
+        # Save the baseline dataset for model monitoring
+        df_model_data.drop([target_col], axis=1).to_csv(baseline_data_output_s3_path, index=False, header=False)
+        
+        s3 = boto3.client("s3")
+      
+        print(f"Datasets are uploaded to S3: {output_s3_prefix}. Exiting.")
+        
+        return {
+           "train_data":train_data_output_s3_path,
+            "validation_data":validation_data_output_s3_path,
+            "test_x_data":test_x_data_output_s3_path,
+            "test_y_data":test_y_data_output_s3_path,
+            "baseline_data":baseline_data_output_s3_path,
+            "experiment_name":experiment.name,
+            "pipeline_run_id":pipeline_run.info.run_id if pipeline_run else ''
+        }
+    except Exception as e:
+        print(f"Exception in processing script: {e}")
+        raise e
+    finally:
+        mlflow.end_run()
     
-    return {
-        "train_data":train_data_output_s3_path,
-        "validation_data":validation_data_output_s3_path,
-        "test_x_data":test_x_data_output_s3_path,
-        "test_y_data":test_y_data_output_s3_path,
-        "baseline_data":baseline_data_output_s3_path
-    }
