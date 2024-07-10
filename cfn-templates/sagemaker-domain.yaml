@@ -17,26 +17,6 @@ Parameters:
     Description: Owner identification to be written as a resource tag
     Default: 'not-set'
 
-Mappings: 
-  RegionMap: 
-    us-east-1: 
-      datascience: "arn:aws:sagemaker:us-east-1:081325390199:image/sagemaker-data-science-310-v1"
-      basepython: "arn:aws:sagemaker:us-east-1:081325390199:image/sagemaker-base-python-310-v1"
-      jupyter: "arn:aws:sagemaker:us-east-1:081325390199:image/jupyter-server-3"
-      tensorflow: "arn:aws:sagemaker:us-east-1:081325390199:image/tensorflow-2.12.0-cpu-py310-ubuntu20.04-sagemaker-v1.0"
-
-    us-west-2: 
-      datascience: "arn:aws:sagemaker:us-west-2:236514542706:image/sagemaker-data-science-310-v1"
-      basepython: "arn:aws:sagemaker:us-west-2:236514542706:image/sagemaker-base-python-310-v1"
-      jupyter: "arn:aws:sagemaker:us-west-2:236514542706:image/jupyter-server-3"
-      tensorflow: "arn:aws:sagemaker:us-west-2:236514542706:image/tensorflow-2.12.0-cpu-py310-ubuntu20.04-sagemaker-v1.0"
-    
-    eu-central-1:
-      datascience: "arn:aws:sagemaker:eu-central-1:936697816551:image/sagemaker-data-science-310-v1"
-      basepython: "arn:aws:sagemaker:eu-central-1:936697816551:image/sagemaker-base-python-310-v1"
-      jupyter: "arn:aws:ecr:eu-central-1:936697816551:repository/looseleaf-jupyter-server-3"
-      tensorflow: "arn:aws:sagemaker:eu-central-1:936697816551:image/tensorflow-2.12.0-cpu-py310-ubuntu20.04-sagemaker-v1.0"
-    
 Resources:
   LambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -201,6 +181,7 @@ Resources:
                 - sagemaker:DescribePipeline
                 - sagemaker:DeletePipeline
                 - sagemaker:StartPipelineExecution
+                - glue:GetConnections
               Resource: "*"
       AssumeRolePolicyDocument: 
         Version: 2012-10-17
@@ -212,12 +193,6 @@ Resources:
                 - sagemaker.amazonaws.com
                 - events.amazonaws.com
                 - forecast.amazonaws.com
-            Action: 
-              - sts:AssumeRole
-          -
-            Effect: Allow
-            Principal: 
-              Service: 
                 - lambda.amazonaws.com
             Action: 
               - sts:AssumeRole
@@ -893,44 +868,6 @@ Resources:
         - Key: owner
           Value: !Ref OwnerID
 
-  JupyterApp:
-    Type: AWS::SageMaker::App
-    DependsOn:
-      - LifeCycleConfigLambdaInvoke
-    Properties: 
-      AppName: default
-      AppType: JupyterServer
-      DomainId: !GetAtt StudioDomain.DomainId
-      UserProfileName: !Select [2, !Split ["/", !GetAtt StudioUserProfile.UserProfileArn ]]
-  
-  DataScienceApp:
-    Type: AWS::SageMaker::App
-    Properties: 
-      AppName: instance-event-engine-datascience-ml-t3-medium
-      AppType: KernelGateway
-      DomainId: !GetAtt StudioDomain.DomainId
-      ResourceSpec: 
-        InstanceType: ml.t3.medium
-        SageMakerImageArn: !FindInMap
-          - RegionMap
-          - !Ref 'AWS::Region'
-          - datascience
-      UserProfileName: !Select [2, !Split ["/", !GetAtt StudioUserProfile.UserProfileArn ]]
-
-  BasePythonApp:
-    Type: AWS::SageMaker::App
-    Properties:
-      AppName: instance-event-engine-basepython-ml-t3-medium
-      AppType: KernelGateway
-      DomainId: !GetAtt StudioDomain.DomainId
-      ResourceSpec:
-        InstanceType: ml.t3.medium
-        SageMakerImageArn: !FindInMap
-          - RegionMap
-          - !Ref 'AWS::Region'
-          - basepython
-      UserProfileName: !Select [2, !Split ["/", !GetAtt StudioUserProfile.UserProfileArn ]]
-
   LifeCycleConfigLambdaRole:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -1010,7 +947,7 @@ Resources:
             - '    response = client.create_studio_lifecycle_config('
             - '        StudioLifecycleConfigName=lcc_config_name,'
             - '        StudioLifecycleConfigContent=base64_lcc_string,'
-            - '        StudioLifecycleConfigAppType="JupyterServer",'
+            - '        StudioLifecycleConfigAppType="JupyterLab",'
             - '   )'
             - ''
             - '    lcc_arn = response["StudioLifecycleConfigArn"]'
@@ -1018,7 +955,7 @@ Resources:
             - '        DomainId=profile.split("|")[1],'
             - '        UserProfileName=profile.split("|")[0],'
             - '        UserSettings={'
-            - '            "JupyterServerAppSettings": {'
+            - '            "JupyterLabAppSettings": {'
             - '                "DefaultResourceSpec": {"LifecycleConfigArn": lcc_arn},'
             - '                "LifecycleConfigArns": [lcc_arn]'
             - '            }'
@@ -1070,3 +1007,48 @@ Resources:
     Version: "1.0"
     Properties:
       ServiceToken: !GetAtt LifeCycleConfigLambda.Arn
+
+  JupyterAppSpace:
+    Type: AWS::SageMaker::Space
+    DependsOn: StudioUserProfile
+    Properties:
+      DomainId: !GetAtt StudioDomain.DomainId
+      OwnershipSettings:
+        OwnerUserProfileName: !Select [2, !Split ["/", !GetAtt StudioUserProfile.UserProfileArn ]]
+      SpaceDisplayName: sagemaker-space
+      SpaceName: sagemaker-space
+      SpaceSettings:
+        AppType: JupyterLab
+        JupyterLabAppSettings:
+          CodeRepositories: 
+            - RepositoryUrl: https://github.com/aws-samples/amazon-sagemaker-from-idea-to-production.git
+          DefaultResourceSpec:
+            InstanceType: ml.t3.medium
+        SpaceStorageSettings:
+          EbsStorageSettings:
+            EbsVolumeSizeInGb: 50
+      SpaceSharingSettings:
+        SharingType: Private
+
+  CodeEditorAppSpace:
+    Type: AWS::SageMaker::Space
+    DependsOn: StudioUserProfile
+    Properties:
+      DomainId: !GetAtt StudioDomain.DomainId
+      OwnershipSettings:
+        OwnerUserProfileName: !Select [2, !Split ["/", !GetAtt StudioUserProfile.UserProfileArn ]]
+      SpaceDisplayName: codeeditor-space
+      SpaceName: codeeditor-space
+      SpaceSettings:
+        AppType: CodeEditor
+        CodeEditorAppSettings:
+          DefaultResourceSpec:
+            InstanceType: ml.t3.medium
+        SpaceStorageSettings:
+          EbsStorageSettings:
+            EbsVolumeSizeInGb: 50
+      SpaceSharingSettings:
+        SharingType: Private
+
+  
+
