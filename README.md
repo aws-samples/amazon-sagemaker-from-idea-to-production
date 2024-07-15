@@ -1,7 +1,7 @@
 # Amazon SageMaker MLOps: from idea to production in six steps
 This repository contains a sequence of simple notebooks demonstrating how to move from an ML idea to production by using [Amazon SageMaker](https://aws.amazon.com/sagemaker).
 
-The notebooks make use of SageMaker [processing](https://docs.aws.amazon.com/sagemaker/latest/dg/processing-job.html) and [training](https://docs.aws.amazon.com/sagemaker/latest/dg/train-model.html) jobs, and SageMaker MLOps features such as [SageMaker Pipelines](https://aws.amazon.com/sagemaker/pipelines/), [SageMaker Feature Store](https://aws.amazon.com/sagemaker/feature-store/), [SageMaker Model Registry](https://docs.aws.amazon.com/sagemaker/latest/dg/model-registry.html), [SageMaker Experiments](https://docs.aws.amazon.com/sagemaker/latest/dg/mlflow.html), and [SageMaker Model Monitor](https://aws.amazon.com/sagemaker/model-monitor/).
+The notebooks make use of SageMaker [processing](https://docs.aws.amazon.com/sagemaker/latest/dg/processing-job.html) and [training](https://docs.aws.amazon.com/sagemaker/latest/dg/train-model.html) jobs, and SageMaker MLOps features such as [SageMaker Pipelines](https://aws.amazon.com/sagemaker/pipelines/), [SageMaker Feature Store](https://aws.amazon.com/sagemaker/feature-store/), [SageMaker Model Registry](https://docs.aws.amazon.com/sagemaker/latest/dg/model-registry.html), [SageMaker managed MLflow experiments](https://docs.aws.amazon.com/sagemaker/latest/dg/mlflow.html), and [SageMaker Model Monitor](https://aws.amazon.com/sagemaker/model-monitor/).
 
 You start with a simple notebook with basic ML code for data preprocessing, feature engineering, and model training, all local to the notebook. Each subsequent notebook builds on top of the previous and introduces one or several SageMaker MLOps features:
 
@@ -17,13 +17,13 @@ You follow along the six notebooks and develop your ML idea from an experimental
 There are also additional hands-on examples of other SageMaker features and ML topics, like [A/B testing](https://docs.aws.amazon.com/sagemaker/latest/dg/model-validation.html), custom [processing](https://docs.aws.amazon.com/sagemaker/latest/dg/build-your-own-processing-container.html), [training](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.html) and [inference](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-inference-main.html) containers, [debugging and profiling](https://docs.aws.amazon.com/sagemaker/latest/dg/train-debugger.html), [security](https://docs.aws.amazon.com/sagemaker/latest/dg/security.html), [multi-model](https://docs.aws.amazon.com/sagemaker/latest/dg/multi-model-endpoints.html) and [multi-container](https://docs.aws.amazon.com/sagemaker/latest/dg/multi-container-endpoints.html) endpoints, and [serial inference pipelines](https://docs.aws.amazon.com/sagemaker/latest/dg/inference-pipelines.html). Explore the notebooks in the folder `additional-topics` to test out these features.
 
 ## Getting started
-For the full version of the instructions and detailed setup of the account refer to the public AWS workshop [Amazon SageMaker MLOps: from idea to production in six steps](https://catalog.us-east-1.prod.workshops.aws/workshops/741835d3-a2bf-4cb6-81f0-d0bb4a62edca/en-US).
+For the full version of the instructions and detailed setup of the account refer to the public AWS workshop [Amazon SageMaker MLOps: from idea to production in six steps](https://catalog.workshops.aws/mlops-from-idea-to-production).
 
 ### Prerequisites
 You need an **AWS account**. If you don't already have an account, follow the [Setting Up Your AWS Environment](https://aws.amazon.com/getting-started/guides/setup-environment/) getting started guide for a quick overview.
 
 ### AWS Instructor-led workshop
-If you participating in an AWS Immersion Day or a similar instructor-led event and would like to use a provided AWS account, please follow this [instructions](https://catalog.us-east-1.prod.workshops.aws/workshops/63069e26-921c-4ce1-9cc7-dd882ff62575/en-US/prerequisites/option1) how to claim your AWS account via Event Engine and how to start SageMaker Studio. 
+If you participating in an AWS Immersion Day or a similar instructor-led event and would like to use a provided AWS account, please follow this [instructions](https://catalog.workshops.aws/mlops-from-idea-to-production/en-US/00-introduction/20-getting-started-workshop-studio) how to claim your temporary AWS account and how to start SageMaker Studio. 
 
 ❗ Skip the following steps **Set up Amazon SageMaker domain** and **Deploy CloudFormation template** if you use an AWS-provisioned account.
 
@@ -44,7 +44,7 @@ If you don't have a SageMaker domain or would like to use a dedicated domain for
 
 ❗ If you have more than one domain in your account, consider the limit of the active domains in a Region in an account.
 
-To create a new domain, you can follow the onboarding [instructions](https://docs.aws.amazon.com/sagemaker/latest/dg/gs-studio-onboard.html) in the Developer Guide or use the provided AWS CloudFormation [template](https://github.com/aws-samples/amazon-sagemaker-from-idea-to-production/blob/master/cfn-templates/sagemaker-domain.yaml) that creates a SageMaker domain, a user profile, and adds the IAM roles required for executing the provided notebooks.
+To create a new domain, you can follow the onboarding [instructions](https://docs.aws.amazon.com/sagemaker/latest/dg/onboard-quick-start.html) in the Developer Guide or use the provided AWS CloudFormation [template](https://github.com/aws-samples/amazon-sagemaker-from-idea-to-production/blob/master/cfn-templates/sagemaker-domain.yaml) that creates a SageMaker domain, a user profile, and adds the IAM roles required for executing the provided notebooks.
 
 ❗ If you create a new domain via AWS Console, make sure you attach the following policies to the IAM execution role of the user profile:
 - `AmazonSageMakerFullAccess`
@@ -80,61 +80,62 @@ On the **CloudFormation** pane, choose **Stacks**. It takes about 15 minutes for
 ![](img/cfn-stack.png)
 
 ### Start SageMaker Studio
-After signing into the AWS account, follow [Launch Amazon SageMaker Studio Classic](https://docs.aws.amazon.com/sagemaker/latest/dg/studio-launch.html#studio-launch-console) instructions to open Studio.
+After signing into the AWS account, follow [Launch Amazon SageMaker Studio](https://docs.aws.amazon.com/sagemaker/latest/dg/studio-updated-launch.html) instructions to open Studio.
 
-If you deployed the provided CloudFormation template or are participating in an instructor-led event, use the section **Launch Studio Classic if Studio is your default experience** and select `studio-user-<UUID>` user profile to launch Studio. If you use your own AWS Account and Studio Classic, follow the section **Launch Studio Classic if Studio Classic is your default experience**.
+Here are the instructions if you are in an AWS-led workshop event:
 
-The following instructions and screenshots show how to start Studio Classic if you are in an AWS-led workshop event.
+1. First navigate to Amazon SageMaker console, you can do this by simply starting to type `SageMaker` in the search box at the top. 
 
-First, launch Studio via your user profile:
+   ![](img/aws-console-sagemaker.png)
 
-![](/img/launch-studio.png)
+2. On the left in the `Applications and IDEs` section select Studio
+3. In the `Get started` box, make sure the studio-user-xxxxxxxx is selected and select `Open studio`. Now SageMaker Studio UI opens in a new browser tab and you're redirected to that window.
 
-SageMaker Studio UX opens in a new browser window and you're redirected to that window.
+   ![](img/launch-studio.png)
 
-Second, select Studio Classic from Studio application pane and click **Open** in Studio Classic pane on the right:
+4. Optionally take the quick tour of the SageMAker Studio interface by selecting the `Take quick tour button` or select `Skip Tour for now``
+5. Accept or Decline the cookie preferences based on your preference
 
-![](/img/launch-studio-classic.png)
+### Open JupyterLab space
+You use a JupyterLab space as our IDE for this workshop. 
 
-If there is no **Open** button in the Action cell, you'll see **Run** action instead. Click **Run** and wait 2-5 minutes until you see **Open** in the cell for Studio Classic app.
+1. To launch a JupyterLab space, select the `JupyterLab` app in the top left
 
-A new browser window with Studio Classic opens and you're redirected to that window.
+   ![JupyterLab selector](img/jupyterlab-app.png)
+   
+2. Each application in SageMaker studio gets its own space. Spaces are used to manage the storage and resource needs of each application. If you're participating in an AWS-led workshop or used the provided CloudFormation template, the required space is already created for you, otherwise you must create a new JupyterLab space as described in the [the Developer Guide](ttps://docs.aws.amazon.com/sagemaker/latest/dg/studio-updated-jl-user-guide.html) or re-use an existing one
+
+3. Run the space by selecting the run button on the right. This process can take a few seconds.
+
+   ![JupyterLab selector](img/space-run.png)
+
+4. Once the space is running select `Open` to navigate to the JupyterLab application. 
 
 ### Start the workshop
-If you're participating in an AWS-led workshop or used the provided CloudFormation template, the workshop content is cloned on the Studio EFS volume automatically, no action required from you. If you use your own domain and user profile or created a domain via AWS Console UX, follow the instructions in the section **Download notebooks into your Studio environment** to clone the content.
+If you're participating in an AWS-led workshop or used the provided CloudFormation template, the workshop content is cloned on the space EBS volume automatically, no action required from you. If you use your own domain and user profile or created a domain via AWS Console UI, follow the instructions in the next section **Download notebooks into your JupyterLab space** to clone the content.
 
 The public GitHub repository [Amazon SageMaker MLOps: from idea to production in six steps](https://github.com/aws-samples/amazon-sagemaker-from-idea-to-production) contains all source code.
 
-#### Open and execute a setup notebook
-Navigate to the Studio Classic _file browser_ inside the folder `amazon-sagemaker-from-idea-to-production`. Open `00-start-here.ipynb` notebook and follow the instructions:
+#### Download notebooks into your JupyterLab space
+You only need to clone the notebooks into your space if you use your own domain and user profile. To do this select `Terminal` in the JupyterLab Launcher window or select **File** > **New** > **Terminal** to open up a terminal and run the `git clone`:
 
-![](/img/studio-open-notebook.png)
-
-If you don't have the workshop folder in the file browser, follow the instructions in the section **Download notebooks into your Studio environment** to clone the content.
-
-Select `Data Science 3.0` image in **Set up environment for "00-start-here-ipynb"**:
-
-![](/img/setup-notebook-environment.png)
-
-Wait until notebook kernel finishes starting.
-
-You must run the `00-start-here.ipynb` notebook to setup the environment and be able to execute other notebooks.
-
-After executing the `00-start-here.ipynb` notebook, you can move to the first notebook [`01-idea-development`](01-idea-development.ipynb).
-
-#### Download notebooks into your Studio environment
-You need to clone the [source code](https://github.com/aws-samples/amazon-sagemaker-from-idea-to-production) for the workshop only if you don't have it on the Studio EFS volume.
-
-After you open Studio Classic select **File** in the top menu, then **New**, then **Terminal**:
-
-![](/img/studio-system-terminal-via-menu.png)
-
-Run the following command in the terminal:
 ```sh
 git clone https://github.com/aws-samples/amazon-sagemaker-from-idea-to-production.git
 ```
 
-The code repository will be downloaded and saved in your home directory on the EFS in Studio.
+This will clone the repository into the local JupyterLab file system.
+
+#### Open and execute a setup notebook
+As the final preparatory step, make sure to run and execute the `00-start-here.ipynb` notebook. To do this
+
+1. In the file browser open the `amazon-sagemaker-from-idea-to-production` folder by double clicking it
+2. Open `00-start-here.ipynb` notebook and follow the instructions in the notebook
+
+![](img/studio-open-notebook.png)
+
+Note: we recommend you read and then execute each cell by using the `Shift + Enter`command.
+
+After executing the `00-start-here.ipynb` notebook, you can move to the first notebook [`01-idea-development`](01-idea-development.ipynb).
 
 ## How to use this workshop
 You can do this workshop in two ways:
@@ -169,28 +170,6 @@ First, run all steps in the provided [clean-up notebook](99-clean-up.ipynb).
 Second, if you used the AWS Console to provision a domain for this workshop, and don't need the domain, you can delete the domain by following [this instructions](https://docs.aws.amazon.com/sagemaker/latest/dg/gs-studio-delete-domain.html). 
 
 If you provisioned a domain use a CloudFormation template, you can delete the CloudFormation stack in the AWS console.
-
-### Delete EFS
-❗ Delete the SageMaker EFS only if you provisioned a new SageMaker domain in your account. Do not delete your own existing EFS!
-
-The deployment of Studio creates a new EFS in your account. This EFS is shared with all users of Studio and contains home directories for Studio users and may contain your data. When you delete the data science environment stack, the domain, user profile and Apps are also deleted. However, the EFS **is not deleted** and kept "as is" in your account. Additional resources are created by Studio and retained upon deletion together with the EFS:
-- EFS mounting points in each private subnet of your VPC
-- ENI for each mounting point
-- Security groups for EFS inbound and outbound traffic
-
-❗ To delete the EFS and EFS-related resources in your AWS account created by the deployment of this solution, do the following steps **after** deleting the CloudFormation stack.
-
-❗ **This is a destructive action. All data on the EFS will be deleted (SageMaker home directories). You may want to backup the EFS before deletion.** ❗
-  
-**From AWS console**  
-Got to the [EFS console](https://console.aws.amazon.com/efs/home?#/file-systems) and delete the SageMaker EFS. You may want to backup the EFS before deletion.
-
-To find the SageMaker EFS, click on the file system ID and then on the Tags tab. You see a tag with the Tag Key `ManagedByAmazonSageMakerResource`. Its Tag Value contains the SageMaker domain ID:
-![efs-tags](/img/efs-tags.png)
-
-❗ If you have multiple EFS, double check that you selected the correct domain ID.
-
-Click on the **Delete** button to delete this EFS.
 
 If you provisioned a new VPC for the domain, go to the [VPC console](https://console.aws.amazon.com/vpc/home?#vpcs) and delete the provisioned VPC.
 
