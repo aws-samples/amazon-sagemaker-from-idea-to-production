@@ -41,6 +41,15 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       Policies: 
+        - PolicyName: logs
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - 
+                Effect: Allow
+                Action:
+                  - logs:FilterLogEvents
+                Resource: !Sub "arn:${AWS::Partition}:logs:*:${AWS::AccountId}:*"
         - PolicyName: iam-access
           PolicyDocument:
             Version: 2012-10-17
