@@ -16,6 +16,17 @@ Parameters:
     Type: String
     Description: Owner identification to be written as a resource tag
     Default: 'not-set'
+  CreateMLflowServer:
+    Type: String
+    Description: Create an MLflow trackings server as part of the domain
+    Default: 'YES'
+    AllowedValues:
+      - 'YES'
+      - 'NO'
+
+Conditions:
+  CreateMLflowServerCondition: !Equals [ !Ref CreateMLflowServer, 'YES' ]
+  OwnerIDCondition: !Equals [ !Ref OwnerID, 'not-set' ]
 
 Resources:
   LambdaExecutionRole:
@@ -323,7 +334,7 @@ Resources:
       Timeout: 60
       Tags:
         - Key: owner
-          Value: !Ref OwnerID
+          Value: !If [ OwnerIDCondition, !Ref 'AWS::StackId', !Ref OwnerID ]
 
   DefaultVpcFinder:
     Type: Custom::ResourceForFindingDefaultVpc
@@ -386,7 +397,7 @@ Resources:
       Timeout: 60
       Tags:
         - Key: owner
-          Value: !Ref OwnerID
+          Value: !If [ OwnerIDCondition, !Ref 'AWS::StackId', !Ref OwnerID ]
 
   EnableProjects:
     Type: Custom::ResourceForEnablingSageMakerProjects
@@ -439,7 +450,7 @@ Resources:
       Timeout: 60
       Tags:
         - Key: owner
-          Value: !Ref OwnerID
+          Value: !If [ OwnerIDCondition, !Ref 'AWS::StackId', !Ref OwnerID ]
 
   CheckIfSageMakerSCProductsRolesExist:
     Type: Custom::CheckIfIAMRolesExist
@@ -490,7 +501,7 @@ Resources:
       Timeout: 60
       Tags:
         - Key: owner
-          Value: !Ref OwnerID
+          Value: !If [ OwnerIDCondition, !Ref 'AWS::StackId', !Ref OwnerID ]
       
   DeleteS3BucketContentOnDelete:
     Type: Custom::DeleteS3BucketContent
@@ -846,7 +857,7 @@ Resources:
       VpcId: !GetAtt DefaultVpcFinder.VpcId
       Tags: 
         - Key: owner
-          Value: !Ref OwnerID
+          Value: !If [ OwnerIDCondition, !Ref 'AWS::StackId', !Ref OwnerID ]
 
   StudioUserProfile:
     Type: AWS::SageMaker::UserProfile
@@ -860,7 +871,7 @@ Resources:
         - Key: domain-id
           Value: !Ref StudioDomain
         - Key: owner
-          Value: !Ref OwnerID
+          Value: !If [ OwnerIDCondition, !Ref 'AWS::StackId', !Ref OwnerID ]
 
 ### S3 Bucket similar to the one created by the create domain action in the UI
   StudioS3Bucket:
@@ -875,7 +886,7 @@ Resources:
         - Key: domain-id
           Value: !Ref StudioDomain
         - Key: owner
-          Value: !Ref OwnerID
+          Value: !If [ OwnerIDCondition, !Ref 'AWS::StackId', !Ref OwnerID ]
 
   LifeCycleConfigLambdaRole:
     Type: 'AWS::IAM::Role'
@@ -1009,7 +1020,7 @@ Resources:
             - '        cfnresponse.send(event, context, cfnresponse.FAILED, response_data)'
       Tags:
         - Key: owner
-          Value: !Ref OwnerID
+          Value: !If [ OwnerIDCondition, !Ref 'AWS::StackId', !Ref OwnerID ]
 
   LifeCycleConfigLambdaInvoke:
     Type: AWS::CloudFormation::CustomResource
@@ -1059,5 +1070,19 @@ Resources:
       SpaceSharingSettings:
         SharingType: Private
 
-  
+  # MLflow tracking server
+  MlFlowServer:
+    Type: AWS::SageMaker::MlflowTrackingServer
+    Condition: CreateMLflowServerCondition
+    Properties:
+      ArtifactStoreUri: !Sub 's3://${StudioS3Bucket}/mlflow/${StudioDomain.DomainId}'
+      AutomaticModelRegistration: True
+      RoleArn: !GetAtt SageMakerExecutionRole.Arn
+      TrackingServerName: !Sub 'mlflow-${StudioDomain.DomainId}'
+      TrackingServerSize: Small
+      Tags:
+        - Key: domain-id
+          Value: !Ref StudioDomain
+        - Key: owner
+          Value: !If [ OwnerIDCondition, !Ref 'AWS::StackId', !Ref OwnerID ]
 
