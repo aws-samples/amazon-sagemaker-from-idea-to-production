@@ -187,6 +187,7 @@ Resources:
                 - s3:PutObject
                 - s3:DeleteObject
                 - s3:GetObject
+                - s3:PutObjectTagging
                 - sagemaker:DescribeDomain
                 - sagemaker:DescribeUserProfile
                 - sagemaker:DescribeSpace
@@ -848,6 +849,9 @@ Resources:
     Properties: 
       AppNetworkAccessType: PublicInternetOnly
       AuthMode: IAM
+      DomainSettings:
+        DockerSettings:
+          EnableDockerAccess: ENABLED
       DefaultUserSettings: 
         ExecutionRole: !GetAtt SageMakerExecutionRole.Arn
         StudioWebPortal: ENABLED
