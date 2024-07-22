@@ -1034,7 +1034,6 @@ Resources:
 
   JupyterAppSpace:
     Type: AWS::SageMaker::Space
-    DependsOn: StudioUserProfile
     Properties:
       DomainId: !GetAtt StudioDomain.DomainId
       OwnershipSettings:
@@ -1047,7 +1046,7 @@ Resources:
           CodeRepositories: 
             - RepositoryUrl: https://github.com/aws-samples/amazon-sagemaker-from-idea-to-production.git
           DefaultResourceSpec:
-            InstanceType: ml.t3.medium
+            InstanceType: ml.t3.large
         SpaceStorageSettings:
           EbsStorageSettings:
             EbsVolumeSizeInGb: 50
@@ -1056,7 +1055,6 @@ Resources:
 
   CodeEditorAppSpace:
     Type: AWS::SageMaker::Space
-    DependsOn: StudioUserProfile
     Properties:
       DomainId: !GetAtt StudioDomain.DomainId
       OwnershipSettings:
@@ -1067,7 +1065,7 @@ Resources:
         AppType: CodeEditor
         CodeEditorAppSettings:
           DefaultResourceSpec:
-            InstanceType: ml.t3.medium
+            InstanceType: ml.t3.large
         SpaceStorageSettings:
           EbsStorageSettings:
             EbsVolumeSizeInGb: 50
