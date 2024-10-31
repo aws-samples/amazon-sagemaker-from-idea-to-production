@@ -1,7 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
-  This template is for an account without a pre-existing SageMaker Studio Domain & SageMaker User Profile - it creates these.  
-  This template also includes the additional permissions which are required to run this workshop 
+  This CFN template creates a new SageMaker domain, a user profile, and a Jupyter App Space
 
 Parameters:
   UserProfileNamePrefix:
@@ -12,6 +11,10 @@ Parameters:
     Type: String
     Description: The domain name prefix of the Sagemaker domain
     Default: 'mlops-workshop-domain'
+  JupyterLabAppInstance:
+    Type: String
+    Description: Name of an ML instance to run JupyterLab App space
+    Default: 'ml.m5.2xlarge'
   OwnerID:
     Type: String
     Description: Owner identification to be written as a resource tag
@@ -32,6 +35,78 @@ Resources:
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
+      Policies: 
+        - PolicyName: SetupLambdaPermissions
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: CloudWatchLogsPermissions
+                Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub "arn:${AWS::Partition}:logs:*:*:*"
+              - Sid: SageMakerDomainPermission
+                Effect: Allow
+                Action:
+                  - sagemaker:ListDomains
+                  - sagemaker:CreateDomain
+                  - sagemaker:DescribeDomain
+                  - sagemaker:DeleteDomain
+                  - sagemaker:UpdateDomain
+                  - sagemaker:ListUserProfiles
+                  - sagemaker:CreateUserProfile
+                  - sagemaker:UpdateUserProfile
+                  - sagemaker:DeleteUserProfile
+                  - sagemaker:DescribeUserProfile
+                  - sagemaker:ListApps
+                  - sagemaker:CreateApp
+                  - sagemaker:DescribeApp
+                  - sagemaker:DeleteApp
+                  - sagemaker:UpdateApp
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:sagemaker:*:*:domain/*"
+                  - !Sub "arn:${AWS::Partition}:sagemaker:*:*:user-profile/*"
+                  - !Sub "arn:${AWS::Partition}:sagemaker:*:*:app/*"
+              - Sid: SageMakerProjectsPermission
+                Effect: Allow
+                Action:
+                  - servicecatalog:AcceptPortfolioShare
+                  - sagemaker:EnableSagemakerServicecatalogPortfolio
+                  - sagemaker:DisableSagemakerServicecatalogPortfolio
+                Resource: '*'
+              - Sid: ServiceCatalogPermission
+                Effect: Allow
+                Action:
+                  - servicecatalog:ListAcceptedPortfolioShares
+                  - servicecatalog:AssociatePrincipalWithPortfolio
+                Resource: '*'
+              - Sid: SageMakerExecPassRole
+                Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource: !GetAtt SageMakerExecutionRole.Arn
+              - Sid: S3BucketCORSPermission
+                Effect: Allow
+                Action:
+                  - s3:GetBucketCORS
+                  - s3:PutBucketCORS
+                  - s3:CreateBucket
+                  - s3:ListBucket
+                  - s3:HeadBucket
+                Resource: !Sub "arn:${AWS::Partition}:s3:::${StudioS3Bucket}" 
+              - Sid: S3BucketDeletePermission
+                Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:ListBucketVersions
+                  - s3:DeleteBucket
+                  - s3:DeleteObject
+                  - s3:DeleteObjectVersion
+                Resource: 
+                  - !Sub "arn:${AWS::Partition}:s3:::${StudioS3Bucket}" 
+                  - !Sub "arn:${AWS::Partition}:s3:::${StudioS3Bucket}/*" 
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -44,7 +119,6 @@ Resources:
       Path: /
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess'
-        - 'arn:aws:iam::aws:policy/AmazonS3FullAccess'
         - 'arn:aws:iam::aws:policy/IAMReadOnlyAccess'
         - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
 
@@ -129,6 +203,27 @@ Resources:
                 - sagemaker:StopMlflowTrackingServer
                 - sagemaker:CreatePresignedMlflowTrackingServerUrl
               Resource: "*"
+        - PolicyName: q-developer-access
+          PolicyDocument: 
+            Version: 2012-10-17
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - q:SendMessage
+                Resource: '*'
+        - PolicyName: bedrock-models-access
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+            - 
+              Effect: Allow
+              Action:
+                - bedrock:GetFoundationModelAvailability
+                - bedrock:InvokeModel
+                - bedrock:InvokeModelWithResponseStream
+              Resource:
+                - 'arn:aws:bedrock:*::foundation-model/*'
         - PolicyName: headless-execution-permissions
           PolicyDocument:
             Version: 2012-10-17
@@ -224,61 +319,149 @@ Resources:
         - 'arn:aws:iam::aws:policy/AWSCodePipeline_FullAccess'
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonSageMakerPipelinesIntegrations"
   
-  LambdaExecutionPolicy:
-    Type: AWS::IAM::ManagedPolicy
+  EnableCanvasSettingsLambda:
+    Type: AWS::Lambda::Function
     Properties:
-      Path: /
-      PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Sid: CloudWatchLogsPermissions
-            Effect: Allow
-            Action:
-              - logs:CreateLogGroup
-              - logs:CreateLogStream
-              - logs:PutLogEvents
-            Resource: !Sub "arn:${AWS::Partition}:logs:*:*:*"
-          - Sid: SageMakerDomainPermission
-            Effect: Allow
-            Action:
-              - sagemaker:ListDomains
-              - sagemaker:CreateDomain
-              - sagemaker:DescribeDomain
-              - sagemaker:DeleteDomain
-              - sagemaker:UpdateDomain
-              - sagemaker:ListUserProfiles
-              - sagemaker:CreateUserProfile
-              - sagemaker:UpdateUserProfile
-              - sagemaker:DeleteUserProfile
-              - sagemaker:DescribeUserProfile
-              - sagemaker:ListApps
-              - sagemaker:CreateApp
-              - sagemaker:DescribeApp
-              - sagemaker:DeleteApp
-              - sagemaker:UpdateApp
-            Resource:
-              - !Sub "arn:${AWS::Partition}:sagemaker:*:*:domain/*"
-              - !Sub "arn:${AWS::Partition}:sagemaker:*:*:user-profile/*"
-              - !Sub "arn:${AWS::Partition}:sagemaker:*:*:app/*"
-          - Sid: SageMakerProjectsPermission
-            Effect: Allow
-            Action:
-              - servicecatalog:AcceptPortfolioShare
-              - sagemaker:EnableSagemakerServicecatalogPortfolio
-              - sagemaker:DisableSagemakerServicecatalogPortfolio
-            Resource: '*'
-          - Sid: ServiceCatalogPermission
-            Effect: Allow
-            Action:
-              - servicecatalog:*
-            Resource: '*'
-          - Sid: SageMakerExecPassRole
-            Effect: Allow
-            Action:
-              - iam:PassRole
-            Resource: !GetAtt SageMakerExecutionRole.Arn
-      Roles:
-        - !Ref LambdaExecutionRole
+      Code:
+        ZipFile: |
+          # Function: CFEnableSagemakerCanvasSettings
+          # Purpose:  Enables Sagemaker Canvas Settings
+          import json
+          import boto3
+          import cfnresponse
+
+          client = boto3.client('sagemaker')
+
+          def lambda_handler(event, context):
+              response_status = cfnresponse.SUCCESS
+              sagemaker_domain_id = event['ResourceProperties']['SageMakerDomainId']
+              sagemaker_execution_role = event['ResourceProperties']['SageMakerExecutionRoleArn']
+              canvas_bucket_artifacts = event['ResourceProperties']['CanvasBucketName']
+
+              try:
+                if 'RequestType' in event and event['RequestType'] == 'Create':
+                    client.update_domain(
+                        DomainId=sagemaker_domain_id,
+                        DefaultUserSettings={
+                          'CanvasAppSettings': {
+                            'WorkspaceSettings': {'S3ArtifactPath': f's3://{canvas_bucket_artifacts}/'},
+                            'TimeSeriesForecastingSettings': {'Status': 'ENABLED'},
+                            'ModelRegisterSettings': {'Status': 'ENABLED'},
+                            'DirectDeploySettings': {'Status': 'ENABLED'},
+                            'KendraSettings': {'Status': 'DISABLED'}, # Change to ENABLED when you want to use Kendra for RAG
+                            'GenerativeAiSettings': {'AmazonBedrockRoleArn':sagemaker_execution_role},
+                            # Uncomment and modify the below if you need to add OAuth for Salesforce or Snowflake
+                            # 'IdentityProviderOAuthSettings': [
+                            #     {
+                            #         'DataSourceName': 'SalesforceGenie'|'Snowflake',
+                            #         'Status': 'ENABLED'|'DISABLED',
+                            #         'SecretArn': 'string'
+                            #     },
+                            # ],
+                          }
+                        }
+                    )
+                cfnresponse.send(event, context, response_status, {}, '')
+              except Exception as e:
+                cfnresponse.send(event, context, cfnresponse.FAILED, {'Error': str(e)}, context.log_stream_name)
+
+      Description: Enable SageMaker Canvas Settings
+      Handler: index.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.12
+      Timeout: 30
+      Tags:
+        - Key: owner
+          Value: !If [ OwnerIDCondition, !Ref 'AWS::StackId', !Ref OwnerID ]
+
+  EnableCanvasSettings:
+    Type: Custom::EnableCanvasSettings
+    Properties:
+      ServiceToken: !GetAtt EnableCanvasSettingsLambda.Arn
+      SageMakerDomainId: !GetAtt StudioDomain.DomainId
+      SageMakerExecutionRoleArn: !GetAtt SageMakerExecutionRole.Arn
+      CanvasBucketName: !Ref StudioS3Bucket
+
+  SetS3BucketCORSPolicyLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Handler: index.handler
+      Runtime: python3.12
+      Timeout: 30
+      MemorySize: 128
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import botocore
+          import cfnresponse
+          import os
+
+          s3 = boto3.client('s3')
+
+          def handler(event, context):
+              bucket_name = event['ResourceProperties']['BucketName']
+              cors_configuration = {
+                  'CORSRules': [{
+                      'AllowedHeaders': ['*'],
+                      'AllowedMethods': ['POST', 'PUT', 'GET', 'HEAD', 'DELETE'],
+                      'AllowedOrigins': ['https://*.sagemaker.aws'],
+                      'ExposeHeaders': [
+                          'ETag', 'x-amz-delete-marker', 'x-amz-id-2',
+                          'x-amz-request-id', 'x-amz-server-side-encryption',
+                          'x-amz-version-id'
+                      ]
+                  }]
+              }
+
+              response_status = cfnresponse.SUCCESS
+
+              if 'RequestType' in event and event['RequestType'] != 'Create':
+                cfnresponse.send(event, context, response_status, {}, '')
+
+              try:
+                  # Check if the bucket exists
+                  s3.head_bucket(Bucket=bucket_name)
+                  s3.put_bucket_cors(Bucket=bucket_name, CORSConfiguration=cors_configuration)
+              except botocore.exceptions.ClientError as e:
+                  # If a 404 error occurs, then the bucket does not exist
+                  if e.response['Error']['Code'] == '404':
+                      try:
+                          # Create the bucket
+                          s3.create_bucket(
+                              Bucket=bucket_name,
+                              CreateBucketConfiguration={'LocationConstraint': os.getenv("AWS_REGION")}
+                          )
+                          # Set the CORS configuration
+                          s3.put_bucket_cors(Bucket=bucket_name, CORSConfiguration=cors_configuration)
+                      except botocore.exceptions.ClientError as e:
+                          # If an error occurs during bucket creation or CORS setting, return an error
+                          print(f"Error creating or setting CORS for bucket {bucket_name}: {e}")
+                          cfnresponse.send(event, context, cfnresponse.FAILED, {'Error': str(e)}, bucket_name)
+                          return
+                  else:
+                      # If any other error occurs, return an error
+                      print(f"Error accessing bucket {bucket_name}: {e}")
+                      cfnresponse.send(event, context, cfnresponse.FAILED, {'Error': str(e)}, bucket_name)
+                      return
+              except Exception as e:
+                  # If any other unexpected error occurs, return an error
+                  print(f"Unexpected error: {e}")
+                  cfnresponse.send(event, context, cfnresponse.FAILED, {'Error': str(e)}, bucket_name)
+                  return
+
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, {'BucketName': bucket_name}, bucket_name)
+      Tags:
+        - Key: owner
+          Value: !If [ OwnerIDCondition, !Ref 'AWS::StackId', !Ref OwnerID ]
+
+  SetS3BucketCORSPolicy:
+    Type: Custom::SetS3BucketCORSPolicy
+    Properties:
+      ServiceToken: !GetAtt SetS3BucketCORSPolicyLambda.Arn
+      BucketName: !Ref StudioS3Bucket
 
   DefaultVpcLambda:
     Type: AWS::Lambda::Function
@@ -510,6 +693,41 @@ Resources:
       ServiceToken: !GetAtt DeleteS3BucketContentLambda.Arn
       BucketName: !Ref StudioS3Bucket
  
+  DelayLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.10
+      Timeout: 900
+      Code:
+        ZipFile: |
+          import time
+          import cfnresponse
+
+          def lambda_handler(event, context):
+              try:
+                  delay_sec = int(event.get('ResourceProperties', {}).get('DelayInSec', 60))
+                  time.sleep(delay_sec)
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, {
+                      'Data': f'Delayed for {delay_sec} seconds'
+                  }, event.get('PhysicalResourceId', 'DelayCustomResource'))
+              except Exception as e:
+                  cfnresponse.send(event, context, cfnresponse.FAILED, {
+                      'Error': str(e)
+                  }, event.get('PhysicalResourceId', 'DelayCustomResource'))
+      Tags:
+        - Key: owner
+          Value: !If [ OwnerIDCondition, !Ref 'AWS::StackId', !Ref OwnerID ]
+      
+  Delay:
+    DependsOn:
+      - StudioDomain
+    Type: Custom::DelayLambda
+    Properties:
+      ServiceToken: !GetAtt DelayLambda.Arn
+      DelayInSec: 60
+
   ### Roles for Sagemaker projects
   AmazonSageMakerServiceCatalogProductsLaunchRole:
     Type: "AWS::IAM::Role"
@@ -864,6 +1082,8 @@ Resources:
           Value: !If [ OwnerIDCondition, !Ref 'AWS::StackId', !Ref OwnerID ]
 
   StudioUserProfile:
+    DependsOn:
+      - Delay
     Type: AWS::SageMaker::UserProfile
     Properties: 
       DomainId: !GetAtt StudioDomain.DomainId
@@ -887,8 +1107,6 @@ Resources:
           - !Ref AWS::AccountId
           - !Select [0, !Split [ "-", !Select [2, !Split ["/", !Ref AWS::StackId]]]]
       Tags:
-        - Key: domain-id
-          Value: !Ref StudioDomain
         - Key: owner
           Value: !If [ OwnerIDCondition, !Ref 'AWS::StackId', !Ref OwnerID ]
 
@@ -951,7 +1169,7 @@ Resources:
             - '    ''then'','
             - '    ''   echo "Running in job mode, skip lcc"'','
             - '    ''else'','
-            - '    ''   git clone https://github.com/aws-samples/amazon-sagemaker-from-idea-to-production.git'','
+            - '    ''   git clone https://github.com/aws-samples/amazon-sagemaker-from-idea-to-production.git || { echo "Error: Failed to clone repository"; exit 0; }'','
             - '    ''   echo "Files cloned from GitHub repo"'','
             - '    ''fi'','
             - '    '''','
@@ -1038,15 +1256,15 @@ Resources:
       DomainId: !GetAtt StudioDomain.DomainId
       OwnershipSettings:
         OwnerUserProfileName: !Select [2, !Split ["/", !GetAtt StudioUserProfile.UserProfileArn ]]
-      SpaceDisplayName: sagemaker-space
-      SpaceName: sagemaker-space
+      SpaceDisplayName: jupyterlab-space
+      SpaceName: jupyterlab-space
       SpaceSettings:
         AppType: JupyterLab
         JupyterLabAppSettings:
           CodeRepositories: 
             - RepositoryUrl: https://github.com/aws-samples/amazon-sagemaker-from-idea-to-production.git
           DefaultResourceSpec:
-            InstanceType: ml.t3.large
+            InstanceType: !Ref JupyterLabAppInstance
         SpaceStorageSettings:
           EbsStorageSettings:
             EbsVolumeSizeInGb: 50
