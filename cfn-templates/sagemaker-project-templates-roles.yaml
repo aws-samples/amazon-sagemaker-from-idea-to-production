@@ -205,10 +205,33 @@ Resources:
                 - codepipeline.amazonaws.com
                 - lambda.amazonaws.com
             Action: "sts:AssumeRole"
+      Policies: 
+        - PolicyName: SageMakerAddTags
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - 
+                Effect: Allow
+                Action:
+                  - sagemaker:AddTags
+                Resource: "*"
+        - PolicyName: CodeStarConnectionsPass
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - 
+                Effect: Allow
+                Action:
+                  - codestar-connections:PassConnection
+                Resource: "*"
+                Condition:
+                  ForAllValues:StringEquals:
+                    codestar-connections:PassedToService: codepipeline.amazonaws.com
       Path: "/service-role/"
       MaxSessionDuration: 3600
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/AmazonSageMakerAdmin-ServiceCatalogProductsServiceRolePolicy'
+        - 'arn:aws:iam::aws:policy/AWSCodeStarFullAccess'
    
   ProductsUseRole:
     Type: "AWS::IAM::Role"
@@ -222,6 +245,7 @@ Resources:
       MaxSessionDuration: 3600 
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess'
+        - 'arn:aws:iam::aws:policy/AWSCodeStarFullAccess'
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -572,10 +596,21 @@ Resources:
             Principal:
               Service: "codepipeline.amazonaws.com"
             Action: "sts:AssumeRole"
+      Policies: 
+        - PolicyName: CodeStar
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - 
+                Effect: Allow
+                Action:
+                  - codestar-connections:UseConnection
+                Resource: "*"
       Path: "/service-role/"
       MaxSessionDuration: 3600
       ManagedPolicyArns:
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonSageMakerServiceCatalogProductsCodePipelineServiceRolePolicy"
+        - 'arn:aws:iam::aws:policy/AWSCodeStarFullAccess'
 
   EventsRole:
     Type: "AWS::IAM::Role"
