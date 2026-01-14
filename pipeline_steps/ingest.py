@@ -36,7 +36,7 @@ def process_and_ingest(
 
     # Indicator for individuals not actively employed
     df_data["not_working"] = np.where(
-        np.in1d(df_data["job"], ["student", "retired", "unemployed"]), 1, 0
+        np.isin(df_data["job"], ["student", "retired", "unemployed"]), 1, 0
     )
 
     # remove unnecessary data
