@@ -1,0 +1,7 @@
+sagemaker==3.4.0
+sagemaker-core==2.4.0
+sagemaker-mlops==1.4.0
+sagemaker-serve==1.4.0
+sagemaker-train==1.4.0
+sagemaker_schema_inference_artifacts==0.0.5
+mlflow==3.9.0
