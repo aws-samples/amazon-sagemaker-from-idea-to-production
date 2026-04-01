@@ -17,7 +17,7 @@ def preprocess(
         suffix = strftime('%d-%H-%M-%S', gmtime())
         mlflow.set_tracking_uri(tracking_server_arn)
         experiment = mlflow.set_experiment(experiment_name=experiment_name if experiment_name else f"{preprocess.__name__ }-{suffix}")
-        pipeline_run = mlflow.start_run(run_name=pipeline_run_name) if pipeline_run_name else None            
+        pipeline_run = mlflow.start_run(run_name=f"pipeline-{pipeline_run_name}") if pipeline_run_name else None            
         run = mlflow.start_run(run_id=run_id) if run_id else mlflow.start_run(run_name=f"processing-{suffix}", nested=True)
 
         # Load data

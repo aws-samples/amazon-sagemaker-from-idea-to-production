@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pandas as pd
 import xgboost as xgb
@@ -11,16 +12,24 @@ import boto3
 
 # helper function to load XGBoost model into xgboost.Booster
 def load_model(model_data_s3_uri):
-    model_file = "./xgboost-model.tar.gz"
     bucket, key = model_data_s3_uri.replace("s3://", "").split("/", 1)
-    boto3.client("s3").download_file(bucket, key, model_file)
-    
-    with tarfile.open(model_file, "r:gz") as t:
-        t.extractall(path=".")
-    
-    # Load model
+    local_file = os.path.basename(key)
+    boto3.client("s3").download_file(bucket, key, local_file)
+
+    # Handle both tar.gz (from ModelTrainer) and raw model file (from train_fn)
+    if local_file.endswith(".tar.gz"):
+        with tarfile.open(local_file, "r:gz") as t:
+            t.extractall(path=".")
+        model_path = "xgboost-model"
+    else:
+        model_path = local_file
+
+    # Try native XGBoost format first, fall back to pickle
     model = xgb.Booster()
-    model.load_model("xgboost-model")
+    try:
+        model.load_model(model_path)
+    except xgb.core.XGBoostError:
+        model = pkl.load(open(model_path, "rb"))
 
     return model
 
