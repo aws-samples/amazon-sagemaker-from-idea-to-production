@@ -66,7 +66,7 @@ if __name__ == '__main__':
     import mlflow
     mlflow.set_tracking_uri(os.getenv('MLFLOW_TRACKING_ARN'))
     mlflow.set_experiment(experiment_name=experiment_name if experiment_name else f'train-{suffix}')
-    mlflow.xgboost.autolog(log_model_signatures=False, log_datasets=False)
+    mlflow.xgboost.autolog(log_model_signatures=True, log_datasets=True)
 
     train_hp = {
         'max_depth': args.max_depth, 'eta': args.eta, 'gamma': args.gamma,
@@ -80,17 +80,30 @@ if __name__ == '__main__':
         num_boost_round=args.num_round, model_dir=args.model_dir,
     )
 
+    # Resume parent run if MLFLOW_RUN_ID is set (for nested run grouping)
+    parent_run_id = os.getenv('MLFLOW_RUN_ID')
+    if parent_run_id:
+        mlflow.start_run(run_id=parent_run_id)
+
     with mlflow.start_run(
         run_name=f'container-training-{suffix}',
         description='xgboost running in SageMaker container in script mode',
+        nested=True if parent_run_id else False,
     ) as run:
         mlflow.set_tags({
             'mlflow.user': user_profile_name,
             'mlflow.source.type': 'JOB',
-            'mlflow.source.name': f"https://{region}.console.aws.amazon.com/sagemaker/home?region={region}#/jobs/{sm_training_env['job_name']}"
+            'mlflow.source.name': f"https://{region}.console.aws.amazon.com/sagemaker/home?region={region}#/jobs/{sm_training_env['job_name']}",
+            'sagemaker.container_image': sm_training_env.get('additional_framework_parameters', {}).get('sagemaker_training_image', os.environ.get('TRAINING_JOB_ARN', 'n/a')),
+            'sagemaker.job_name': sm_training_env['job_name'],
+            'sagemaker.runtime': 'sagemaker',
         })
         if dtrain:
             xgb_train_args['is_master'] = True
             _xgb_train(**xgb_train_args)
         else:
             raise ValueError('Training channel must have data to train model.')
+
+        # Write MLflow run_id to model dir so it gets packaged in model.tar.gz
+        with open(os.path.join(args.model_dir, 'mlflow_run_id.txt'), 'w') as f:
+            f.write(run.info.run_id)

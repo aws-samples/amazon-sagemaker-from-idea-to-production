@@ -4,28 +4,30 @@ import xgboost as xgb
 import mlflow
 from sklearn.metrics import roc_auc_score
 from time import gmtime, strftime
+try:
+    from pipeline_steps.runtime_utils import log_runtime_info
+except ImportError:
+    def log_runtime_info(): pass
 
 
 def train(
     train_data_s3_path,
     validation_data_s3_path,
     output_s3_prefix,
-    tracking_server_arn,
     num_round=50,
     max_depth=3,
     eta=0.5,
     alpha=2.5,
     objective="binary:logistic",
-    experiment_name=None,
     pipeline_run_id=None,
-    run_id=None,
 ):
+    """Train XGBoost model. MLflow tracking URI and experiment are read from environment."""
     try:
         suffix = strftime('%d-%H-%M-%S', gmtime())
-        mlflow.set_tracking_uri(tracking_server_arn)
-        experiment = mlflow.set_experiment(experiment_name=experiment_name if experiment_name else f"train-{suffix}")
+
         pipeline_run = mlflow.start_run(run_id=pipeline_run_id) if pipeline_run_id else None
-        run = mlflow.start_run(run_id=run_id) if run_id else mlflow.start_run(run_name=f"training-{suffix}", nested=True)
+        run = mlflow.start_run(run_name=f"training-{suffix}", nested=True)
+        log_runtime_info()
 
         # Load data — first column is the label
         train_df = pd.read_csv(train_data_s3_path, header=None)
@@ -42,7 +44,7 @@ def train(
             "eval_metric": "auc",
         }
 
-        mlflow.xgboost.autolog(log_model_signatures=False, log_datasets=False)
+        mlflow.xgboost.autolog(log_model_signatures=True, log_datasets=True)
 
         booster = xgb.train(
             params=params,
@@ -63,7 +65,7 @@ def train(
         # Save model to S3
         model_output_s3_path = f"{output_s3_prefix}/model/xgboost-model"
         booster.save_model("xgboost-model")
-        import boto3, io
+        import boto3
         bucket, key = model_output_s3_path.replace("s3://", "").split("/", 1)
         boto3.client("s3").upload_file("xgboost-model", bucket, key)
 
@@ -73,7 +75,8 @@ def train(
             "model_s3_path": model_output_s3_path,
             "train_auc": train_auc,
             "validation_auc": val_auc,
-            "experiment_name": experiment.name,
+            "mlflow_run_id": run.info.run_id,
+            "training_job_name": os.environ.get("TRAINING_JOB_NAME", "local"),
             "pipeline_run_id": pipeline_run.info.run_id if pipeline_run else '',
         }
 
@@ -81,4 +84,5 @@ def train(
         print(f"Exception in training: {e}")
         raise e
     finally:
-        mlflow.end_run()
+        while mlflow.active_run():
+            mlflow.end_run()
