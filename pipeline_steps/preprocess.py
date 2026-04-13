@@ -1,24 +1,35 @@
+import os
 import pandas as pd
 import numpy as np
 import mlflow
 from mlflow.data.pandas_dataset import PandasDataset
 from time import gmtime, strftime
 from sklearn.preprocessing import MinMaxScaler, LabelEncoder
+try:
+    from pipeline_steps.runtime_utils import log_runtime_info
+except ImportError:
+    def log_runtime_info(): pass
+
 
 def preprocess(
     input_data_s3_path,
     output_s3_prefix,
-    tracking_server_arn,
-    experiment_name=None,
     pipeline_run_name=None,
-    run_id=None,
+    pipeline_run_id=None,
 ):
+    """Preprocess data. MLflow tracking URI and experiment are read from environment."""
     try:
         suffix = strftime('%d-%H-%M-%S', gmtime())
-        mlflow.set_tracking_uri(tracking_server_arn)
-        experiment = mlflow.set_experiment(experiment_name=experiment_name if experiment_name else f"{preprocess.__name__ }-{suffix}")
-        pipeline_run = mlflow.start_run(run_name=f"pipeline-{pipeline_run_name}") if pipeline_run_name else None            
-        run = mlflow.start_run(run_id=run_id) if run_id else mlflow.start_run(run_name=f"processing-{suffix}", nested=True)
+
+        # Resume or create parent run
+        if pipeline_run_id:
+            pipeline_run = mlflow.start_run(run_id=pipeline_run_id)
+        elif pipeline_run_name:
+            pipeline_run = mlflow.start_run(run_name=f"step-pipeline-{pipeline_run_name}")
+        else:
+            pipeline_run = None
+        run = mlflow.start_run(run_name=f"processing-{suffix}", nested=True)
+        log_runtime_info()
 
         # Load data
         df_data = pd.read_csv(input_data_s3_path, sep=";")
@@ -50,7 +61,7 @@ def preprocess(
         df_model_data.drop('age', axis=1, inplace=True)
         df_model_data.drop('age_range', axis=1, inplace=True)
 
-        # Scale features
+        # Scale features
         scaled_features = ['pdays', 'previous', 'campaign']
         df_model_data[scaled_features] = MinMaxScaler().fit_transform(df_model_data[scaled_features])
 
@@ -104,23 +115,23 @@ def preprocess(
         test_data[target_col].to_csv(test_y_data_output_s3_path, index=False, header=False)
         test_data.drop([target_col], axis=1).to_csv(test_x_data_output_s3_path, index=False, header=False)
         
-        # We need the baseline dataset for model monitoring
+        # We need the baseline dataset for model monitoring
         df_model_data.drop([target_col], axis=1).to_csv(baseline_data_output_s3_path, index=False, header=False)
            
         print("## Data processing complete. Exiting.")
         
         return {
-            "train_data":train_data_output_s3_path,
-            "validation_data":validation_data_output_s3_path,
-            "test_x_data":test_x_data_output_s3_path,
-            "test_y_data":test_y_data_output_s3_path,
-            "baseline_data":baseline_data_output_s3_path,
-            "experiment_name":experiment.name,
-            "pipeline_run_id":pipeline_run.info.run_id if pipeline_run else ''
+            "train_data": train_data_output_s3_path,
+            "validation_data": validation_data_output_s3_path,
+            "test_x_data": test_x_data_output_s3_path,
+            "test_y_data": test_y_data_output_s3_path,
+            "baseline_data": baseline_data_output_s3_path,
+            "pipeline_run_id": pipeline_run.info.run_id if pipeline_run else '',
         }
 
     except Exception as e:
         print(f"Exception in processing script: {e}")
         raise e
     finally:
-        mlflow.end_run()
+        while mlflow.active_run():
+            mlflow.end_run()

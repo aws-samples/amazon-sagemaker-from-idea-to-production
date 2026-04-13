@@ -1,181 +1,204 @@
-import json
 import os
-import tempfile
-import tarfile
+import json
+import time
 import boto3
 import mlflow
-import s3fs
 from time import gmtime, strftime
-
-from sagemaker.core.helper.session_helper import Session
-from sagemaker.core.model_metrics import MetricsSource, ModelMetrics
-from sagemaker.core.common_utils import name_from_base
-
-from sagemaker.serve import ModelBuilder
-from sagemaker.serve.mode.function_pointers import Mode
-from sagemaker.serve.spec.inference_spec import InferenceSpec
-from sagemaker.serve.builder.schema_builder import SchemaBuilder
-from sagemaker.serve.utils.types import ModelServer
+try:
+    from pipeline_steps.runtime_utils import log_runtime_info
+except ImportError:
+    def log_runtime_info(): pass
 
 
-class XGBoostMLflowSpec(InferenceSpec):
-    """Inference spec that loads an XGBoost model from MLflow."""
-    def __init__(self, mlflow_model_uri, tracking_uri):
-        self._mlflow_model_uri = mlflow_model_uri
-        self._tracking_uri = tracking_uri
+def _build_model_artifacts(container_image, model_uri, tracking_uri):
+    """Use ModelBuilder to create deployable S3 artifacts with InferenceSpec."""
+    from sagemaker.serve import ModelBuilder
+    from sagemaker.serve.spec.inference_spec import InferenceSpec
+    from sagemaker.serve.builder.schema_builder import SchemaBuilder
+    from sagemaker.serve.utils.types import ModelServer
 
-    def load(self, model_dir=None):
-        import mlflow
-        mlflow.set_tracking_uri(self._tracking_uri)
-        return mlflow.xgboost.load_model(self._mlflow_model_uri)
+    class XGBoostMLflowSpec(InferenceSpec):
+        def __init__(self, mlflow_model_uri, tracking_uri):
+            self._mlflow_model_uri = mlflow_model_uri
+            self._tracking_uri = tracking_uri
 
-    def invoke(self, input_object, model):
-        import xgboost as xgb
-        import numpy as np
-        if isinstance(input_object, str):
-            rows = [list(map(float, r.split(",")) ) for r in input_object.strip().split("\n") if r]
-            dmatrix = xgb.DMatrix(np.array(rows))
-        elif isinstance(input_object, list):
-            dmatrix = xgb.DMatrix(np.array(input_object))
-        else:
-            dmatrix = xgb.DMatrix(np.array(input_object))
-        return "\n".join(map(str, model.predict(dmatrix)))
+        def load(self, model_dir=None):
+            import mlflow as _mlflow
+            _mlflow.set_tracking_uri(self._tracking_uri)
+            return _mlflow.xgboost.load_model(self._mlflow_model_uri)
+
+        def invoke(self, input_object, model):
+            import xgboost as xgb
+            import numpy as np
+            if isinstance(input_object, str):
+                rows = [list(map(float, r.split(","))) for r in input_object.strip().split("\n") if r]
+                dmatrix = xgb.DMatrix(np.array(rows))
+            elif isinstance(input_object, list):
+                dmatrix = xgb.DMatrix(np.array(input_object))
+            else:
+                dmatrix = xgb.DMatrix(np.array(input_object))
+            return "\n".join(map(str, model.predict(dmatrix)))
+
+    schema_builder = SchemaBuilder(
+        sample_input="0.0," * 58 + "0.0",
+        sample_output="0.5",
+    )
+
+    model_builder = ModelBuilder(
+        image_uri=container_image,
+        instance_type="ml.m5.large",
+        inference_spec=XGBoostMLflowSpec(model_uri, tracking_uri),
+        schema_builder=schema_builder,
+        model_server=ModelServer.TORCHSERVE,
+        dependencies={"auto": False},
+    )
+    model_builder.build()
+
+    # Get the S3 model data URL
+    model_data_url = getattr(model_builder, 's3_upload_path', None) or \
+                     getattr(model_builder, 's3_model_data_url', None)
+    return model_data_url
 
 
 def register(
     model_package_group_name,
     model_approval_status,
     evaluation_result,
-    output_s3_prefix,
-    tracking_server_arn,
-    image_uri,
-    # For @step path: pass model S3 path directly
-    model_s3_path=None,
-    # For hybrid path: pass training job name (model artifacts extracted automatically)
+    mlflow_run_id=None,
     training_job_name=None,
-    model_statistics_s3_path=None,
-    model_constraints_s3_path=None,
-    model_data_statistics_s3_path=None,
-    model_data_constraints_s3_path=None,
-    experiment_name=None,
     pipeline_run_id=None,
-    run_id=None,
 ):
+    """Register a model via MLflow, build deployable artifacts with ModelBuilder,
+    and update the auto-created SageMaker Model Package."""
     try:
         suffix = strftime('%d-%H-%M-%S', gmtime())
-        mlflow.set_tracking_uri(tracking_server_arn)
-        experiment = mlflow.set_experiment(
-            experiment_name=experiment_name if experiment_name else f"register-{suffix}"
-        )
+        sm_client = boto3.client("sagemaker")
+        tracking_uri = os.environ.get("MLFLOW_TRACKING_URI", "")
+        container_image = os.environ.get("CONTAINER_IMAGE", "")
+
         pipeline_run = mlflow.start_run(run_id=pipeline_run_id) if pipeline_run_id else None
-        run = mlflow.start_run(run_id=run_id) if run_id else mlflow.start_run(run_name=f"register-{suffix}", nested=True)
+        run = mlflow.start_run(run_name=f"register-{suffix}", nested=True)
+        log_runtime_info()
 
         # Log evaluation result
         with open("evaluation.json", "w") as f:
             f.write(json.dumps(evaluation_result))
         mlflow.log_artifact(local_path="evaluation.json")
 
-        sm_client = boto3.client("sagemaker")
+        # Resolve mlflow_run_id from training job's model.tar.gz if needed
+        if not mlflow_run_id and training_job_name and training_job_name != "local":
+            try:
+                import s3fs, tarfile, tempfile
+                desc = sm_client.describe_training_job(TrainingJobName=training_job_name)
+                s3 = s3fs.S3FileSystem()
+                local_tar = tempfile.mktemp(suffix=".tar.gz")
+                with s3.open(desc["ModelArtifacts"]["S3ModelArtifacts"], "rb") as remote, open(local_tar, "wb") as local:
+                    local.write(remote.read())
+                with tarfile.open(local_tar, "r:gz") as tar:
+                    f = tar.extractfile("mlflow_run_id.txt")
+                    if f:
+                        mlflow_run_id = f.read().decode().strip()
+                        print(f"## Retrieved MLflow run_id from model.tar.gz: {mlflow_run_id}")
+            except Exception as e:
+                print(f"## Could not extract mlflow_run_id: {e}")
 
-        # Resolve model data URL
-        if training_job_name:
-            desc = sm_client.describe_training_job(TrainingJobName=training_job_name)
-            model_data_url = desc["ModelArtifacts"]["S3ModelArtifacts"]
-        elif model_s3_path:
-            # Package raw model file into model.tar.gz for SageMaker
-            s3 = s3fs.S3FileSystem()
-            local_model = "xgboost-model"
-            with s3.open(model_s3_path, "rb") as remote, open(local_model, "wb") as local:
-                local.write(remote.read())
+        # Step 1: Register in MLflow Model Registry
+        model_uri = f"runs:/{mlflow_run_id}/model"
+        model_version = mlflow.register_model(model_uri=model_uri, name=model_package_group_name)
+        print(f"## Registered in MLflow: {model_version.name} v{model_version.version}")
 
-            tar_path = tempfile.mktemp(suffix=".tar.gz")
-            with tarfile.open(tar_path, "w:gz") as tar:
-                tar.add(local_model, arcname="xgboost-model")
+        # Step 2: Build deployable model artifacts with ModelBuilder
+        model_data_url = None
+        if container_image and container_image != "local":
+            try:
+                model_data_url = _build_model_artifacts(container_image, model_uri, tracking_uri)
+                if model_data_url:
+                    print(f"## ModelBuilder created artifacts at: {model_data_url}")
+                else:
+                    print("## ModelBuilder built but model_data_url not found")
+            except Exception as e:
+                print(f"## ModelBuilder failed: {e}")
 
-            model_data_url = f"{output_s3_prefix}/model/model.tar.gz"
-            with s3.open(model_data_url, "wb") as remote, open(tar_path, "rb") as local:
-                remote.write(local.read())
-        else:
-            raise ValueError("Provide either training_job_name or model_s3_path")
+        # Step 3: Wait for auto-sync to create SageMaker Model Package
+        print("## Waiting for SageMaker auto-registration...")
+        sm_model_package_arn = None
+        mlflow_source = model_version.source
 
-        # Find the MLflow model URI from the latest run's logged model
-        mlflow_client = mlflow.tracking.MlflowClient()
-        current_run_id = mlflow.active_run().info.run_id
-        # Search for the training run that logged the model
-        runs = mlflow_client.search_runs(
-            experiment_ids=[experiment.experiment_id],
-            filter_string="",
-            order_by=["start_time DESC"],
-            max_results=10,
-        )
-        mlflow_model_uri = None
-        for r in runs:
-            artifacts = mlflow_client.list_artifacts(r.info.run_id)
-            for a in artifacts:
-                if a.path == "model" and a.is_dir:
-                    mlflow_model_uri = f"runs:/{r.info.run_id}/model"
+        for _ in range(10):
+            groups = sm_client.list_model_package_groups(
+                NameContains=model_package_group_name
+            )["ModelPackageGroupSummaryList"]
+            for g in groups:
+                pkgs = sm_client.list_model_packages(
+                    ModelPackageGroupName=g["ModelPackageGroupName"],
+                    SortBy="CreationTime", SortOrder="Descending", MaxResults=5,
+                )
+                for p in pkgs["ModelPackageSummaryList"]:
+                    pkg_desc = sm_client.describe_model_package(ModelPackageName=p["ModelPackageArn"])
+                    if pkg_desc.get("SourceUri") == mlflow_source:
+                        sm_model_package_arn = p["ModelPackageArn"]
+                        sm_model_package_group = g["ModelPackageGroupName"]
+                        break
+                if sm_model_package_arn:
                     break
-            if mlflow_model_uri:
+            if sm_model_package_arn:
                 break
+            time.sleep(3)
+            print(".", end="", flush=True)
 
-        # Build model metrics
-        model_metrics = ModelMetrics(
-            model_statistics=MetricsSource(s3_uri=model_statistics_s3_path, content_type="application/json") if model_statistics_s3_path else None,
-            model_constraints=MetricsSource(s3_uri=model_constraints_s3_path, content_type="application/json") if model_constraints_s3_path else None,
-            model_data_statistics=MetricsSource(s3_uri=model_data_statistics_s3_path, content_type="application/json") if model_data_statistics_s3_path else None,
-            model_data_constraints=MetricsSource(s3_uri=model_data_constraints_s3_path, content_type="application/json") if model_data_constraints_s3_path else None,
-        )
+        if not sm_model_package_arn:
+            raise TimeoutError("SageMaker Model Package was not auto-created within timeout")
+        print(f"\n## Found SageMaker Model Package: {sm_model_package_arn}")
 
-        # Use ModelBuilder to build and register the model
-        # Same InferenceSpec pattern as notebook 02
-        schema_builder = SchemaBuilder(
-            sample_input="0.0," * 58 + "0.0",  # 59 features
-            sample_output="0.5",
-        )
+        # Step 4: Update the model package to make it deployable
+        update_kwargs = {
+            "ModelPackageArn": sm_model_package_arn,
+            "ModelApprovalStatus": model_approval_status,
+            "CustomerMetadataProperties": {
+                "TrainingJobName": training_job_name or "local",
+                "ContainerImage": container_image or "n/a",
+                "MlflowRunId": mlflow_run_id or "",
+                "MlflowModelUri": model_uri,
+            },
+        }
 
-        model_builder = ModelBuilder(
-            image_uri=image_uri,
-            s3_model_data_url=model_data_url,
-            instance_type="ml.m5.large",
-            inference_spec=XGBoostMLflowSpec(
-                mlflow_model_uri or "placeholder",
-                tracking_server_arn,
-            ),
-            schema_builder=schema_builder,
-            model_server=ModelServer.TORCHSERVE,
-            dependencies={"auto": False},
-        )
-        model_builder.build()
+        if container_image and container_image != "local":
+            inference_spec = {
+                "Containers": [{
+                    "Image": container_image,
+                    "Environment": {
+                        "SAGEMAKER_PROGRAM": "inference.py",
+                        "SAGEMAKER_SUBMIT_DIRECTORY": "/opt/ml/model/code",
+                    },
+                }],
+                "SupportedContentTypes": ["text/csv"],
+                "SupportedResponseMIMETypes": ["text/csv"],
+                "SupportedRealtimeInferenceInstanceTypes": ["ml.m5.large", "ml.m5.xlarge"],
+                "SupportedTransformInstanceTypes": ["ml.m5.large", "ml.m5.xlarge"],
+            }
+            if model_data_url:
+                inference_spec["Containers"][0]["ModelDataUrl"] = model_data_url
+            update_kwargs["InferenceSpecification"] = inference_spec
 
-        # ModelBuilder.register() has a bug: passes Framework enum to boto3 instead of string.
-        # Workaround: register directly via core API using the container def from build().
-        from sagemaker.core.model_registry import create_model_package_from_containers
-        sagemaker_session = Session()
-
-        model_package_response = create_model_package_from_containers(
-            sagemaker_session=sagemaker_session,
-            containers=[{"Image": image_uri, "ModelDataUrl": model_data_url}],
-            content_types=["text/csv"],
-            response_types=["text/csv"],
-            inference_instances=["ml.m5.xlarge", "ml.m5.large"],
-            transform_instances=["ml.m5.xlarge", "ml.m5.large"],
-            model_package_group_name=model_package_group_name,
-            approval_status=model_approval_status,
-            model_metrics=model_metrics._to_request_dict(),
-        )
-        model_package_arn = model_package_response.get("ModelPackageArn")
+        sm_client.update_model_package(**update_kwargs)
+        print(f"## Updated SageMaker Model Package:")
+        print(f"   Container: {container_image}")
+        print(f"   ModelDataUrl: {model_data_url or 'n/a'}")
+        print(f"   TrainingJob: {training_job_name or 'local'}")
 
         mlflow.log_params({
-            "model_package_arn": model_package_arn,
-            "model_data_url": model_data_url,
-            "mlflow_model_uri": mlflow_model_uri or "not found",
+            "registered_model_name": model_version.name,
+            "registered_model_version": model_version.version,
+            "sm_model_package_arn": sm_model_package_arn,
+            "sm_model_package_group": sm_model_package_group,
+            "model_data_url": model_data_url or "n/a",
         })
 
-        print(f"## Registered model package: {model_package_arn}")
-
         return {
-            "model_package_arn": model_package_arn,
-            "model_package_group_name": model_package_group_name,
+            "model_package_group_name": sm_model_package_group,
+            "model_package_arn": sm_model_package_arn,
+            "registered_model_name": model_version.name,
+            "registered_model_version": str(model_version.version),
             "pipeline_run_id": pipeline_run.info.run_id if pipeline_run else '',
         }
 
@@ -183,4 +206,5 @@ def register(
         print(f"Exception in register: {e}")
         raise e
     finally:
-        mlflow.end_run()
+        while mlflow.active_run():
+            mlflow.end_run()
