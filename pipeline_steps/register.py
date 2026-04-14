@@ -86,7 +86,12 @@ def register(
             f.write(json.dumps(evaluation_result))
         mlflow.log_artifact(local_path="evaluation.json")
 
-        # Resolve mlflow_run_id from training job's model.tar.gz if needed
+        # Resolve mlflow_run_id from training job's model.tar.gz if needed.
+        # This is used in the hybrid pipeline (Part 3 of notebook 03) where TrainingStep
+        # runs training/train.py as a script. The script writes mlflow_run_id.txt into
+        # model.tar.gz, but the @step register function can't access train_fn's return
+        # value — so we extract it from the artifact. In the @step-only pipeline (Part 2)
+        # and the CI/CD pipeline (notebook 04), mlflow_run_id is passed directly.
         if not mlflow_run_id and training_job_name and training_job_name != "local":
             try:
                 import s3fs, tarfile, tempfile
