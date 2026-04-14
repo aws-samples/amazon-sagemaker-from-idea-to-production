@@ -54,10 +54,11 @@ def _build_model_artifacts(container_image, model_uri, tracking_uri):
     )
     model_builder.build()
 
-    # Get the S3 model data URL
+    # Get the S3 model data URL and secret key
     model_data_url = getattr(model_builder, 's3_upload_path', None) or \
                      getattr(model_builder, 's3_model_data_url', None)
-    return model_data_url
+    secret_key = getattr(model_builder, 'secret_key', '')
+    return model_data_url, secret_key
 
 
 def register(
@@ -109,15 +110,17 @@ def register(
 
         # Step 2: Build deployable model artifacts with ModelBuilder
         model_data_url = None
+        secret_key = ''
         if container_image and container_image != "local":
             try:
-                model_data_url = _build_model_artifacts(container_image, model_uri, tracking_uri)
+                model_data_url, secret_key = _build_model_artifacts(container_image, model_uri, tracking_uri)
                 if model_data_url:
                     print(f"## ModelBuilder created artifacts at: {model_data_url}")
                 else:
                     print("## ModelBuilder built but model_data_url not found")
             except Exception as e:
                 print(f"## ModelBuilder failed: {e}")
+                secret_key = ''
 
         # Step 3: Wait for auto-sync to create SageMaker Model Package
         print("## Waiting for SageMaker auto-registration...")
@@ -169,6 +172,7 @@ def register(
                     "Environment": {
                         "SAGEMAKER_PROGRAM": "inference.py",
                         "SAGEMAKER_SUBMIT_DIRECTORY": "/opt/ml/model/code",
+                        "SAGEMAKER_SERVE_SECRET_KEY": secret_key if secret_key else "",
                     },
                 }],
                 "SupportedContentTypes": ["text/csv"],
