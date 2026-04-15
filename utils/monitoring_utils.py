@@ -1,6 +1,7 @@
 import os, sys
 from urllib.parse import urlparse
-from sagemaker.processing import Processor, ProcessingInput, ProcessingOutput
+# V3: sagemaker.processing → sagemaker.core.processing
+from sagemaker.core.processing import Processor, ProcessingInput, ProcessingOutput
 
 def get_model_monitor_container_uri(region):
     container_uri_format = '{0}.dkr.ecr.{1}.amazonaws.com/sagemaker-model-monitor-analyzer'
