@@ -1,0 +1,27 @@
+{
+    "CORSRules": [
+        {
+            "AllowedHeaders": [
+                "*"
+            ],
+            "AllowedMethods": [
+                "POST",
+                "PUT",
+                "GET",
+                "HEAD",
+                "DELETE"
+            ],
+            "AllowedOrigins": [
+                "https://*.sagemaker.aws"
+            ],
+            "ExposeHeaders": [
+                "ETag",
+                "x-amz-delete-marker",
+                "x-amz-id-2",
+                "x-amz-request-id",
+                "x-amz-server-side-encryption",
+                "x-amz-version-id"
+            ]
+        }
+    ]
+}
