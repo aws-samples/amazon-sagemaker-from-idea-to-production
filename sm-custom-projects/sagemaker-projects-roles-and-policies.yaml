@@ -934,8 +934,6 @@ Resources:
             Condition:
               StringEqualsIgnoreCase:
                 aws:ResourceTag/sagemaker: 'true'
-
-
   AmazonSageMakerProjectsEventsRole:
     Type: AWS::IAM::Role
     Properties:
