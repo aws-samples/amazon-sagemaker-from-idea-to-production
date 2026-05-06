@@ -1,3 +1,17 @@
+"""Training script for the BYOC XGBoost container experiment.
+
+This is a copy of ``training/train.py`` with one intentional change: the
+original uses ``sagemaker_xgboost_container.data_utils.get_dmatrix`` to load
+CSV input channels, but that module only exists inside AWS's managed XGBoost
+container. The BYOC image built from ``byoc/Dockerfile`` is derived from
+``python:3.10-slim-bookworm`` and does not have it.
+
+To keep the BYOC image free of AWS-specific framework coupling, this script
+replaces ``get_dmatrix`` with a small local helper, ``load_csv_dmatrix``,
+that does the same job using only pandas and xgboost. The helper follows
+the standard SageMaker XGBoost CSV convention: header-less files where the
+first column is the label.
+"""
 import argparse
 import json
 import os
@@ -7,15 +21,31 @@ import pandas as pd
 from sklearn.metrics import roc_auc_score
 import xgboost as xgb
 
-# NOTE: The original script used `get_dmatrix` from `sagemaker_xgboost_container`,
-# a module that only exists inside AWS's managed XGBoost container. The BYOC
-# image built from `byoc/Dockerfile` does not include it. The local helper
-# `load_csv_dmatrix` below is a drop-in replacement that uses only pandas and
-# xgboost, so the script works against both the AWS-managed image and the BYOC
-# image.
+from time import gmtime, strftime
+
+suffix = strftime('%d-%H-%M-%S', gmtime())
+user_profile_name = os.getenv('USER', 'sagemaker')
+experiment_name = os.getenv('MLFLOW_EXPERIMENT_NAME')
+region = os.getenv('REGION')
+
+
 def load_csv_dmatrix(channel_dir):
-    """Build an xgb.DMatrix from all CSV files in a SageMaker channel dir.
-    Assumes header-less CSVs with the label in column 0 (SageMaker XGBoost convention)."""
+    """Build an ``xgb.DMatrix`` from all CSV files in a SageMaker channel dir.
+
+    SageMaker mounts training input channels at ``/opt/ml/input/data/<channel>/``
+    as one or more files. For CSV the standard convention is header-less rows
+    with the label in the first column. This helper:
+
+    * returns ``None`` if the channel dir is missing or empty (e.g. no
+      validation channel was supplied),
+    * concatenates every non-hidden file in the directory into a single
+      DataFrame,
+    * splits column 0 as the label and columns 1+ as features,
+    * returns an ``xgb.DMatrix`` ready for ``xgb.train``.
+
+    This replaces ``sagemaker_xgboost_container.data_utils.get_dmatrix`` with
+    a dependency-free equivalent for the BYOC image.
+    """
     if channel_dir is None or not os.path.isdir(channel_dir):
         return None
     files = sorted(
@@ -30,13 +60,6 @@ def load_csv_dmatrix(channel_dir):
     labels = df.iloc[:, 0].values
     features = df.iloc[:, 1:].values
     return xgb.DMatrix(features, label=labels)
-
-from time import gmtime, strftime
-
-suffix = strftime('%d-%H-%M-%S', gmtime())
-user_profile_name = os.getenv('USER', 'sagemaker')
-experiment_name = os.getenv('MLFLOW_EXPERIMENT_NAME')
-region = os.getenv('REGION')
 
 
 def _xgb_train(params, dtrain, dval, evals, num_boost_round, model_dir, is_master):

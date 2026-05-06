@@ -1,0 +1,31 @@
+# Python dependencies for the BYOC XGBoost image.
+# Pinned where the rest of the workshop pins them; left open where transitive
+# resolution is safer. If a resolver conflict shows up during build, pin the
+# offending package here and rebuild.
+
+# CPU-only PyTorch wheel. sagemaker-serve (pulled transitively by sagemaker-train
+# and friends) depends on torch. Without this extra index, pip resolves to the
+# default PyPI torch build, which drags in ~3 GB of CUDA libraries we do not
+# need on CPU training/inference instances. The CPU wheel is ~200 MB.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.4.1+cpu
+
+# ML stack
+xgboost==3.0.5
+scikit-learn==1.4.2
+pandas
+numpy
+
+# Data access and AWS
+boto3
+s3fs
+
+# SageMaker Python SDK (matches versions used by the workshop notebooks)
+sagemaker==3.7.1
+sagemaker-core==2.7.1
+sagemaker-train==1.7.1
+sagemaker-mlops==1.7.1
+
+# Experiment tracking
+mlflow<4
+sagemaker-mlflow==0.2.0
