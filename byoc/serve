@@ -1,0 +1,26 @@
+#!/usr/bin/env python
+"""
+SageMaker inference entrypoint.
+
+SageMaker starts the inference container by invoking ``docker run <image> serve``.
+The container must have an executable named ``serve`` on ``$PATH`` that starts
+an HTTP server listening on port 8080 and handling ``GET /ping`` and
+``POST /invocations``.
+
+This script delegates to ``sagemaker_inference.model_server.start_model_server``,
+which launches Multi Model Server (MMS) configured to dispatch requests to the
+user's ``inference.py`` (resolved via the ``SAGEMAKER_PROGRAM`` environment
+variable, set by the SageMaker Python SDK at deploy time).
+
+The user's ``inference.py`` is expected to define the standard functions
+``model_fn``, ``input_fn``, ``predict_fn``, and ``output_fn`` (or a subset —
+defaults are supplied by the toolkit).
+"""
+from sagemaker_inference import model_server
+
+
+if __name__ == "__main__":
+    # Using the default handler service means MMS invokes sagemaker_inference's
+    # built-in Transformer, which in turn loads the user's inference.py from
+    # /opt/ml/model/code/ (or wherever SAGEMAKER_SUBMIT_DIRECTORY points).
+    model_server.start_model_server(handler_service="sagemaker_inference.default_handler_service")
