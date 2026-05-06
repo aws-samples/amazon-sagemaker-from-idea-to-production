@@ -4,7 +4,7 @@ This is a copy of ``training/train.py`` with one intentional change: the
 original uses ``sagemaker_xgboost_container.data_utils.get_dmatrix`` to load
 CSV input channels, but that module only exists inside AWS's managed XGBoost
 container. The BYOC image built from ``byoc/Dockerfile`` is derived from
-``python:3.10-slim-bookworm`` and does not have it.
+``python:3.12-slim-bookworm`` and does not have it.
 
 To keep the BYOC image free of AWS-specific framework coupling, this script
 replaces ``get_dmatrix`` with a small local helper, ``load_csv_dmatrix``,

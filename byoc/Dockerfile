@@ -21,7 +21,7 @@
 # Base image is pulled from the AWS ECR Public Gallery mirror of the official
 # Python image. Using the public.ecr.aws mirror avoids Docker Hub anonymous
 # rate limits and works reliably inside SageMaker Studio's Docker proxy.
-FROM public.ecr.aws/docker/library/python:3.10-slim-bookworm
+FROM public.ecr.aws/docker/library/python:3.12-slim-bookworm
 
 # OS-level dependencies:
 #   build-essential, libgomp1: XGBoost + scikit-learn runtime (OpenMP)
@@ -42,7 +42,7 @@ RUN apt-get update \
 
 # Install Python dependencies pinned in requirements.txt.
 COPY requirements.txt /tmp/requirements.txt
-RUN pip install --no-cache-dir --upgrade pip \
+RUN pip install --no-cache-dir --upgrade pip "setuptools<70" \
     && pip install --no-cache-dir -r /tmp/requirements.txt
 
 # SageMaker toolkits:
@@ -53,6 +53,7 @@ RUN pip install --no-cache-dir --upgrade pip \
 #                        wraps. Required for `serve` to actually start an
 #                        HTTP server on :8080.
 RUN pip install --no-cache-dir \
+      "setuptools<70" \
       sagemaker-training \
       sagemaker-inference \
       multi-model-server
@@ -61,6 +62,11 @@ RUN pip install --no-cache-dir \
 # to start inference, so the script must be on $PATH and executable.
 COPY serve /usr/local/bin/serve
 RUN chmod +x /usr/local/bin/serve
+
+# Ensure setuptools (pkg_resources) survives all prior pip resolutions.
+# setuptools 70+ on Python 3.12 may not expose pkg_resources; pin to <70.
+RUN pip install --no-cache-dir --force-reinstall "setuptools<70" \
+    && python -c "import pkg_resources; print(pkg_resources.__file__)"
 
 # SageMaker convention: user code may be copied into /opt/program.
 ENV PATH="/opt/program:${PATH}"

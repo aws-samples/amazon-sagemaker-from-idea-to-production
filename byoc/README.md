@@ -3,7 +3,7 @@
 This folder contains a minimal **Bring Your Own Container** image for the
 workshop. Unlike the default path in `00-start-here.ipynb` — which *extends*
 the AWS-managed XGBoost container — this image is built **from scratch** on
-top of `python:3.10-slim-bookworm` and installs only what the workshop uses.
+top of `python:3.12-slim-bookworm` and installs only what the workshop uses.
 
 The resulting image is a drop-in replacement for the `xgboost_image` variable
 stored by `00-start-here.ipynb`, so notebooks 02–06 work unchanged.
@@ -12,7 +12,7 @@ stored by `00-start-here.ipynb`, so notebooks 02–06 work unchanged.
 
 | Layer | What | Why |
 |---|---|---|
-| `python:3.10-slim-bookworm` | Debian slim + CPython 3.10 | Minimal, matches workshop kernel version |
+| `python:3.12-slim-bookworm` | Debian slim + CPython 3.12 | Minimal, matches workshop kernel version |
 | `build-essential`, `libgomp1` | OpenMP runtime | Required by XGBoost and scikit-learn wheels |
 | `sudo` | sudo binary | Required by SageMaker SDK `@remote` / `@step` bootstrap |
 | `xgboost`, `scikit-learn`, `pandas`, `numpy` | ML stack | Training and preprocessing |
@@ -83,7 +83,7 @@ cells in `00-start-here.ipynb`.
 
 | | Extended (default) | BYOC (this folder) |
 |---|---|---|
-| Base | `sagemaker-xgboost:3.0-5` (AWS-managed) | `python:3.10-slim-bookworm` |
+| Base | `sagemaker-xgboost:3.0-5` (AWS-managed) | `python:3.12-slim-bookworm` |
 | Size | Larger (inherits full AWS image) | Smaller (only what's needed) |
 | Cross-account ECR pull | Yes (`246618743249.dkr.ecr...`) | No |
 | Transparency | Limited (base is opaque) | Full (you see every layer) |
