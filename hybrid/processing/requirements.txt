@@ -1,2 +1,2 @@
 mlflow>3
-sagemaker-mlflow
+sagemaker-mlflow>=0.3,<1
