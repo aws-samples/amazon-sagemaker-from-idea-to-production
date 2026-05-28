@@ -21,11 +21,11 @@ boto3
 s3fs
 
 # SageMaker Python SDK (matches versions used by the workshop notebooks)
-sagemaker==3.7.1
-sagemaker-core==2.7.1
-sagemaker-train==1.7.1
-sagemaker-mlops==1.7.1
+sagemaker>=3,<4
+sagemaker-core>=2,<3
+sagemaker-train>=1,<2
+sagemaker-mlops>=1,<2
 
 # Experiment tracking
 mlflow<4
-sagemaker-mlflow==0.2.0
+sagemaker-mlflow>=0.3,<1
