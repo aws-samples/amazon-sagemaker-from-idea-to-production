@@ -1,0 +1,721 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: This template creates the required IAM roles for SageMaker project templates
+
+Outputs:
+  AmazonSageMakerServiceCatalogProductsLaunchRoleArn:
+    Description: ProductsLaunchRole ARN
+    Value: !If
+      - ProductsLaunchRoleCondition
+      - !GetAtt ProductsLaunchRole.Arn
+      - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/service-role/AmazonSageMakerServiceCatalogProductsLaunchRole'
+
+  AmazonSageMakerServiceCatalogProductsUseRoleArn:
+    Description: ProductsUseRole ARN
+    Value: !If
+      - ProductsUseRoleCondition
+      - !GetAtt ProductsUseRole.Arn
+      - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/service-role/AmazonSageMakerServiceCatalogProductsUseRole'
+
+  AmazonSageMakerServiceCatalogProductsCloudformationRoleArn:
+    Description: AmazonSageMakerServiceCatalogProductsCloudformationRole ARN
+    Value: !If
+      - CloudFormationRoleCondition
+      - !GetAtt CloudFormationRole.Arn
+      - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/service-role/AmazonSageMakerServiceCatalogProductsCloudformationRole'
+
+  AmazonSageMakerServiceCatalogProductsCodeBuildRoleArn:
+    Description: CodeBuildRole ARN
+    Value: !If
+      - CodeBuildRoleCondition
+      - !GetAtt CodeBuildRole.Arn
+      - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/service-role/AmazonSageMakerServiceCatalogProductsCodeBuildRole'
+
+  AmazonSageMakerServiceCatalogProductsCodePipelineRoleArn:
+    Description: CodePipelineRole ARN
+    Value: !If
+      - CodePipelineRoleCondition
+      - !GetAtt CodePipelineRole.Arn
+      - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/service-role/AmazonSageMakerServiceCatalogProductsCodePipelineRole'
+
+  AmazonSageMakerServiceCatalogProductsEventsRoleArn:
+    Description: EventsRole ARN
+    Value: !If
+      - EventsRoleCondition
+      - !GetAtt EventsRole.Arn
+      - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/service-role/AmazonSageMakerServiceCatalogProductsEventsRole'
+
+  AmazonSageMakerServiceCatalogProductsApiGatewayRoleArn:
+    Description: ApiGatewayRole ARN
+    Value: !If
+      - ApiGatewayRoleCondition
+      - !GetAtt ApiGatewayRole.Arn
+      - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/service-role/AmazonSageMakerServiceCatalogProductsApiGatewayRole'
+
+  AmazonSageMakerServiceCatalogProductsFirehoseRoleArn:
+    Description: FirehoseRole ARN
+    Value: !If
+      - FirehoseRoleCondition
+      - !GetAtt FirehoseRole.Arn
+      - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/service-role/AmazonSageMakerServiceCatalogProductsFirehoseRole'
+
+  AmazonSageMakerServiceCatalogProductsGlueRoleArn:
+    Description: GlueRole ARN
+    Value: !If
+      - GlueRoleCondition
+      - !GetAtt GlueRole.Arn
+      - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/service-role/AmazonSageMakerServiceCatalogProductsGlueRole'
+
+  AmazonSageMakerServiceCatalogProductsLambdaRoleArn:
+    Description: LambdaRole ARN
+    Value: !If
+      - LambdaRoleCondition
+      - !GetAtt LambdaRole.Arn
+      - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/service-role/AmazonSageMakerServiceCatalogProductsLambdaRole'
+
+  AmazonSageMakerServiceCatalogProductsExecutionRoleArn:
+    Description: ProductsExecutionRole ARN
+    Value: !If
+      - ProductsExecutionRoleCondition
+      - !GetAtt ProductsExecutionRole.Arn
+      - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/service-role/AmazonSageMakerServiceCatalogProductsExecutionRole'
+
+Parameters:
+
+  CreateProductsLaunchRole:
+    Description: Create AmazonSageMakerServiceCatalogProductsLaunchRole
+    Type: String
+    AllowedValues:
+      - 'YES'
+      - 'NO'
+    Default: 'NO' 
+
+  CreateProductsUseRole:
+    Description: Create AmazonSageMakerServiceCatalogProductsUseRole
+    Type: String
+    AllowedValues:
+      - 'YES'
+      - 'NO'
+    Default: 'NO' 
+
+  CreateCloudFormationRole:
+    Description: Create AmazonSageMakerServiceCatalogProductsCloudformationRole
+    Type: String
+    AllowedValues:
+      - 'YES'
+      - 'NO'
+    Default: 'YES' 
+
+  CreateCodeBuildRole:
+    Description: Create AmazonSageMakerServiceCatalogProductsCodeBuildRole
+    Type: String
+    AllowedValues:
+      - 'YES'
+      - 'NO'
+    Default: 'YES' 
+
+  CreateCodePipelineRole:
+    Description: Create AmazonSageMakerServiceCatalogProductsCodePipelineRole
+    Type: String
+    AllowedValues:
+      - 'YES'
+      - 'NO'
+    Default: 'YES' 
+
+  CreateEventsRole:
+    Description: Create AmazonSageMakerServiceCatalogProductsEventsRole
+    Type: String
+    AllowedValues:
+      - 'YES'
+      - 'NO'
+    Default: 'YES' 
+
+  CreateApiGatewayRole:
+    Description: Create AmazonSageMakerServiceCatalogProductsApiGatewayRole
+    Type: String
+    AllowedValues:
+      - 'YES'
+      - 'NO'
+    Default: 'YES' 
+
+  CreateFirehoseRole:
+    Description: Create AmazonSageMakerServiceCatalogProductsFirehoseRole
+    Type: String
+    AllowedValues:
+      - 'YES'
+      - 'NO'
+    Default: 'YES' 
+
+  CreateGlueRole:
+    Description: Create AmazonSageMakerServiceCatalogProductsGlueRole
+    Type: String
+    AllowedValues:
+      - 'YES'
+      - 'NO'
+    Default: 'YES' 
+
+  CreateLambdaRole:
+    Description: Create AmazonSageMakerServiceCatalogProductsLambdaRole
+    Type: String
+    AllowedValues:
+      - 'YES'
+      - 'NO'
+    Default: 'YES' 
+
+  CreateProductsExecutionRole:
+    Description: Create AmazonSageMakerServiceCatalogProductsExecutionRole
+    Type: String
+    AllowedValues:
+      - 'YES'
+      - 'NO'
+    Default: 'YES' 
+
+Conditions:
+  ProductsLaunchRoleCondition: !Equals [ !Ref CreateProductsLaunchRole, 'YES' ]
+  ProductsUseRoleCondition: !Equals [ !Ref CreateProductsUseRole, 'YES' ]
+  CloudFormationRoleCondition: !Equals [ !Ref CreateCloudFormationRole, 'YES' ]
+  CodeBuildRoleCondition: !Equals [ !Ref CreateCodeBuildRole, 'YES' ]
+  CodePipelineRoleCondition: !Equals [ !Ref CreateCodePipelineRole, 'YES' ]
+  EventsRoleCondition: !Equals [ !Ref CreateEventsRole, 'YES' ]
+  ApiGatewayRoleCondition: !Equals [ !Ref CreateApiGatewayRole, 'YES' ]
+  FirehoseRoleCondition: !Equals [ !Ref CreateFirehoseRole, 'YES' ]
+  GlueRoleCondition: !Equals [ !Ref CreateGlueRole, 'YES' ]
+  LambdaRoleCondition: !Equals [ !Ref CreateLambdaRole, 'YES' ]
+  ProductsExecutionRoleCondition: !Equals [ !Ref CreateProductsExecutionRole, 'YES' ]
+
+Resources:
+
+  ProductsLaunchRole:
+    Type: "AWS::IAM::Role"
+    Condition: ProductsLaunchRoleCondition
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      RoleName: AmazonSageMakerServiceCatalogProductsLaunchRole
+      Description: "SageMaker role created from the SageMaker AWS Management Console. This role has the permissions required to launch the Amazon SageMaker portfolio of products from AWS ServiceCatalog."
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: 
+                - servicecatalog.amazonaws.com
+                - codepipeline.amazonaws.com
+                - lambda.amazonaws.com
+            Action: "sts:AssumeRole"
+      Policies: 
+        - PolicyName: SageMakerAddTags
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - 
+                Effect: Allow
+                Action:
+                  - sagemaker:AddTags
+                Resource: "*"
+        - PolicyName: CodeStarConnectionsPass
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - 
+                Effect: Allow
+                Action:
+                  - codestar-connections:PassConnection
+                Resource: "*"
+                Condition:
+                  ForAllValues:StringEquals:
+                    codestar-connections:PassedToService: codepipeline.amazonaws.com
+      Path: "/service-role/"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AmazonSageMakerAdmin-ServiceCatalogProductsServiceRolePolicy'
+        - 'arn:aws:iam::aws:policy/AWSCodeStarFullAccess'
+   
+  ProductsUseRole:
+    Type: "AWS::IAM::Role"
+    Condition: ProductsUseRoleCondition
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      RoleName: AmazonSageMakerServiceCatalogProductsUseRole
+      Description: "SageMaker role created from the SageMaker AWS Management Console. This role has the permissions required to use the Amazon SageMaker portfolio of products from AWS ServiceCatalog."
+      Path: "/service-role/"
+      MaxSessionDuration: 3600 
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess'
+        - 'arn:aws:iam::aws:policy/AWSCodeStarFullAccess'
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "codepipeline.amazonaws.com"
+                - "cloudformation.amazonaws.com"
+                - "firehose.amazonaws.com"
+                - "codebuild.amazonaws.com"
+                - "sagemaker.amazonaws.com"
+                - "states.amazonaws.com"
+                - "lambda.amazonaws.com"
+                - "events.amazonaws.com"
+                - "apigateway.amazonaws.com"
+                - "glue.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Policies: 
+        - PolicyName: AmazonSageMakerServiceCatalogProductsUseRolePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              -
+                Action:
+                  - sts:AssumeRole
+                Resource:
+                  - 'arn:aws:iam::*:role/*SageMakerModelExecution*'
+                Effect: Allow
+              - 
+                Action:
+                  - cloudformation:Delete*
+                  - cloudformation:Get*
+                  - cloudformation:Create*
+                  - cloudformation:Update*
+                  - cloudformation:List*
+                  - cloudformation:Describe*
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:SetStackPolicy
+                Resource: 
+                  - arn:aws:cloudformation:*:*:stack/sagemaker-*
+                  - arn:aws:cloudformation:*:*:stackset/sagemaker-*
+                  - arn:aws:cloudformation:*:*:type/resource/*
+                  - arn:aws:cloudformation:*:*:stackset-target/sagemaker-*
+                Effect: Allow
+              - 
+                Action:
+                  - cloudformation:GetTemplate
+                  - cloudformation:GetTemplateSummary
+                  - cloudformation:TagResource
+                Resource: 
+                  - '*'
+                Effect: Allow
+              - 
+                Action:
+                  - cloudwatch:PutMetricData
+                Resource: 
+                  - !Sub 'arn:aws:cloudwatch:*:${AWS::AccountId}:*'
+                Effect: Allow
+              - 
+                Action:
+                  - codebuild:BatchGetBuilds
+                  - codebuild:StartBuild
+                Resource:
+                  - arn:aws:codebuild:*:*:project/sagemaker-*
+                  - arn:aws:codebuild:*:*:build/sagemaker-*
+                Effect: Allow
+              - 
+                Action:
+                  - codebuild:ListCuratedEnvironmentImages
+                Resource: 
+                  - '*'
+                Effect: Allow
+              -
+                Action:
+                  - codebuild:CreateReportGroup
+                  - codebuild:CreateReport
+                  - codebuild:UpdateReport
+                  - codebuild:BatchPutTestCases
+                  - codebuild:BatchPutCodeCoverages
+                Resource: !Sub 'arn:aws:codebuild:*:${AWS::AccountId}:report-group/sagemaker*'
+                Effect: Allow
+              - 
+                Action:
+                  - codecommit:CancelUploadArchive
+                  - codecommit:GetBranch
+                  - codecommit:GetCommit
+                  - codecommit:GetUploadArchiveStatus
+                  - codecommit:UploadArchive
+                Resource: arn:aws:codecommit:*:*:sagemaker-*
+                Effect: Allow
+              - 
+                Action:
+                  - codepipeline:StartPipelineExecution
+                Resource: arn:aws:codepipeline:*:*:sagemaker-*
+                Effect: Allow
+              - 
+                Action:
+                  - ec2:CreateNetworkInterface
+                  - ec2:DeleteNetworkInterface
+                Resource: 
+                  - !Sub 'arn:aws:ec2:*:${AWS::AccountId}:*'
+                Effect: Allow
+              - 
+                Action:
+                  - ec2:CreateNetworkInterfacePermission
+                Resource: !Sub "arn:aws:ec2:*:${AWS::AccountId}:network-interface/*"
+                Effect: Allow
+              - 
+                Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:BatchGetImage
+                  - ecr:Describe*
+                  - ecr:ListImages
+                  - ecr:GetAuthorizationToken
+                  - ecr:GetDownloadUrlForLayer
+                Resource: 
+                  - '*'
+                Effect: Allow
+              - 
+                Effect: Allow
+                Action:
+                  - ecr:BatchDeleteImage
+                  - ecr:CompleteLayerUpload
+                  - ecr:CreateRepository
+                  - ecr:DeleteRepository
+                  - ecr:InitiateLayerUpload
+                  - ecr:PutImage
+                  - ecr:UploadLayerPart
+                Resource:
+                  - arn:aws:ecr:*:*:repository/sagemaker-*
+              - 
+                Action:
+                  - events:DeleteRule
+                  - events:DescribeRule
+                  - events:PutRule
+                  - events:PutTargets
+                  - events:RemoveTargets
+                Resource:
+                  - arn:aws:events:*:*:rule/sagemaker-*
+                Effect: Allow
+              - 
+                Action:
+                  - firehose:PutRecord
+                  - firehose:PutRecordBatch
+                Resource: arn:aws:firehose:*:*:deliverystream/sagemaker-*
+                Effect: Allow
+              - 
+                Action:
+                  - glue:BatchCreatePartition
+                  - glue:BatchDeletePartition
+                  - glue:BatchDeleteTable
+                  - glue:BatchDeleteTableVersion
+                  - glue:BatchGetPartition
+                  - glue:CreateDatabase
+                  - glue:CreatePartition
+                  - glue:CreateTable
+                  - glue:DeletePartition
+                  - glue:DeleteTable
+                  - glue:DeleteTableVersion
+                  - glue:GetDatabase
+                  - glue:GetPartition
+                  - glue:GetPartitions
+                  - glue:GetTable
+                  - glue:GetTables
+                  - glue:GetTableVersion
+                  - glue:GetTableVersions
+                  - glue:SearchTables
+                  - glue:UpdatePartition
+                  - glue:UpdateTable
+                Resource:
+                  - arn:aws:glue:*:*:catalog
+                  - arn:aws:glue:*:*:database/default
+                  - arn:aws:glue:*:*:database/global_temp
+                  - arn:aws:glue:*:*:database/sagemaker-*
+                  - arn:aws:glue:*:*:table/sagemaker-*
+                  - arn:aws:glue:*:*:tableVersion/sagemaker-*
+                Effect: Allow
+              - 
+                Action:
+                  - iam:PassRole
+                Resource:
+                  - arn:aws:iam::*:role/service-role/AmazonSageMakerServiceCatalog*
+                Effect: Allow
+              - 
+                Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - arn:aws:lambda:*:*:function:sagemaker-*
+              - 
+                Action:
+                  - logs:CreateLogDelivery
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:DeleteLogDelivery
+                  - logs:Describe*
+                  - logs:GetLogDelivery
+                  - logs:GetLogEvents
+                  - logs:ListLogDeliveries
+                  - logs:PutLogEvents
+                  - logs:PutResourcePolicy
+                  - logs:UpdateLogDelivery
+                Resource:
+                  - !Sub 'arn:aws:logs:*:${AWS::AccountId}:*'
+                Effect: Allow
+              - 
+                Effect: Allow
+                Action:
+                  - s3:CreateBucket
+                  - s3:GetBucketAcl
+                  - s3:GetBucketCors
+                  - s3:GetBucketLocation
+                  - s3:ListAllMyBuckets
+                  - s3:ListBucket
+                  - s3:ListBucketMultipartUploads
+                  - s3:PutBucketCors
+                  - s3:AbortMultipartUpload
+                  - s3:DeleteObject
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:PutObject
+                Resource:
+                  - 'arn:aws:s3:::aws-glue-*'
+                  - 'arn:aws:s3:::sagemaker-*'
+                  - 'arn:aws:s3:::sm-mlops-cp-*'
+                  - !Sub 'arn:aws:s3:::*-${AWS::AccountId}-data*'
+                  - !Sub 'arn:aws:s3:::*-${AWS::AccountId}-data*/*'
+                  - !Sub 'arn:aws:s3:::*-${AWS::AccountId}-models*'
+                  - !Sub 'arn:aws:s3:::*-${AWS::AccountId}-models*/*'
+              - 
+                Effect: Allow
+                Action:
+                  - sagemaker:*
+                NotResource:
+                  - arn:aws:sagemaker:*:*:domain/*
+                  - arn:aws:sagemaker:*:*:user-profile/*
+                  - arn:aws:sagemaker:*:*:app/*
+                  - arn:aws:sagemaker:*:*:flow-definition/*
+              - 
+                Action:
+                  - 'sagemaker:List*'
+                Resource:
+                  - '*'
+                Effect: Allow
+              - 
+                Effect: Allow
+                Action:
+                  - sagemaker:Describe*
+                  - sagemaker:ListTags
+                Resource:
+                  - arn:aws:sagemaker:*:*:domain/*
+              - 
+                Action:
+                  - states:DescribeExecution
+                  - states:DescribeStateMachine
+                  - states:DescribeStateMachineForExecution
+                  - states:GetExecutionHistory
+                  - states:ListExecutions
+                  - states:ListTagsForResource
+                  - states:StartExecution
+                  - states:StopExecution
+                  - states:TagResource
+                  - states:UntagResource
+                  - states:UpdateStateMachine
+                Resource:
+                  - arn:aws:states:*:*:stateMachine:sagemaker-*
+                  - arn:aws:states:*:*:execution:sagemaker-*:*
+                Effect: Allow
+              - 
+                Action:
+                  - states:ListStateMachines
+                Resource:
+                  - '*'
+                Effect: Allow
+              - 
+                Action:
+                  - codestar-connections:UseConnection
+                Resource:
+                  - arn:aws:codestar-connections:*:*:connection/*
+                Condition:
+                  StringEqualsIgnoreCase: 
+                    'aws:ResourceTag/sagemaker': 'true'
+                Effect: Allow
+              - 
+                Action:
+                  - 'kms:CreateGrant'
+                  - 'kms:Decrypt'
+                  - 'kms:DescribeKey'
+                  - 'kms:Encrypt'
+                  - 'kms:GenerateDataKey'
+                  - 'kms:ListAliases'
+                Resource: 
+                  - '*'
+                Effect: Allow
+              - 
+                Action:
+                  - 'ssm:GetParameter*'
+                Resource: !Sub 'arn:aws:ssm:*:${AWS::AccountId}:parameter/*'
+                Effect: Allow
+
+
+  CloudFormationRole:
+    Type: "AWS::IAM::Role"
+    Condition: CloudFormationRoleCondition
+    Properties:
+      RoleName: AmazonSageMakerServiceCatalogProductsCloudformationRole
+      Description: "CloudFormationRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "cloudformation.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Path: "/service-role/"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonSageMakerServiceCatalogProductsCloudformationServiceRolePolicy"
+
+  CodeBuildRole:
+    Type: "AWS::IAM::Role"
+    Condition: CodeBuildRoleCondition
+    Properties:
+      RoleName: AmazonSageMakerServiceCatalogProductsCodeBuildRole
+      Description: "CodeBuildRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "codebuild.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Path: "/service-role/"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonSageMakerServiceCatalogProductsCodeBuildServiceRolePolicy"
+
+  CodePipelineRole:
+    Type: "AWS::IAM::Role"
+    Condition: CodePipelineRoleCondition
+    Properties:
+      RoleName: AmazonSageMakerServiceCatalogProductsCodePipelineRole
+      Description: "CodePipelineRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "codepipeline.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Policies: 
+        - PolicyName: CodeStar
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - 
+                Effect: Allow
+                Action:
+                  - codestar-connections:UseConnection
+                Resource: "*"
+      Path: "/service-role/"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonSageMakerServiceCatalogProductsCodePipelineServiceRolePolicy"
+        - 'arn:aws:iam::aws:policy/AWSCodeStarFullAccess'
+
+  EventsRole:
+    Type: "AWS::IAM::Role"
+    Condition: EventsRoleCondition
+    Properties:
+      RoleName: AmazonSageMakerServiceCatalogProductsEventsRole
+      Description: "EventsRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "events.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Path: "/service-role/"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonSageMakerServiceCatalogProductsEventsServiceRolePolicy"
+
+  ApiGatewayRole:
+    Type: "AWS::IAM::Role"
+    Condition: ApiGatewayRoleCondition
+    Properties:
+      RoleName: AmazonSageMakerServiceCatalogProductsApiGatewayRole
+      Description: "ApiGatewayRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "apigateway.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Path: "/service-role/"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonSageMakerServiceCatalogProductsApiGatewayServiceRolePolicy"
+
+  FirehoseRole:
+    Type: "AWS::IAM::Role"
+    Condition: FirehoseRoleCondition
+    Properties:
+      RoleName: AmazonSageMakerServiceCatalogProductsFirehoseRole
+      Description: "FirehoseRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "firehose.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Path: "/service-role/"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonSageMakerServiceCatalogProductsFirehoseServiceRolePolicy"
+
+  GlueRole:
+    Type: "AWS::IAM::Role"
+    Condition: GlueRoleCondition
+    Properties:
+      RoleName: AmazonSageMakerServiceCatalogProductsGlueRole
+      Description: "GlueRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "glue.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Path: "/service-role/"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonSageMakerServiceCatalogProductsGlueServiceRolePolicy"
+
+  LambdaRole:
+    Type: "AWS::IAM::Role"
+    Condition: LambdaRoleCondition
+    Properties:
+      RoleName: AmazonSageMakerServiceCatalogProductsLambdaRole
+      Description: "LambdaRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "lambda.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Path: "/service-role/"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonSageMakerServiceCatalogProductsLambdaServiceRolePolicy"
+
+  ProductsExecutionRole:
+    Type: "AWS::IAM::Role"
+    Condition: ProductsExecutionRoleCondition
+    Properties:
+      RoleName: AmazonSageMakerServiceCatalogProductsExecutionRole
+      Description: "ProductsExecutionRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "sagemaker.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Path: "/service-role/"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonSageMakerFullAccess"

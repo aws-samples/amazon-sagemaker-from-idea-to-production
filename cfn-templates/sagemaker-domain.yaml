@@ -19,16 +19,8 @@ Parameters:
     Type: String
     Description: Owner identification to be written as a resource tag
     Default: 'not-set'
-  CreateMLflowServer:
-    Type: String
-    Description: Create an MLflow trackings server as part of the domain
-    Default: 'YES'
-    AllowedValues:
-      - 'YES'
-      - 'NO'
 
 Conditions:
-  CreateMLflowServerCondition: !Equals [ !Ref CreateMLflowServer, 'YES' ]
   OwnerIDCondition: !Equals [ !Ref OwnerID, 'not-set' ]
 
 Resources:
@@ -159,6 +151,11 @@ Resources:
                     iam:PassedToService:
                       - sagemaker.amazonaws.com
                       - events.amazonaws.com
+              -
+                Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/AmazonSageMakerProjectsLaunchRole'
         - PolicyName: kms-access
           PolicyDocument:
             Version: 2012-10-17
@@ -202,6 +199,13 @@ Resources:
                 - sagemaker:StartMlflowTrackingServer
                 - sagemaker:StopMlflowTrackingServer
                 - sagemaker:CreatePresignedMlflowTrackingServerUrl
+                - sagemaker:CreateMlflowApp
+                - sagemaker:UpdateMlflowApp
+                - sagemaker:DeleteMlflowTApp
+                - sagemaker:StartMlflowApp
+                - sagemaker:StopMlflowTrackingServer
+                - sagemaker:CreatePresignedMlflowAppUrl
+                - sagemaker:CallMlflowAppApi
               Resource: "*"
         - PolicyName: q-developer-access
           PolicyDocument: 
@@ -233,6 +237,40 @@ Resources:
               Action:
                 - codestar-connections:UseConnection
               Resource: "*"
+        - PolicyName: assume-projects-launch-role
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - sts:AssumeRole
+                Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/AmazonSageMakerProjectsLaunchRole'
+        - PolicyName: cfn-stack-sm-projects
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              -
+                Sid: AmazonSageMakerProjectsCFnMutatePermission
+                Effect: Allow
+                Action:
+                  - cloudformation:CreateStack
+                  - cloudformation:UpdateStack
+                  - cloudformation:DeleteStack
+                  - cloudformation:DescribeStacks
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:cloudformation:*:*:stack/SP-*'
+              -
+                Sid: AmazonSageMakerProjectsCFnTagPermission
+                Effect: Allow
+                Action:
+                  - cloudformation:TagResource
+                  - cloudformation:UntagResource
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:cloudformation:*:*:stack/SP-*'
+                Condition:
+                  'Null':
+                    'aws:ResourceTag/sagemaker:project-name': 'false'
         - PolicyName: headless-execution-permissions
           PolicyDocument:
             Version: 2012-10-17
@@ -266,6 +304,7 @@ Resources:
               Resource: 
                 - 'arn:aws:sagemaker:*:*:training-job/*'
                 - 'arn:aws:sagemaker:*:*:pipeline/*'
+                - 'arn:aws:sagemaker:*:*:domain/*'
             - 
               Effect: Allow
               Action: 
@@ -292,6 +331,7 @@ Resources:
                 - s3:DeleteObject
                 - s3:GetObject
                 - s3:PutObjectTagging
+                - s3:GetObjectTagging
                 - sagemaker:DescribeDomain
                 - sagemaker:DescribeUserProfile
                 - sagemaker:DescribeSpace
@@ -741,8 +781,8 @@ Resources:
   ### Roles for Sagemaker projects
   AmazonSageMakerServiceCatalogProductsLaunchRole:
     Type: "AWS::IAM::Role"
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
     Properties:
       RoleName: !GetAtt CheckIfSageMakerSCProductsRolesExist.AmazonSageMakerServiceCatalogProductsLaunchRole
       Description: "SageMaker role created from the SageMaker AWS Management Console. This role has the permissions required to launch the Amazon SageMaker portfolio of products from AWS ServiceCatalog."
@@ -786,8 +826,8 @@ Resources:
    
   AmazonSageMakerServiceCatalogProductsUseRole:
     Type: "AWS::IAM::Role"
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
     Properties:
       RoleName: !GetAtt CheckIfSageMakerSCProductsRolesExist.AmazonSageMakerServiceCatalogProductsUseRole
       Description: "SageMaker role created from the SageMaker AWS Management Console. This role has the permissions required to use the Amazon SageMaker portfolio of products from AWS ServiceCatalog."
@@ -1201,10 +1241,14 @@ Resources:
             - '    '''','
             - '    ''if [ ! -z "${SM_JOB_DEF_VERSION}" ]'','
             - '    ''then'','
-            - '    ''   echo "Running in job mode, skip lcc"'','
+            - '    ''   echo "Running in job mode, running setup-py312.sh"'','
+            - '    ''   pwd'','
+            - '    ''   ls -lah'','
+            - '    ''   bash setup-py312.sh'','
             - '    ''else'','
             - '    ''   git clone https://github.com/aws-samples/amazon-sagemaker-from-idea-to-production.git || { echo "Error: Failed to clone repository"; exit 0; }'','
             - '    ''   echo "Files cloned from GitHub repo"'','
+            - '    ''   cd amazon-sagemaker-from-idea-to-production && bash setup-py312.sh'','
             - '    ''fi'','
             - '    '''','
             - '))'
@@ -1324,19 +1368,10 @@ Resources:
       SpaceSharingSettings:
         SharingType: Private
 
-  # MLflow tracking server
-  MlFlowServer:
-    Type: AWS::SageMaker::MlflowTrackingServer
-    Condition: CreateMLflowServerCondition
-    Properties:
-      ArtifactStoreUri: !Sub 's3://${StudioS3Bucket}/mlflow/${StudioDomain.DomainId}'
-      AutomaticModelRegistration: True
-      RoleArn: !GetAtt SageMakerExecutionRole.Arn
-      TrackingServerName: !Sub 'mlflow-${StudioDomain.DomainId}'
-      TrackingServerSize: Small
-      Tags:
-        - Key: domain-id
-          Value: !Ref StudioDomain
-        - Key: owner
-          Value: !If [ OwnerIDCondition, !Ref 'AWS::StackId', !Ref OwnerID ]
 
+Outputs:
+  SageMakerExecutionRoleArn:
+    Description: ARN of the SageMaker Execution Role
+    Value: !GetAtt SageMakerExecutionRole.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-SageMakerExecutionRoleArn'
