@@ -6,9 +6,7 @@ This repository contains a sequence of Jupyter notebooks demonstrating how to mo
 
 The notebooks make use of SageMaker AI [processing](https://docs.aws.amazon.com/sagemaker/latest/dg/processing-job.html) and [training](https://docs.aws.amazon.com/sagemaker/latest/dg/train-model.html) jobs, and SageMaker AI MLOps features such as [SageMaker Pipelines](https://aws.amazon.com/sagemaker/pipelines/), [SageMaker Feature Store](https://aws.amazon.com/sagemaker/feature-store/), [SageMaker Model Registry](https://docs.aws.amazon.com/sagemaker/latest/dg/model-registry.html), [SageMaker managed MLflow experiments](https://docs.aws.amazon.com/sagemaker/latest/dg/mlflow.html), and [SageMaker Model Monitor](https://aws.amazon.com/sagemaker/model-monitor/).
 
-You start with a notebook with basic ML code for data preprocessing, feature engineering, and model training, all local to the notebook. Each subsequent notebook builds on top of the previous and introduces one or several SageMaker AI MLOps features:
-
-![](img/sagemaker-mlops-building-blocks.png)
+You start with a notebook with basic ML code for data preprocessing, feature engineering, and model training, all local to the notebook. Each subsequent notebook builds on top of the previous and introduces one or several SageMaker AI MLOps features.
 
 Each notebook also provides links to useful hands-on resources and proposes real-world ideas for additional development.
 
@@ -18,7 +16,7 @@ You follow along the six notebooks and develop your ML idea from an experimental
 |---|---|---|
 |1. |Experiment in a notebook |[01-idea-development](01-idea-development.ipynb)|
 |2. |Scale with SageMaker AI processing jobs and Python SDK |[02-sagemaker-containers](02-sagemaker-containers.ipynb)|
-|3. |Operationalize with ML pipeline, model registry, and feature store |[03-sagemaker-pipeline](03-sagemaker-pipeline.ipynb)|
+|3. |Operationalize with ML pipeline, model registry |[03-sagemaker-pipeline](03-sagemaker-pipeline.ipynb)|
 |4. |Add a model building CI/CD pipeline |[04-sagemaker-project](04-sagemaker-project.ipynb)|
 |5. |Add a model deployment pipeline |[05-deploy](05-deploy.ipynb)|
 |6. |Add model and data monitoring |[06-monitoring](06-monitoring.ipynb)|
@@ -149,17 +147,6 @@ The following diagram shows the possible flows of the workshop:
 ### Execution mode
 Use this mode if you're not familiar with Python programming and new to Jupyter notebooks. You follow each notebook `00-...`, `01-...`, ..., `06-...`and execute all code cells with `Shift` + `Enter`. The given instructions explain what code is doing and why. You need about two and half hours to run through all code cells in all notebooks. 
 All notebooks and all code cells are idempotent. Make sure you run all code cells sequentially, top to bottom.
-
-### Assignment mode
-Use this mode if you have experience working with Jupyter notebooks and would like to write own code to have a deeper hands-on understanding of SageMaker AI features and Python SDK.
-Each foundational instruction notebook `00-...`, `01-...`, ..., `06-...` in the workshop root folder has a corresponding "assignment" notebook with exercises in the `assignments` folder. First, go through the instructions in the root folder notebook and then complete the exercises in the corresponding assignment notebook. The notebooks are mapped as follows:
-- `00-start-here` > `./assignments/00-assignment-setup`
-- `01-idea-development` > `./assignments/01-assignment-local-development`
-- `02-sagemaker-containers` > `./assignments/02-assignment-sagemaker-containers`
-- `03-sagemaker-pipeline` > `./assignments/03-assignment-sagemaker-pipeline`
-- `04-sagemaker-projects` > `./assignments/04-assignment-sagemaker-project`
-- `05-deploy` > `./assignments/05-assignment-deploy`
-- `06-monitoring` > `./assignments/06-assignment-monitoring`
 
 ## Clean-up
 ❗ You don't need to perform a clean-up if you run an AWS-instructor led workshop.
