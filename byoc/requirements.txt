@@ -8,7 +8,7 @@
 # default PyPI torch build, which drags in ~3 GB of CUDA libraries we do not
 # need on CPU training/inference instances. The CPU wheel is ~200 MB.
 --extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.4.1+cpu
+torch==2.12.0+cpu
 
 # ML stack
 xgboost==3.0.5
