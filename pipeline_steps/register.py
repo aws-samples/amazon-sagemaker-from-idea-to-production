@@ -127,10 +127,27 @@ def register(
                 print(f"## ModelBuilder failed: {e}")
                 secret_key = ''
 
-        # Step 3: Wait for auto-sync to create SageMaker Model Package
+        # Step 3: Wait for auto-sync to create SageMaker Model Package.
+        # The auto-created package is matched to the MLflow model version via the
+        # package's MetadataProperties.GeneratedBy, which records the MLflow
+        # registered-model name and version. We can't match on SourceUri because
+        # SageMaker stores it as a resolved s3:// artifact path while
+        # model_version.source is a "models:/..." URI (they never compare equal).
         print("## Waiting for SageMaker auto-registration...")
         sm_model_package_arn = None
-        mlflow_source = model_version.source
+        mlflow_model_name = model_version.name
+        mlflow_model_version = str(model_version.version)
+
+        def _matches_mlflow_version(pkg_desc):
+            generated_by = pkg_desc.get("MetadataProperties", {}).get("GeneratedBy", "")
+            try:
+                meta = json.loads(generated_by)
+            except (json.JSONDecodeError, TypeError):
+                return False
+            return (
+                meta.get("MLflowRegisteredModel") == mlflow_model_name
+                and str(meta.get("ModelVersion")) == mlflow_model_version
+            )
 
         for _ in range(10):
             groups = sm_client.list_model_package_groups(
@@ -143,7 +160,7 @@ def register(
                 )
                 for p in pkgs["ModelPackageSummaryList"]:
                     pkg_desc = sm_client.describe_model_package(ModelPackageName=p["ModelPackageArn"])
-                    if pkg_desc.get("SourceUri") == mlflow_source:
+                    if _matches_mlflow_version(pkg_desc):
                         sm_model_package_arn = p["ModelPackageArn"]
                         sm_model_package_group = g["ModelPackageGroupName"]
                         break
