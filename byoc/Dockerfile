@@ -41,9 +41,17 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies pinned in requirements.txt.
+# requirements.txt adds the PyTorch CPU index via --extra-index-url. uv defaults
+# to the `first-index` strategy (only considers the first index that publishes a
+# given package, to prevent dependency-confusion attacks). That makes transitive
+# deps such as importlib-metadata resolve to the only version the PyTorch index
+# hosts (7.1.0), which conflicts with sagemaker-core (<7.0). `unsafe-best-match`
+# restores pip's behavior: consider all (trusted) indexes and pick the best
+# compatible version.
 COPY requirements.txt /tmp/requirements.txt
-RUN pip install --no-cache-dir --upgrade pip "setuptools<70" \
-    && pip install --no-cache-dir -r /tmp/requirements.txt
+RUN pip install --no-cache-dir uv \
+    && uv pip install --system --no-cache "setuptools<70" \
+    && uv pip install --system --no-cache --index-strategy unsafe-best-match -r /tmp/requirements.txt
 
 # SageMaker toolkits:
 #   sagemaker-training   provides the `train` entrypoint and SAGEMAKER_PROGRAM
@@ -52,7 +60,7 @@ RUN pip install --no-cache-dir --upgrade pip "setuptools<70" \
 #   multi-model-server   the JVM-based model server that sagemaker-inference
 #                        wraps. Required for `serve` to actually start an
 #                        HTTP server on :8080.
-RUN pip install --no-cache-dir \
+RUN uv pip install --system --no-cache \
       "setuptools<70" \
       sagemaker-training \
       sagemaker-inference \
@@ -65,7 +73,7 @@ RUN chmod +x /usr/local/bin/serve
 
 # Ensure setuptools (pkg_resources) survives all prior pip resolutions.
 # setuptools 70+ on Python 3.12 may not expose pkg_resources; pin to <70.
-RUN pip install --no-cache-dir --force-reinstall "setuptools<70" \
+RUN uv pip install --system --no-cache --reinstall "setuptools<70" \
     && python -c "import pkg_resources; print(pkg_resources.__file__)"
 
 # SageMaker convention: user code may be copied into /opt/program.

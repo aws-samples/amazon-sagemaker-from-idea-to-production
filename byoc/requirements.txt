@@ -25,6 +25,7 @@ sagemaker>=3,<4
 sagemaker-core>=2,<3
 sagemaker-train>=1,<2
 sagemaker-mlops>=1,<2
+sagemaker-serve>=1,<2
 
 # Experiment tracking
 mlflow<4
