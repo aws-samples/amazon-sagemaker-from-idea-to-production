@@ -12,7 +12,7 @@ torch==2.4.1+cpu
 
 # ML stack
 xgboost==3.0.5
-scikit-learn==1.4.2
+scikit-learn==1.5.0
 pandas
 numpy
 
