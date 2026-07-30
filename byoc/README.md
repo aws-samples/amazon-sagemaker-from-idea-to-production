@@ -20,7 +20,7 @@ stored by `00-start-here.ipynb`, so notebooks 02–06 work unchanged.
 | `sagemaker`, `sagemaker-core`, `sagemaker-train`, `sagemaker-mlops` | SageMaker SDK v3 | Same pins as the rest of the workshop |
 | `mlflow`, `sagemaker-mlflow` | Experiment tracking | Notebooks 01+ log to MLflow from inside jobs |
 | `sagemaker-training` | Training toolkit | Makes the container script-mode compatible |
-| `sagemaker-inference` | Inference toolkit | Provides `/ping` + `/invocations` server |
+| `fastapi`, `uvicorn` | Native inference server | Our `serve` script implements `/ping` + `/invocations` directly |
 
 ## How SageMaker uses it
 
@@ -35,11 +35,15 @@ entrypoint code:
   `/opt/ml/model/`, `/opt/ml/output/`.
 - **Processing** — The SDK invokes your processing script directly; no
   special entrypoint is used.
-- **Inference** — SageMaker runs `docker run <image> serve`. The
-  `sagemaker-inference` toolkit starts a model server on port `8080` that
-  exposes `GET /ping` and `POST /invocations`, delegating to `model_fn`,
-  `input_fn`, `predict_fn`, and `output_fn` defined in the `inference.py` the
-  SDK uploads at deploy time.
+- **Inference** — SageMaker runs `docker run <image> serve`. Our `serve`
+  script (a small FastAPI/uvicorn app baked into the image) listens on port
+  `8080`, exposes `GET /ping` and `POST /invocations`, and delegates to
+  `model_fn`, `input_fn`, `predict_fn`, and `output_fn` defined in the
+  `inference.py` the SDK uploads at deploy time (resolved via
+  `$SAGEMAKER_PROGRAM` / `$SAGEMAKER_SUBMIT_DIRECTORY`). Defaults are
+  provided for everything except `model_fn`. This replaces the archived
+  `sagemaker-inference` toolkit and its JVM-based Multi Model Server —
+  same script-mode contract, no Java, ~200 MB smaller image.
 
 You keep script-mode flexibility: the image has no training or inference
 logic baked in.
@@ -98,8 +102,8 @@ value ownership (BYOC) or managed maintenance (extended).
 After `docker push` succeeds, a quick sanity check:
 
 ```bash
-# Confirm the image can start and the toolkits are installed
-docker run --rm <image-uri> python -c "import sagemaker_training, sagemaker_inference, xgboost, sklearn, mlflow; print('ok')"
+# Confirm the image can start and the runtime stack is installed
+docker run --rm <image-uri> python -c "import fastapi, uvicorn, sagemaker_training, xgboost, sklearn, mlflow; print('ok')"
 ```
 
 End-to-end verification is running notebook `02-sagemaker-containers.ipynb`
