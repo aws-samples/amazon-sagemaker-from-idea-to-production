@@ -170,9 +170,17 @@ def build_app() -> FastAPI:
             data = input_fn(body, content_type)
             prediction = predict_fn(data, model)
             result = output_fn(prediction, accept)
-        except ValueError as e:
-            # Unsupported content/accept type -> 415, matching toolkit behavior
-            return Response(content=str(e), status_code=415, media_type="text/plain")
+        except ValueError:
+            # Unsupported content/accept type -> 415. Log the details server-side
+            # only: the exception message can contain attacker-controlled request
+            # data (e.g. the Content-Type header), and reflecting it back in the
+            # response would be an information-exposure / reflected-input issue.
+            logger.warning("Rejected request with unsupported content/accept type", exc_info=True)
+            return Response(
+                content="Unsupported content type or accept header",
+                status_code=415,
+                media_type="text/plain",
+            )
         # output_fn may return (payload, content_type) or just the payload
         if isinstance(result, tuple):
             payload, media_type = result
