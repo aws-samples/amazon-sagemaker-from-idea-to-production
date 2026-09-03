@@ -106,5 +106,7 @@ After `docker push` succeeds, a quick sanity check:
 docker run --rm <image-uri> python -c "import fastapi, uvicorn, sagemaker_training, xgboost, sklearn, mlflow; print('ok')"
 ```
 
-End-to-end verification is running notebook `02-sagemaker-containers.ipynb`
-against the new image (both local mode and a managed training job).
+End-to-end verification is running notebook `01-mlflow-and-sagemaker-jobs.ipynb`
+against the new image: the managed processing job, `@remote` training, the
+`ModelTrainer` local-container and managed training jobs, and the real-time
+endpoint deployed from the Model Registry all use this image.
