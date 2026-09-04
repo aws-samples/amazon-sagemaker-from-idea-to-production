@@ -121,6 +121,9 @@ def preprocess(
         print("## Data processing complete. Exiting.")
         
         return {
+            # The CSVs above are header-less, so the column names travel as data.
+            # pipeline_steps/explain.py needs them to label the SHAP report.
+            "feature_names": [c for c in df_model_data.columns if c != target_col],
             "train_data": train_data_output_s3_path,
             "validation_data": validation_data_output_s3_path,
             "test_x_data": test_x_data_output_s3_path,
