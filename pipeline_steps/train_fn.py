@@ -13,7 +13,6 @@ except ImportError:
 def train(
     train_data_s3_path,
     validation_data_s3_path,
-    output_s3_prefix,
     num_round=50,
     max_depth=3,
     eta=0.5,
@@ -21,7 +20,14 @@ def train(
     objective="binary:logistic",
     pipeline_run_id=None,
 ):
-    """Train XGBoost model. MLflow tracking URI and experiment are read from environment."""
+    """Train an XGBoost model and log it to MLflow.
+
+    The trained model is logged to the MLflow artifact store only - it is not
+    copied to S3. Downstream steps receive ``mlflow_model_id`` and load the
+    model with ``mlflow.xgboost.load_model(f"models:/{mlflow_model_id}")``.
+
+    MLflow tracking URI and experiment are read from the environment.
+    """
     try:
         suffix = strftime('%d-%H-%M-%S', gmtime())
 
@@ -44,7 +50,7 @@ def train(
             "eval_metric": "auc",
         }
 
-        mlflow.xgboost.autolog(log_model_signatures=True, log_datasets=True)
+        mlflow.xgboost.autolog(log_model_signatures=True, log_datasets=True, log_models=False)
 
         booster = xgb.train(
             params=params,
@@ -59,20 +65,17 @@ def train(
         train_auc = roc_auc_score(dtrain.get_label(), booster.predict(dtrain))
         mlflow.log_params(params)
         mlflow.log_metrics({"validation_auc": val_auc, "train_auc": train_auc})
-
+        # mlflow.xgboost.log_model returns a ModelInfo carrying the logged model's
+        # id. That id is the handle every downstream step uses to load the model,
+        # so the MLflow artifact store stays the single source of truth and the
+        # model is never copied to a second location.
+        model_info = mlflow.xgboost.log_model(booster, name=f'xgboost-{suffix}')
         print(f"## Training complete — train AUC: {train_auc:.4f}, validation AUC: {val_auc:.4f}")
 
-        # Save model to S3
-        model_output_s3_path = f"{output_s3_prefix}/model/xgboost-model"
-        booster.save_model("xgboost-model")
-        import boto3
-        bucket, key = model_output_s3_path.replace("s3://", "").split("/", 1)
-        boto3.client("s3").upload_file("xgboost-model", bucket, key)
-
-        mlflow.log_param("model_s3_path", model_output_s3_path)
+        mlflow.log_param("mlflow_model_uri", model_info.model_uri)
 
         return {
-            "model_s3_path": model_output_s3_path,
+            "mlflow_model_id": model_info.model_id,
             "train_auc": train_auc,
             "validation_auc": val_auc,
             "mlflow_run_id": run.info.run_id,

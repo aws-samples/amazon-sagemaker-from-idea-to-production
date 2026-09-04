@@ -1,4 +1,3 @@
-import os
 import numpy as np
 import pandas as pd
 import xgboost as xgb
@@ -6,36 +5,10 @@ import mlflow
 from time import gmtime, strftime
 from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
-import tarfile
-import pickle as pkl
-import boto3
 try:
     from pipeline_steps.runtime_utils import log_runtime_info
 except ImportError:
     def log_runtime_info(): pass
-
-
-def load_model(model_data_s3_uri):
-    bucket, key = model_data_s3_uri.replace("s3://", "").split("/", 1)
-    local_file = os.path.basename(key)
-    boto3.client("s3").download_file(bucket, key, local_file)
-
-    # Handle both tar.gz (from ModelTrainer) and raw model file (from train_fn)
-    if local_file.endswith(".tar.gz"):
-        with tarfile.open(local_file, "r:gz") as t:
-            t.extractall(path=".")
-        model_path = "xgboost-model"
-    else:
-        model_path = local_file
-
-    # Try native XGBoost format first, fall back to pickle
-    model = xgb.Booster()
-    try:
-        model.load_model(model_path)
-    except xgb.core.XGBoostError:
-        model = pkl.load(open(model_path, "rb"))
-
-    return model
 
 
 def plot_roc_curve(fpr, tpr):
@@ -53,11 +26,18 @@ def plot_roc_curve(fpr, tpr):
 def evaluate(
     test_x_data_s3_path,
     test_y_data_s3_path,
-    model_s3_path,
+    mlflow_model_id,
     output_s3_prefix,
     pipeline_run_id=None,
 ):
-    """Evaluate model. MLflow tracking URI and experiment are read from environment."""
+    """Evaluate the MLflow-logged model produced by the training step.
+
+    ``mlflow_model_id`` is the logged model id returned by ``train``. The model
+    is loaded straight from the MLflow artifact store, so there is no second
+    copy of it in S3 to keep in sync.
+
+    MLflow tracking URI and experiment are read from the environment.
+    """
     try:
         suffix = strftime('%d-%H-%M-%S', gmtime())
 
@@ -69,8 +49,9 @@ def evaluate(
         X_test = xgb.DMatrix(pd.read_csv(test_x_data_s3_path, header=None).values)
         y_test = pd.read_csv(test_y_data_s3_path, header=None).to_numpy()
     
-        # Run predictions
-        probability = load_model(model_s3_path).predict(X_test)
+        # Load the model from the MLflow artifact store and run predictions
+        booster = mlflow.xgboost.load_model(f"models:/{mlflow_model_id}")
+        probability = booster.predict(X_test)
     
         # Evaluate predictions
         fpr, tpr, thresholds = roc_curve(y_test, probability)
@@ -83,6 +64,7 @@ def evaluate(
             },
         }}
         
+        mlflow.log_param("evaluated_model_id", mlflow_model_id)
         mlflow.log_metric("auc_score", auc_score)
         mlflow.log_artifact(plot_roc_curve(fpr, tpr))
         
