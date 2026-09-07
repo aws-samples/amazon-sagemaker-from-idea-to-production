@@ -83,6 +83,11 @@ if __name__=="__main__":
             df_model_data.sample(frac=1, random_state=1729),
             [int(0.7 * len(df_model_data)), int(0.9 * len(df_model_data))],
         )
+
+        # Convert np.arrays to DataFrames
+        train_data = pd.DataFrame(train_data, columns=df_model_data.columns)
+        validation_data = pd.DataFrame(validation_data, columns=df_model_data.columns)
+        test_data = pd.DataFrame(test_data, columns=df_model_data.columns)
     
         print(f"Data split > train:{train_data.shape} | validation:{validation_data.shape} | test:{test_data.shape}")
         mlflow.log_params(
