@@ -136,27 +136,11 @@ def register(
             f.write(json.dumps(evaluation_result))
         mlflow.log_artifact(local_path="evaluation.json")
 
-        # Resolve mlflow_run_id from the MLflow tracking server if needed.
-        # This is used in the hybrid pipeline (Part 3 of notebook 03) where TrainingStep
-        # runs training/train.py as a script and the @step register function can't
-        # access a return value. train.py tags its (nested) training run with
-        # 'sagemaker.job_name', so the run is found by that tag — no artifact
-        # inspection required. In the @step-only pipeline (Part 2) and the CI/CD
-        # pipeline (notebook 04), mlflow_run_id is passed directly.
-        if not mlflow_run_id and training_job_name and training_job_name != "local":
-            runs = mlflow.search_runs(
-                filter_string=f"tags.sagemaker.job_name = '{training_job_name}'",
-                search_all_experiments=True,
-                max_results=1,
-                order_by=["attributes.start_time DESC"],
+        if not mlflow_run_id:
+            raise ValueError(
+                "mlflow_run_id is required — the training step returns it "
+                "(see pipeline_steps/train_fn.py)."
             )
-            if len(runs) == 0:
-                raise RuntimeError(
-                    f"No MLflow run found with tag sagemaker.job_name = '{training_job_name}' — "
-                    "did the training script tag its run?"
-                )
-            mlflow_run_id = runs["run_id"][0]
-            print(f"## Resolved MLflow run_id from sagemaker.job_name tag: {mlflow_run_id}")
 
         # Step 1: Resolve the logged model created by the training run
         logged_model = _resolve_logged_model(mlflow_client, mlflow_run_id)
