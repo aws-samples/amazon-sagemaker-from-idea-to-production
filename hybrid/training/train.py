@@ -53,6 +53,8 @@ def _xgb_train(params, dtrain, dval, evals, num_boost_round, model_dir, is_maste
         pkl.dump(booster, open(model_location, 'wb'))
         print(f'Stored trained model at {model_location}')
 
+    return booster
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -89,7 +91,7 @@ if __name__ == '__main__':
     import mlflow
     mlflow.set_tracking_uri(os.getenv('MLFLOW_TRACKING_ARN'))
     mlflow.set_experiment(experiment_name=experiment_name if experiment_name else f'train-{suffix}')
-    mlflow.xgboost.autolog(log_model_signatures=True, log_datasets=True)
+    mlflow.xgboost.autolog(log_model_signatures=True, log_datasets=True, log_models=False)
 
     train_hp = {
         'max_depth': args.max_depth, 'eta': args.eta, 'gamma': args.gamma,
@@ -123,10 +125,11 @@ if __name__ == '__main__':
         })
         if dtrain:
             xgb_train_args['is_master'] = True
-            _xgb_train(**xgb_train_args)
+            booster = _xgb_train(**xgb_train_args)
+            # autolog(log_models=False) leaves model logging to us: log the model
+            # explicitly so we control the logged-model name. Downstream steps
+            # resolve it from the run's model outputs on the tracking server --
+            # nothing MLflow-specific goes into model.tar.gz.
+            mlflow.xgboost.log_model(booster, name=f'xgboost-{suffix}')
         else:
             raise ValueError('Training channel must have data to train model.')
-
-        # Write MLflow run_id to model dir so it gets packaged in model.tar.gz
-        with open(os.path.join(args.model_dir, 'mlflow_run_id.txt'), 'w') as f:
-            f.write(run.info.run_id)

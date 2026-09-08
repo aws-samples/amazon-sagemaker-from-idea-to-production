@@ -45,7 +45,7 @@ def _resolve_logged_model(mlflow_client, mlflow_run_id):
     if not model_outputs:
         raise RuntimeError(
             f"MLflow run {mlflow_run_id} has no logged model outputs — "
-            "was the model logged (e.g. via mlflow.xgboost.autolog)?"
+            "was the model logged (e.g. via mlflow.xgboost.log_model)?"
         )
     return mlflow_client.get_logged_model(model_outputs[0].model_id)
 
@@ -136,27 +136,27 @@ def register(
             f.write(json.dumps(evaluation_result))
         mlflow.log_artifact(local_path="evaluation.json")
 
-        # Resolve mlflow_run_id from training job's model.tar.gz if needed.
+        # Resolve mlflow_run_id from the MLflow tracking server if needed.
         # This is used in the hybrid pipeline (Part 3 of notebook 03) where TrainingStep
-        # runs training/train.py as a script. The script writes mlflow_run_id.txt into
-        # model.tar.gz, but the @step register function can't access train_fn's return
-        # value — so we extract it from the artifact. In the @step-only pipeline (Part 2)
-        # and the CI/CD pipeline (notebook 04), mlflow_run_id is passed directly.
+        # runs training/train.py as a script and the @step register function can't
+        # access a return value. train.py tags its (nested) training run with
+        # 'sagemaker.job_name', so the run is found by that tag — no artifact
+        # inspection required. In the @step-only pipeline (Part 2) and the CI/CD
+        # pipeline (notebook 04), mlflow_run_id is passed directly.
         if not mlflow_run_id and training_job_name and training_job_name != "local":
-            try:
-                import s3fs, tarfile
-                desc = sm_client.describe_training_job(TrainingJobName=training_job_name)
-                s3 = s3fs.S3FileSystem()
-                local_tar = tempfile.mktemp(suffix=".tar.gz")
-                with s3.open(desc["ModelArtifacts"]["S3ModelArtifacts"], "rb") as remote, open(local_tar, "wb") as local:
-                    local.write(remote.read())
-                with tarfile.open(local_tar, "r:gz") as tar:
-                    f = tar.extractfile("mlflow_run_id.txt")
-                    if f:
-                        mlflow_run_id = f.read().decode().strip()
-                        print(f"## Retrieved MLflow run_id from model.tar.gz: {mlflow_run_id}")
-            except Exception as e:
-                print(f"## Could not extract mlflow_run_id: {e}")
+            runs = mlflow.search_runs(
+                filter_string=f"tags.sagemaker.job_name = '{training_job_name}'",
+                search_all_experiments=True,
+                max_results=1,
+                order_by=["attributes.start_time DESC"],
+            )
+            if len(runs) == 0:
+                raise RuntimeError(
+                    f"No MLflow run found with tag sagemaker.job_name = '{training_job_name}' — "
+                    "did the training script tag its run?"
+                )
+            mlflow_run_id = runs["run_id"][0]
+            print(f"## Resolved MLflow run_id from sagemaker.job_name tag: {mlflow_run_id}")
 
         # Step 1: Resolve the logged model created by the training run
         logged_model = _resolve_logged_model(mlflow_client, mlflow_run_id)
