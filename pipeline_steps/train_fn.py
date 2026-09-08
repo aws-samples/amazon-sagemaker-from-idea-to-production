@@ -44,7 +44,7 @@ def train(
             "eval_metric": "auc",
         }
 
-        mlflow.xgboost.autolog(log_model_signatures=True, log_datasets=True)
+        mlflow.xgboost.autolog(log_model_signatures=True, log_datasets=True, log_models=False)
 
         booster = xgb.train(
             params=params,
@@ -59,6 +59,12 @@ def train(
         train_auc = roc_auc_score(dtrain.get_label(), booster.predict(dtrain))
         mlflow.log_params(params)
         mlflow.log_metrics({"validation_auc": val_auc, "train_auc": train_auc})
+
+        # autolog(log_models=False) leaves model logging to us. log_model returns
+        # a ModelInfo whose model_id identifies the logged model on the tracking
+        # server; the register step resolves it from the run's model outputs.
+        model_info = mlflow.xgboost.log_model(booster, name=f"xgboost-{suffix}")
+        mlflow.log_param("mlflow_model_uri", model_info.model_uri)
 
         print(f"## Training complete — train AUC: {train_auc:.4f}, validation AUC: {val_auc:.4f}")
 
