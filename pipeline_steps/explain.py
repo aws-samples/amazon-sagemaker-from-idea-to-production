@@ -11,12 +11,11 @@ That mirrors the workshop's own progression - ``@remote`` is the easy path to ru
 a function on SageMaker, ``@step`` is the easy path to turn it into a pipeline
 step - so the explainability logic is written once and never diverges.
 
-Why SHAP and pandas rather than Amazon SageMaker Clarify: new customer access to
-Clarify closed on 2026-07-30 and no new features are planned (see
-https://docs.aws.amazon.com/sagemaker/latest/dg/clarify-availability-change.html).
-AWS recommends reproducing the analysis with the building blocks Clarify was made
-of - SHAP for feature attribution (the library Clarify used internally) and the
-published, standardized bias-metric formulas computed directly with pandas.
+Why SHAP and pandas: both are open-source building blocks with no service
+dependency - SHAP for feature attribution and the standardized fairness-metric
+formulas (class imbalance, difference in positive proportions, disparate impact)
+computed directly with pandas - so the report is reproducible anywhere the model
+itself runs.
 
 Why ``TreeExplainer``: the model under analysis is a plain XGBoost booster, so
 tree SHAP applies and is **exact** - no sampling, and fast enough to explain the
@@ -44,7 +43,7 @@ except ImportError:  # running as a flat module inside a job
 
 
 # --------------------------------------------------------------------------- #
-# Standardized bias metrics (pandas re-implementation of the Clarify metrics)
+# Standardized bias metrics (pandas implementation of the usual fairness metrics)
 # --------------------------------------------------------------------------- #
 def compute_bias_metrics(labels, predicted_labels, in_facet, positive_label=1):
     """Compute a core set of pre-training and post-training bias metrics.
@@ -59,9 +58,10 @@ def compute_bias_metrics(labels, predicted_labels, in_facet, positive_label=1):
       * DPPL - Difference in Positive Proportions in Predicted Labels
       * DI   - Disparate Impact
 
-    Formulas follow the Clarify metric references:
-    https://docs.aws.amazon.com/sagemaker/latest/dg/clarify-measure-data-bias.html
-    https://docs.aws.amazon.com/sagemaker/latest/dg/clarify-measure-post-training-bias.html
+    These are the standard definitions used in the fairness literature; see e.g.
+    Feldman et al. (2015) for Disparate Impact and the fairlearn documentation
+    (https://fairlearn.org/main/user_guide/assessment/common_fairness_metrics.html)
+    for the difference-in-positive-proportions family.
     """
     labels = np.asarray(labels).ravel()
     predicted_labels = np.asarray(predicted_labels).ravel()
