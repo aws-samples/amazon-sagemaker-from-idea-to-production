@@ -198,6 +198,13 @@ def register(
 
         # Step 6: Set approval status and traceability metadata. The inference
         # specification is already on the package — no spec mutation needed.
+        # EvaluationMetrics is picked up by the EventBridge model-card automation
+        # (notebook 02) and rendered into the card's evaluation_details.
+        evaluation_metrics = {
+            name: float(metric["value"])
+            for name, metric in evaluation_result.get("classification_metrics", {}).items()
+            if isinstance(metric, dict) and "value" in metric
+        }
         sm_client.update_model_package(
             ModelPackageArn=sm_model_package_arn,
             ModelApprovalStatus=model_approval_status,
@@ -207,6 +214,7 @@ def register(
                 "MlflowRunId": mlflow_run_id or "",
                 "MlflowModelId": logged_model.model_id,
                 "MlflowArtifactLocation": logged_model.artifact_location,
+                "EvaluationMetrics": json.dumps(evaluation_metrics)[:1024],
             },
         )
         print(f"## Model Package status set to: {model_approval_status}")

@@ -12,6 +12,7 @@ Work through the notebooks in order:
 |---|---|
 | [00-start-here.ipynb](00-start-here.ipynb) | Environment setup: SageMaker domain, MLflow tracking, data download |
 | [01-mlflow-and-sagemaker-jobs.ipynb](01-mlflow-and-sagemaker-jobs.ipynb) | **Part 1** — experiment locally in the notebook (data processing, training, evaluation in plain Python) with experiment tracking in SageMaker managed MLflow. **Part 2** — scale the same logic with SageMaker AI processing and training jobs (`@remote`, `ModelTrainer`, a BYOC XGBoost container), explain the selected model with SHAP and standardized fairness metrics as a managed job, then register it with a logged inference specification and deploy the auto-synced Model Package version to a real-time endpoint |
+| [02-model-card-automation.ipynb](02-model-card-automation.ipynb) | Automate model governance: an EventBridge rule on `SageMaker Model Package State Change` invokes a Lambda function that completes the Model Card of every registered model package version (one card per version, status aligned with the approval workflow) |
 | [03-sagemaker-pipeline.ipynb](03-sagemaker-pipeline.ipynb) | Operationalize with a SageMaker pipeline built with the `@step` decorator, and register models in the Model Registry |
 | [04-monitoring-with-evidently.ipynb](04-monitoring-with-evidently.ipynb) | Deploy a real-time endpoint with data capture and add model monitoring with Evidently |
 
@@ -24,6 +25,8 @@ Work through the notebooks in order:
 ├── byoc/                 # Bring-your-own-container: Dockerfile, training and serving code,
 │                         # and build_and_push.sh to publish the custom XGBoost image to ECR
 ├── img/                  # Images and diagrams used in the notebooks
+├── model_card_automation/ # Lambda function deployed by notebook 02: completes the Model Card
+│                         # of each registered model package version (EventBridge-triggered)
 ├── pipeline_steps/       # Python functions used as pipeline steps in notebook 03
 │                         # (preprocess, train_fn, evaluate, register, inference)
 └── setup-py312.sh        # Creates the Python 3.12 kernel required by the notebooks
