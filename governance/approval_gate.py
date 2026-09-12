@@ -37,9 +37,7 @@ POLICY_DIR = Path(__file__).resolve().parent
 DATA_SCIENTIST = "data-scientist"
 GOVERNANCE_OFFICER = "governance-officer"
 
-# Role names created by static/cfnSageMakerProjectsRoles.yaml in the workshop
-# CloudFormation stack (its DataScientistRoleName / GovernanceOfficerRoleName
-# parameters default to exactly these).
+# The two persona roles are pre-provisioned in the workshop account.
 PERSONA_ROLE_NAMES = {
     DATA_SCIENTIST: "from-idea-to-prod-data-scientist-role",
     GOVERNANCE_OFFICER: "from-idea-to-prod-governance-officer-role",
@@ -53,9 +51,8 @@ PRODUCTION_ACTIVE_ALIAS = "sagemakerlifecycle-production-active"
 def load_persona_policy(persona, region, account_id, model_package_group_prefix):
     """Read the reference copy of a persona policy from ``<persona>_policy.json``.
 
-    The deployed policies are the inline policies created by
-    ``static/cfnSageMakerProjectsRoles.yaml``; these JSON files mirror them so the
-    policy can be read (and diffed) without opening the CloudFormation template."""
+    The deployed policies are pre-provisioned; these JSON files mirror them so the
+    policy can be read."""
     file_name = f"{persona.replace('-', '_')}_policy.json"
     template = (POLICY_DIR / file_name).read_text()
     rendered = (
@@ -67,25 +64,28 @@ def load_persona_policy(persona, region, account_id, model_package_group_prefix)
 
 
 def resolve_persona_role(iam_client, role_name):
-    """Return the ARN and inline policy of a persona role created by CloudFormation.
-
-    The workshop's ``cfnSageMakerProjectsRoles.yaml`` stack creates both persona
-    roles, because the Studio execution role deliberately has no ``iam:CreateRole``.
-    Raises a ``LookupError`` naming the stack when the role is missing."""
+    """Return the ARN and inline policy of a persona role."""
     try:
         role = iam_client.get_role(RoleName=role_name)["Role"]
     except iam_client.exceptions.NoSuchEntityException:
         raise LookupError(
-            f"IAM role '{role_name}' does not exist. The approval-gate persona roles are "
-            "created by the workshop CloudFormation stack (static/cfnSageMakerProjectsRoles.yaml). "
-            "Deploy or update that stack, or set the *_ROLE_ARN overrides in this cell."
+            f"IAM role '{role_name}' was not found in this account. Ask your workshop "
+            "administrator for the approval-gate persona roles."
         ) from None
+    # Reading the policy is for display only, so not being allowed to read it must not
+    # stop the workshop: the guardrail is enforced by IAM when the persona calls
+    # SageMaker, not by anything shown here.
     policy = None
-    policy_names = iam_client.list_role_policies(RoleName=role_name).get("PolicyNames", [])
-    if policy_names:
-        policy = iam_client.get_role_policy(
-            RoleName=role_name, PolicyName=policy_names[0]
-        )["PolicyDocument"]
+    try:
+        policy_names = iam_client.list_role_policies(RoleName=role_name).get("PolicyNames", [])
+        if policy_names:
+            policy = iam_client.get_role_policy(
+                RoleName=role_name, PolicyName=policy_names[0]
+            )["PolicyDocument"]
+    except ClientError as e:
+        if e.response["Error"]["Code"] not in ("AccessDenied", "AccessDeniedException"):
+            raise
+        print("  (not allowed to read this role's policy, so it is not shown here)")
     return role["Arn"], policy
 
 

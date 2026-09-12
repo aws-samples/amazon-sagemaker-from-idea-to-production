@@ -1,5 +1,5 @@
 {
-  "_comment": "Reference copy of the data-scientist persona policy. The policy is already deployed during workshop provisioning.",
+  "_comment": "Reference copy of the data-scientist persona policy, for reading alongside the notebooks. The policy actually in force is the one attached to the pre-provisioned data-scientist role in your workshop account.",
   "Version": "2012-10-17",
   "Statement": [
     {

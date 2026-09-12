@@ -1,5 +1,5 @@
 {
-  "_comment": "Reference copy of the governance-officer persona policy. The policy is already deployed during workshop provisioning.",
+  "_comment": "Reference copy of the governance-officer persona policy, for reading alongside the notebooks. The policy actually in force is the one attached to the pre-provisioned governance-officer role in your workshop account.",
   "Version": "2012-10-17",
   "Statement": [
     {

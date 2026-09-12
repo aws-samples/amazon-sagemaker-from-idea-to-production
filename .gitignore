@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+config.yaml
+build.log
+data/
+evaluation.json

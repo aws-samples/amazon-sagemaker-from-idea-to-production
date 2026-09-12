@@ -29,7 +29,7 @@ The workshop follows the single-account pattern from [Govern models with MLflow 
 
 The gate is enforced by IAM only: there is no stage check in the code. Every lifecycle change is an `UpdateModelPackage` call signed as one of the two roles, and the policy attached to that role decides. The pipeline's register step ([`pipeline_steps/register.py`](pipeline_steps/register.py)) makes its lifecycle update as the data-scientist role (`DATA_SCIENTIST_ROLE_ARN`), so a pipeline asking for `production` fails with `AccessDeniedException`.
 
-Both roles are created as part of provisioning of the workshop. The notebooks only look for the roles. Notebook 00 resolves the roles and prints the policy attached to each, notebook 01 exercises the gate for a version registered by hand, and notebook 03 for a version registered by the pipeline. Shared helpers live in [`governance/approval_gate.py`](governance/approval_gate.py); the JSON files above are reference copies of the policies the stack deploys.
+Both roles are created as part of provisioning of the workshop. The notebooks only look for the roles. Notebook 00 resolves the roles and prints the policy attached to each, notebook 01 exercises the gate for a version registered by hand, and notebook 03 for a version registered by the pipeline. Shared helpers live in [`governance/approval_gate.py`](governance/approval_gate.py); the JSON files linked above are reference copies of those policies.
 
 ## Repository structure
 
