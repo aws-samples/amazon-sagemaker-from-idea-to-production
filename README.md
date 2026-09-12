@@ -10,13 +10,26 @@ Work through the notebooks in order:
 
 | Notebook | What you do |
 |---|---|
-| [00-start-here.ipynb](00-start-here.ipynb) | Environment setup: SageMaker domain, MLflow tracking, data download |
-| [01-mlflow-and-sagemaker-jobs.ipynb](01-mlflow-and-sagemaker-jobs.ipynb) | **Part 1** — experiment locally in the notebook (data processing, training, evaluation in plain Python) with experiment tracking in SageMaker managed MLflow. **Part 2** — scale the same logic with SageMaker AI processing and training jobs (`@remote`, `ModelTrainer`, a BYOC XGBoost container), explain the selected model with SHAP and standardized fairness metrics as a managed job, then register it with a logged inference specification and deploy the auto-synced Model Package version to a real-time endpoint |
+| [00-start-here.ipynb](00-start-here.ipynb) | Environment setup: SageMaker domain, MLflow tracking with Model Registry sync, data download, and the **approval gate**: two IAM persona roles (data scientist, governance officer) separated by Model Registry condition keys |
+| [01-mlflow-and-sagemaker-jobs.ipynb](01-mlflow-and-sagemaker-jobs.ipynb) | **Part 1** — experiment locally in the notebook (data processing, training, evaluation in plain Python) with experiment tracking in SageMaker managed MLflow. **Part 2** — scale the same logic with SageMaker AI processing and training jobs (`@remote`, `ModelTrainer`, a BYOC XGBoost container), explain the selected model with SHAP and standardized fairness metrics as a managed job, register it with a logged inference specification, group and version tags and the `staging` lifecycle stage, pass the approval gate (data scientist denied, governance officer promotes to `production` and approves), and deploy the approved Model Package version to a real-time endpoint |
 | [02-model-card-automation.ipynb](02-model-card-automation.ipynb) | Automate model governance: an EventBridge rule on `SageMaker Model Package State Change` invokes a Lambda function that completes the Model Card of every registered model package version (one card per version, status aligned with the approval workflow) |
-| [03-sagemaker-pipeline.ipynb](03-sagemaker-pipeline.ipynb) | Operationalize with a SageMaker pipeline built with the `@step` decorator, and register models in the Model Registry |
+| [03-sagemaker-pipeline.ipynb](03-sagemaker-pipeline.ipynb) | Operationalize with a SageMaker pipeline built with the `@step` decorator; the register step stages and tags the version in the Model Registry, and the governance officer promotes and approves it |
 | [04-monitoring-with-evidently.ipynb](04-monitoring-with-evidently.ipynb) | Deploy a real-time endpoint with data capture and add model monitoring with Evidently |
 
 > Each capability is exercised exactly once: the preprocessing logic is prototyped in the notebook and then executed once as a managed job, and there is a single model registration and a single real-time endpoint, which serves the registered and approved Model Package.
+
+## Model governance: the approval gate
+
+The workshop follows the single-account pattern from [Govern models with MLflow and Amazon SageMaker AI Model Registry sync](https://aws.amazon.com/blogs/machine-learning/govern-models-with-mlflow-and-amazon-sagemaker-ai-model-registry-sync-part-1/). Every `mlflow.register_model()` call creates a Model Package version in the SageMaker Model Registry; two personas, separated by IAM rather than by accounts, then move it through its lifecycle:
+
+| Persona | Does | Denied |
+|---|---|---|
+| Data scientist ([policy](governance/data_scientist_policy.json)) | registers versions from MLflow, moves them to `staging/pending` (`UpdateModelPackage` made as this role, mirrored as the `sagemakerlifecycle-staging-pending` MLflow alias), tags versions | `UpdateModelPackage` when `sagemaker:ModelLifeCycle/stage = production`, when `sagemaker:ModelApprovalStatus = Approved`, and on versions tagged `locked=true` |
+| Governance officer ([policy](governance/governance_officer_policy.json)) | reviews synced metrics, model card and lineage; sets `ModelLifeCycle = production/active` and `ModelApprovalStatus = Approved`; locks the version | — |
+
+The gate is enforced by IAM only: there is no stage check in the code. Every lifecycle change is an `UpdateModelPackage` call signed as one of the two roles, and the policy attached to that role decides. The pipeline's register step ([`pipeline_steps/register.py`](pipeline_steps/register.py)) makes its lifecycle update as the data-scientist role (`DATA_SCIENTIST_ROLE_ARN`), so a pipeline asking for `production` fails with `AccessDeniedException`.
+
+Notebook 00 creates both roles (they trust the Studio execution role, so one workshop user can assume either), notebook 01 exercises the gate for a version registered by hand, and notebook 03 for a version registered by the pipeline. Shared helpers live in [`governance/approval_gate.py`](governance/approval_gate.py).
 
 ## Repository structure
 
@@ -24,6 +37,8 @@ Work through the notebooks in order:
 ├── 0x-*.ipynb            # Workshop notebooks (see table above)
 ├── byoc/                 # Bring-your-own-container: Dockerfile, training and serving code,
 │                         # and build_and_push.sh to publish the custom XGBoost image to ECR
+├── governance/           # Approval gate: IAM policy templates for the data-scientist and
+│                         # governance-officer personas, and the helpers notebooks 00/01/03 use
 ├── img/                  # Images and diagrams used in the notebooks
 ├── model_card_automation/ # Lambda function deployed by notebook 02: completes the Model Card
 │                         # of each registered model package version (EventBridge-triggered)

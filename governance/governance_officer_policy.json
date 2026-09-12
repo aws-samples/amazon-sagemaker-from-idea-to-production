@@ -1,0 +1,31 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ReadModelRegistry",
+      "Effect": "Allow",
+      "Action": [
+        "sagemaker:DescribeModelPackage",
+        "sagemaker:DescribeModelPackageGroup",
+        "sagemaker:ListModelPackages",
+        "sagemaker:ListModelPackageGroups",
+        "sagemaker:ListTags",
+        "sagemaker:Search"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "PromoteApproveAndLockModelPackages",
+      "Effect": "Allow",
+      "Action": [
+        "sagemaker:UpdateModelPackage",
+        "sagemaker:AddTags",
+        "sagemaker:DeleteTags"
+      ],
+      "Resource": [
+        "arn:aws:sagemaker:${REGION}:${ACCOUNT_ID}:model-package/${MODEL_PACKAGE_GROUP_PREFIX}*",
+        "arn:aws:sagemaker:${REGION}:${ACCOUNT_ID}:model-package-group/${MODEL_PACKAGE_GROUP_PREFIX}*"
+      ]
+    }
+  ]
+}
