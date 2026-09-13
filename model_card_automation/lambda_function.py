@@ -195,10 +195,24 @@ def _desired_status(described):
     return APPROVAL_TO_CARD_STATUS.get(described.get("ModelApprovalStatus"), "Draft")
 
 
-def _update(model_package_arn, content, status):
+# Card content and card status cannot travel in the same call. Sending both fails with
+# "Both ModelCardContent and ModelCardStatus are provided. Cannot determine which to
+# use." (see the UpdateModelCard API reference), so each gets its own request.
+#
+# Note also that the two APIs are not symmetric: UpdateModelPackage requires
+# ModelPackageArn, while DescribeModelPackage takes ModelPackageName -- a field that
+# happens to accept an ARN. Passing ModelPackageName here fails parameter validation.
+def _update_card_content(model_package_arn, content):
     _sm().update_model_package(
-        ModelPackageName=model_package_arn,
-        ModelCard={"ModelCardContent": json.dumps(content), "ModelCardStatus": status},
+        ModelPackageArn=model_package_arn,
+        ModelCard={"ModelCardContent": json.dumps(content)},
+    )
+
+
+def _update_card_status(model_package_arn, status):
+    _sm().update_model_package(
+        ModelPackageArn=model_package_arn,
+        ModelCard={"ModelCardStatus": status},
     )
 
 
@@ -225,17 +239,27 @@ def reconcile_model_card(model_package_arn):
             return "no-op: card already up to date"
         if current_status == "Archived":
             return "no-op: card is archived"
-        _update(model_package_arn, current_content, desired_status)
+        _update_card_status(model_package_arn, desired_status)
         return f"status: {current_status} -> {desired_status}"
 
+    # Content first, while the card is still editable, then the status. The other order
+    # would freeze the card before its content is in place whenever the package is
+    # already Approved.
     content = build_card_content(described, current_content)
-    if desired_status == "Approved":
-        # Content and approval cannot be combined: approved cards are frozen.
-        _update(model_package_arn, content, "PendingReview")
-        _update(model_package_arn, content, "Approved")
-        return "content written, status PendingReview -> Approved"
-    _update(model_package_arn, content, desired_status)
-    return f"content written, status {current_status or '(none)'} -> {desired_status}"
+    _update_card_content(model_package_arn, content)
+    if current_status == desired_status:
+        return f"content written, status unchanged ({desired_status})"
+
+    # Walk the documented card workflow (Draft -> PendingReview -> Approved) instead of
+    # jumping straight to Approved. Status updates are cheap: unlike content edits they
+    # do not create a new card version.
+    path = [current_status or "(none)"]
+    if desired_status == "Approved" and current_status != "PendingReview":
+        _update_card_status(model_package_arn, "PendingReview")
+        path.append("PendingReview")
+    _update_card_status(model_package_arn, desired_status)
+    path.append(desired_status)
+    return "content written, status " + " -> ".join(path)
 
 
 def lambda_handler(event, context):
