@@ -76,16 +76,37 @@ def _env(name, default):
 
 
 # --------------------------------------------------------------------------- content
+def _parse_metrics(raw):
+    """Parse the ``EvaluationMetrics`` value written by pipeline_steps/register.py.
+
+    CustomerMetadataProperties values may only contain letters, digits, whitespace and
+    ``_ . : / = + - @``, so metrics are stored as space-separated ``name=value`` pairs.
+    Model packages registered before that encoding hold JSON, which is still read."""
+    raw = raw.strip()
+    if raw.startswith("{"):
+        try:
+            return json.loads(raw)
+        except json.JSONDecodeError:
+            logger.warning("EvaluationMetrics is not valid JSON: %s", raw)
+            return {}
+    metrics = {}
+    for pair in raw.split():
+        name, separator, value = pair.partition("=")
+        if separator and name:
+            metrics[name] = value
+    if not metrics:
+        logger.warning("EvaluationMetrics could not be parsed: %s", raw)
+    return metrics
+
+
 def _evaluation_details(customer_metadata):
-    """Turn the ``EvaluationMetrics`` JSON written by pipeline_steps/register.py into
+    """Turn the ``EvaluationMetrics`` value written by pipeline_steps/register.py into
     a model card ``evaluation_details`` entry. Returns [] when nothing usable exists."""
     raw = customer_metadata.get("EvaluationMetrics")
     if not raw:
         return []
-    try:
-        metrics = json.loads(raw)
-    except json.JSONDecodeError:
-        logger.warning("EvaluationMetrics is not valid JSON: %s", raw)
+    metrics = _parse_metrics(raw)
+    if not metrics:
         return []
 
     metric_data = []

@@ -284,6 +284,78 @@ def print_lifecycle(sm_client, model_package_arn, title=None):
     return summary
 
 
+def resolve_model_package_group(sm_client, registered_model_name, prefix=None):
+    """Name of the SageMaker Model Package Group that holds a registered model.
+
+    The sync derives the group name from the MLflow registered model name but appends a
+    short hash suffix (``my-model`` -> ``my-model-1a2b3c``), so the two names are not
+    interchangeable: ``ListModelPackages`` on the MLflow name returns nothing, without
+    raising. Searches narrowest first - the MLflow name as-is, then groups whose name
+    contains it, then any group under ``prefix`` - and returns the first that holds at
+    least one version."""
+    def versions(group_name):
+        try:
+            return sm_client.list_model_packages(
+                ModelPackageGroupName=group_name, SortBy="CreationTime",
+                SortOrder="Descending", MaxResults=1,
+            )["ModelPackageSummaryList"]
+        except ClientError:
+            return []
+
+    def groups_containing(fragment):
+        # NameContains must match ^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}$, so a trailing
+        # hyphen (which a prefix usually has) has to go.
+        names = []
+        paginator = sm_client.get_paginator("list_model_package_groups")
+        for page in paginator.paginate(
+            NameContains=fragment.rstrip("-"), SortBy="CreationTime", SortOrder="Descending"
+        ):
+            names.extend(g["ModelPackageGroupName"] for g in page["ModelPackageGroupSummaryList"])
+        return names
+
+    candidates = [registered_model_name]
+    for name in groups_containing(registered_model_name):
+        if name not in candidates:
+            candidates.append(name)
+    if prefix:
+        for name in groups_containing(prefix):
+            if name.startswith(prefix) and name not in candidates:
+                candidates.append(name)
+
+    for candidate in candidates:
+        if versions(candidate):
+            return candidate
+    raise LookupError(
+        f"No Model Package Group with a registered version was found for "
+        f"'{registered_model_name}'. Groups checked: {candidates}"
+    )
+
+
+def mlflow_version_for_package(mlflow_client, registered_model_name, model_package_arn):
+    """MLflow model version whose sync tag points at ``model_package_arn``.
+
+    MLflow version numbers and SageMaker Model Package version numbers usually run in
+    step, but nothing guarantees it, and a lifecycle alias has to be set on the right
+    MLflow version. The sync records the package ARN as the
+    ``sagemaker.model_package_arn`` tag on the model version, so match on that."""
+    for mv in mlflow_client.search_model_versions(f"name='{registered_model_name}'"):
+        if mv.tags.get("sagemaker.model_package_arn") == model_package_arn:
+            return mv.version
+    raise LookupError(
+        f"No version of MLflow model '{registered_model_name}' is tagged with "
+        f"sagemaker.model_package_arn={model_package_arn}"
+    )
+
+
+def latest_model_package(sm_client, registered_model_name, prefix=None):
+    """Summary of the most recently created version of a registered model."""
+    group_name = resolve_model_package_group(sm_client, registered_model_name, prefix)
+    return sm_client.list_model_packages(
+        ModelPackageGroupName=group_name, SortBy="CreationTime",
+        SortOrder="Descending", MaxResults=1,
+    )["ModelPackageSummaryList"][0]
+
+
 def group_arn_of(model_package_arn):
     """Model Package Group ARN for a version ARN.
 
@@ -335,10 +407,14 @@ def set_version_metadata(sm_client, model_package_arn, metadata, merge=True):
     drops entries written earlier (the model card automation reads some of them)."""
     properties = {}
     if merge:
-        properties.update(
-            sm_client.describe_model_package(ModelPackageName=model_package_arn)
-            .get("CustomerMetadataProperties", {})
-        )
+        # Sanitise carried-over values too: a version registered before this encoding
+        # was in place may hold a value the API would now reject (for example metrics
+        # stored as JSON), and re-sending it unchanged would fail the whole call.
+        properties.update({
+            _clean_metadata_value(k, 128): _clean_metadata_value(v, 256)
+            for k, v in sm_client.describe_model_package(ModelPackageName=model_package_arn)
+            .get("CustomerMetadataProperties", {}).items()
+        })
     properties.update({
         _clean_metadata_value(k, 128): _clean_metadata_value(v, 256)
         for k, v in metadata.items()

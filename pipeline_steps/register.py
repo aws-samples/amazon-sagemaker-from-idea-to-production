@@ -275,19 +275,29 @@ def register(
             for name, metric in evaluation_result.get("classification_metrics", {}).items()
             if isinstance(metric, dict) and "value" in metric
         }
+        # CustomerMetadataProperties values may only contain letters, digits,
+        # whitespace and _ . : / = + - @ (see UpdateModelPackage), so the metrics
+        # cannot be JSON: braces, quotes and commas are all rejected. Encode them as
+        # space-separated name=value pairs, which the model-card automation parses.
+        evaluation_metrics_text = " ".join(
+            f"{name}={value:.6g}" for name, value in sorted(evaluation_metrics.items())
+        )
         sm_client.update_model_package(
             ModelPackageArn=sm_model_package_arn,
             ModelApprovalStatus=model_approval_status,
-            CustomerMetadataProperties={
-                "TrainingJobName": training_job_name or "local",
-                "ContainerImage": container_image or "n/a",
-                "MlflowRunId": mlflow_run_id or "",
-                "MlflowModelId": logged_model.model_id,
-                "MlflowArtifactLocation": logged_model.artifact_location,
-                "EvaluationMetrics": json.dumps(evaluation_metrics)[:1024],
-            },
         )
         print(f"## Model Package status set to: {model_approval_status}")
+
+        # Written through set_version_metadata, which sanitises and truncates every
+        # value to what the API accepts.
+        set_version_metadata(sm_client, sm_model_package_arn, {
+            "TrainingJobName": training_job_name or "local",
+            "ContainerImage": container_image or "n/a",
+            "MlflowRunId": mlflow_run_id or "",
+            "MlflowModelId": logged_model.model_id,
+            "MlflowArtifactLocation": logged_model.artifact_location,
+            "EvaluationMetrics": evaluation_metrics_text,
+        })
 
         # Step 7: Lifecycle stage, driven from MLflow by alias. The step stops at
         # staging; promotion to production is the governance officer's call.
