@@ -1,5 +1,5 @@
 {
-  "_comment": "Reference copy of the data-scientist persona policy, for reading alongside the notebooks. The policy actually in force is the one attached to the pre-provisioned data-scientist role in your workshop account.",
+  "_comment": "Data-scientist guardrail: the DenyProductionPromotion statement is the gate, using the sagemaker:ModelLifeCycle/stage condition key. Reference copy for reading alongside the notebooks; the policy in force is the one attached to the pre-provisioned data-scientist role.",
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -49,17 +49,13 @@
       }
     },
     {
-      "Sid": "DenyChangesToLockedVersions",
+      "Sid": "DenyUpdatesToFrozenModels",
       "Effect": "Deny",
-      "Action": [
-        "sagemaker:UpdateModelPackage",
-        "sagemaker:AddTags",
-        "sagemaker:DeleteTags"
-      ],
+      "Action": "sagemaker:UpdateModelPackage",
       "Resource": "*",
       "Condition": {
         "StringEquals": {
-          "aws:ResourceTag/locked": "true"
+          "aws:ResourceTag/frozen": "true"
         }
       }
     }

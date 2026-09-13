@@ -24,12 +24,19 @@ The workshop follows the single-account pattern from [Govern models with MLflow 
 
 | Persona | Does | Denied |
 |---|---|---|
-| Data scientist ([policy](governance/data_scientist_policy.json)) | registers versions from MLflow, moves them to `staging/pending` (`UpdateModelPackage` made as this role, mirrored as the `sagemakerlifecycle-staging-pending` MLflow alias), tags versions | `UpdateModelPackage` when `sagemaker:ModelLifeCycle/stage = production`, when `sagemaker:ModelApprovalStatus = Approved`, and on versions tagged `locked=true` |
-| Governance officer ([policy](governance/governance_officer_policy.json)) | reviews synced metrics, model card and lineage; sets `ModelLifeCycle = production/active` and `ModelApprovalStatus = Approved`; locks the version | — |
+| Data scientist ([policy](governance/data_scientist_policy.json)) | registers versions from MLflow, moves them to `staging/pending` with the `sagemakerlifecycle-staging-pending` alias, records their provenance | `UpdateModelPackage` when `sagemaker:ModelLifeCycle/stage = production` or `sagemaker:ModelApprovalStatus = Approved`, and on anything tagged `frozen=true` |
+| Governance officer ([policy](governance/governance_officer_policy.json)) | reviews synced metrics, model card and lineage; promotes to `production/active`; sets `ModelApprovalStatus = Approved`; can freeze the group ([freeze policy](governance/freeze_policy.json)) | — |
 
-The gate is enforced by IAM only: there is no stage check in the code. Every lifecycle change is an `UpdateModelPackage` call signed as one of the two roles, and the policy attached to that role decides. The pipeline's register step ([`pipeline_steps/register.py`](pipeline_steps/register.py)) makes its lifecycle update as the data-scientist role (`DATA_SCIENTIST_ROLE_ARN`), so a pipeline asking for `production` fails with `AccessDeniedException`.
+Lifecycle stage is driven from MLflow: setting the alias `sagemakerlifecycle-<stage>-<status>` on a model version updates the `ModelLifeCycle` of the synced Model Package version. Two consequences shape where a guardrail bites:
 
-Both roles are created as part of provisioning of the workshop. The notebooks only look for the roles. Notebook 00 resolves the roles and prints the policy attached to each, notebook 01 exercises the gate for a version registered by hand, and notebook 03 for a version registered by the pipeline. Shared helpers live in [`governance/approval_gate.py`](governance/approval_gate.py); the JSON files linked above are reference copies of those policies.
+- **Alias-driven lifecycle transitions are performed by the MLflow app's service role**, not by the caller. A deny on the notebook role does not stop them, so the notebooks verify that guardrail with `iam:SimulateCustomPolicy` — IAM's own evaluation of the same request — exactly as the blog's [reference notebook](https://github.com/aws-samples/genai-ml-platform-examples/blob/main/operations/sagemaker-mlflow-model-registry-goverance/01_single_account_governance.ipynb) does. Attach the policy to the data-scientist roles *and* to the MLflow app service role to close that route in production.
+- **`ModelApprovalStatus` is set by a direct `UpdateModelPackage` call**, so the calling role's policy does apply. The notebooks demonstrate that denial live, against the real data-scientist role.
+
+Provenance follows the shape of the API rather than a preference: SageMaker supports tag operations on Model Package **Groups** only, so group-wide facts (project, use case, team) are resource tags on the group — which is also what `aws:ResourceTag` conditions evaluate — while per-version facts (who registered it, from where, the test AUC, who approved it and when) live in the version's `CustomerMetadataProperties`.
+
+There is no stage check in the workshop code: the register step stops at `staging` and the policies decide the rest.
+
+Both roles are created as part of provisioning of the workshop; the notebooks only look them up. Notebook 00 resolves the roles and prints the policy attached to each, notebook 01 exercises the gate for a version registered by hand, and notebook 03 for a version registered by the pipeline. Shared helpers live in [`governance/approval_gate.py`](governance/approval_gate.py); the JSON files linked above are reference copies of the deployed policies.
 
 ## Repository structure
 

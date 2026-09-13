@@ -16,17 +16,16 @@ the fact, we make the MLflow artifact store the single source of truth:
    ``AutoModelRegistrationEnabled`` and the spec was logged FIRST, the synced
    SageMaker Model Package is created *already deployable* — serving directly
    from the MLflow artifact store, no repacking, no artifact copies.
-5. Put the version where it belongs in its lifecycle (default ``staging`` /
-   ``pending``). The ``UpdateModelPackage`` call is made **as the data-scientist
-   IAM role** (``DATA_SCIENTIST_ROLE_ARN``), so the guardrail attached to that
-   role — ``Deny`` when ``sagemaker:ModelLifeCycle/stage = production`` — is what
-   keeps the step out of production, not a check in this code. The matching
-   ``sagemakerlifecycle-<stage>-<status>`` alias is then set in MLflow so both
-   registries show the same stage.
-6. Tag the Model Package Group (via MLflow registered-model tags, synced by the
-   app) and the Model Package version (SageMaker resource tags) with the
-   traceability metadata a reviewer needs: project, use case, who registered
-   it, from where, and the MLflow run / training job it came from.
+5. Move the version to its lifecycle stage (default ``staging`` / ``pending``) by
+   setting the MLflow alias ``sagemakerlifecycle-<stage>-<status>``, which the sync
+   turns into the Model Package's ``ModelLifeCycle``. The step never asks for
+   ``production``: that is the governance officer's decision, and the
+   data-scientist guardrail (``sagemaker:ModelLifeCycle/stage = production``)
+   denies it.
+6. Record the traceability a reviewer needs. SageMaker supports tag operations on
+   Model Package *Groups* only, so group-wide facts (project, use case, team) are
+   resource tags on the group, while per-version facts (who registered it, from
+   where, the test AUC) go into the version's ``CustomerMetadataProperties``.
 
 The endpoint downloads everything under the model's artifact location to
 /opt/ml/model (MLmodel, model file, conda.yaml, code/inference.py), so
@@ -47,6 +46,14 @@ try:
     from pipeline_steps.runtime_utils import log_runtime_info
 except ImportError:
     def log_runtime_info(): pass
+
+# governance/ ships with the step code (IncludeLocalWorkDir).
+from governance.approval_gate import (
+    set_lifecycle,
+    set_version_metadata,
+    tag_model_package_group,
+    wait_for_lifecycle,
+)
 
 
 def _resolve_logged_model(mlflow_client, mlflow_run_id):
@@ -142,53 +149,20 @@ def _ensure_registered_model(mlflow_client, name, group_tags):
         print(f"## Registered model '{name}' already exists — reusing it")
 
 
-def _data_scientist_client():
-    """SageMaker client that acts as the *data scientist* persona.
+def _set_lifecycle_stage(mlflow_client, sm_client, model_version, model_package_arn, stage, status):
+    """Move the new version to ``stage``/``status`` from MLflow, by alias.
 
-    The step itself runs under the pipeline execution role. Lifecycle changes are
-    made with the data-scientist role instead (DATA_SCIENTIST_ROLE_ARN, set by
-    notebook 03 via config.yaml), so that IAM — not this code — decides which
-    transitions the step may make: the role's policy denies
-    ``sagemaker:ModelLifeCycle/stage = production``. Without the variable the
-    step falls back to its own credentials and the guardrail is not evaluated."""
-    role_arn = os.environ.get("DATA_SCIENTIST_ROLE_ARN", "")
-    if not role_arn:
-        print("## DATA_SCIENTIST_ROLE_ARN not set — lifecycle update runs under the step's own role (no persona guardrail)")
-        return boto3.client("sagemaker")
-    credentials = boto3.client("sts").assume_role(
-        RoleArn=role_arn, RoleSessionName="data-scientist", DurationSeconds=900
-    )["Credentials"]
-    print(f"## Lifecycle update as data scientist: {role_arn}")
-    return boto3.Session(
-        aws_access_key_id=credentials["AccessKeyId"],
-        aws_secret_access_key=credentials["SecretAccessKey"],
-        aws_session_token=credentials["SessionToken"],
-    ).client("sagemaker")
+    Lifecycle stage is driven from MLflow: setting the alias
+    ``sagemakerlifecycle-<stage>-<status>`` makes the sync update the Model Package's
+    ``ModelLifeCycle``. A version holds one lifecycle alias at a time, so any existing
+    one is removed first.
 
-
-def _set_lifecycle_stage(persona_sm_client, mlflow_client, model_version, model_package_arn, stage, status):
-    """Set the Model Package lifecycle stage as the data-scientist persona.
-
-    ``UpdateModelPackage`` is called directly with the persona's credentials, so
-    the IAM condition keys on that role are evaluated: ``staging`` goes through,
-    ``production`` raises ``AccessDeniedException`` and fails the step. Only after
-    IAM has allowed the transition is the matching ``sagemakerlifecycle-<stage>-<status>``
-    alias set in MLflow, so the MLflow UI shows the same stage. (The alias route
-    alone would not do: the MLflow app syncs aliases under its own service role.)"""
-    persona_sm_client.update_model_package(
-        ModelPackageArn=model_package_arn,
-        ModelLifeCycle={
-            "Stage": stage,
-            "StageStatus": status,
-            "StageDescription": f"Set by the register step as data scientist (MLflow {model_version.name} v{model_version.version})",
-        },
-    )
-    lifecycle = persona_sm_client.describe_model_package(ModelPackageName=model_package_arn).get("ModelLifeCycle") or {}
-    print(f"## Lifecycle stage set: {lifecycle.get('Stage')}/{lifecycle.get('StageStatus')}")
-    mlflow_client.set_registered_model_alias(
-        model_version.name, f"sagemakerlifecycle-{stage}-{status}", model_version.version
-    )
-    return lifecycle
+    The step never asks for ``production``: promotion is the governance officer's
+    decision, and the data-scientist guardrail
+    (``sagemaker:ModelLifeCycle/stage = production``) denies it."""
+    alias = set_lifecycle(mlflow_client, model_version.name, model_version.version, stage, status)
+    print(f"## MLflow alias set: {alias}")
+    return wait_for_lifecycle(sm_client, model_package_arn, stage, status)
 
 
 def register(
@@ -205,16 +179,16 @@ def register(
 ):
     """Register the trained model: log inference spec on the MLflow model, then
     register it — auto-sync creates a deployable SageMaker Model Package — and
-    finally place it in ``lifecycle_stage``/``lifecycle_status`` and tag it.
+    finally move it to ``lifecycle_stage``/``lifecycle_status`` and record its
+    provenance.
 
-    ``tags`` are attached to the Model Package version as SageMaker resource
-    tags (merged with the traceability tags this step derives itself);
-    ``group_tags`` become tags of the Model Package Group when it is created.
+    ``tags`` are recorded on the Model Package version as
+    ``CustomerMetadataProperties`` (merged with the provenance this step derives
+    itself); ``group_tags`` become resource tags of the Model Package Group, because
+    SageMaker supports tag operations on groups only, not on individual versions.
 
-    The step does not police ``lifecycle_stage`` itself. The lifecycle update is
-    made with the data-scientist role (``DATA_SCIENTIST_ROLE_ARN``), whose IAM
-    policy denies ``production``; asking for it fails the step with
-    ``AccessDeniedException``. Promotion belongs to the governance officer."""
+    The step stops at ``staging``: promotion to ``production`` is the governance
+    officer's decision, and the data-scientist guardrail denies it."""
     try:
         suffix = strftime('%d-%H-%M-%S', gmtime())
         sm_client = boto3.client("sagemaker")
@@ -315,33 +289,32 @@ def register(
         )
         print(f"## Model Package status set to: {model_approval_status}")
 
-        # Step 7: Lifecycle stage, as the data-scientist persona. IAM decides:
-        # the role's policy allows staging and denies production.
-        data_scientist_sm = _data_scientist_client()
+        # Step 7: Lifecycle stage, driven from MLflow by alias. The step stops at
+        # staging; promotion to production is the governance officer's call.
         lifecycle = _set_lifecycle_stage(
-            data_scientist_sm, mlflow_client, model_version, sm_model_package_arn,
+            mlflow_client, sm_client, model_version, sm_model_package_arn,
             lifecycle_stage.lower(), lifecycle_status.lower(),
         )
 
-        # Step 8: Resource tags on the version, also as the data scientist. These
-        # are what a governance officer filters on in the registry, and what IAM
-        # aws:ResourceTag conditions evaluate (e.g. the "locked" tag set after approval).
+        # Step 8: Provenance. SageMaker supports tag operations on Model Package
+        # *Groups* only, so per-version facts go into CustomerMetadataProperties
+        # (visible on the version in Studio) and group-wide facts become resource
+        # tags on the group — which is also what IAM aws:ResourceTag conditions see.
         is_job = bool(training_job_name and training_job_name != "local")
-        version_tags = {
-            "registration-source": "sagemaker-pipeline" if is_job else "notebook-local",
-            "registered-by": os.environ.get("USER", "") or "unknown",
-            "mlflow-experiment": os.environ.get("MLFLOW_EXPERIMENT_NAME", ""),
-            "mlflow-run-id": mlflow_run_id or "",
-            "mlflow-model-id": logged_model.model_id,
-            "training-job": training_job_name or "local",
-            "test-auc": f"{evaluation_metrics['auc_score']:.4f}" if "auc_score" in evaluation_metrics else "",
+        version_metadata = {
+            "RegistrationSource": "sagemaker-pipeline" if is_job else "notebook-local",
+            "RegisteredBy": os.environ.get("USER", "") or "unknown",
+            "MlflowExperiment": os.environ.get("MLFLOW_EXPERIMENT_NAME", ""),
+            "LifecycleStage": f"{lifecycle.get('Stage')}/{lifecycle.get('StageStatus')}",
+            "TestAuc": f"{evaluation_metrics['auc_score']:.4f}" if "auc_score" in evaluation_metrics else "",
         }
-        version_tags.update(tags or {})
-        data_scientist_sm.add_tags(
-            ResourceArn=sm_model_package_arn,
-            Tags=[{"Key": k, "Value": str(v)[:256]} for k, v in version_tags.items() if v not in (None, "")],
-        )
-        print(f"## Tagged Model Package version with {sorted(k for k, v in version_tags.items() if v)}")
+        version_metadata.update(tags or {})
+        set_version_metadata(sm_client, sm_model_package_arn, version_metadata)
+        print(f"## Recorded on the version: {sorted(k for k, v in version_metadata.items() if v)}")
+
+        if group_tags:
+            tag_model_package_group(sm_client, sm_model_package_arn, group_tags)
+            print(f"## Tagged the Model Package Group with {sorted(group_tags)}")
 
         mlflow.log_params({
             "registered_model_name": model_version.name,

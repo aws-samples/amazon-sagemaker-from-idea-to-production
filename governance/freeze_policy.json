@@ -1,0 +1,28 @@
+{
+  "_comment": "Freeze guardrail. Attach to the MLflow app service role (and to the data-scientist role) so that once a Model Package Group is tagged frozen=true, approved models can no longer be modified through MLflow. Tags attach to the group, not to individual versions.",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyUpdatesToFrozenModels",
+      "Effect": "Deny",
+      "Action": "sagemaker:UpdateModelPackage",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/frozen": "true"
+        }
+      }
+    },
+    {
+      "Sid": "DenyNewVersionsInFrozenGroup",
+      "Effect": "Deny",
+      "Action": "sagemaker:CreateModelPackage",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/frozen": "true"
+        }
+      }
+    }
+  ]
+}
