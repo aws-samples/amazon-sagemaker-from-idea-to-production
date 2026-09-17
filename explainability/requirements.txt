@@ -1,2 +1,4 @@
+# The BYOC image already ships xgboost, pandas, numpy, mlflow and s3fs.
+# The explainability job only needs these two extra libraries.
 shap
 matplotlib
