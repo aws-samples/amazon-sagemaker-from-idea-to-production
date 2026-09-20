@@ -15,8 +15,9 @@ Work through the notebooks in order:
 | [02-model-card-automation.ipynb](02-model-card-automation.ipynb) | Automate model governance: an EventBridge rule on `SageMaker Model Package State Change` invokes a Lambda function that completes the Model Card of every registered model package version (one card per version, status aligned with the approval workflow) |
 | [03-sagemaker-pipeline.ipynb](03-sagemaker-pipeline.ipynb) | Operationalize with a SageMaker pipeline built with the `@step` decorator; the register step stages and tags the version in the Model Registry, and the governance officer promotes and approves it |
 | [04-inference-and-monitoring.ipynb](04-inference-and-monitoring.ipynb) | **Inference**: resolve the latest approved Model Package version in the registry, validate its logged `inference.py` in the kernel exactly as the serving container runs it, deploy it to a real-time endpoint with **data capture** enabled (no retraining, no repacking), test the endpoint and log the confusion matrix to the model's MLflow run. **Monitoring**: send production traffic and watch it with **Evidently**: data drift against the training baseline and model quality once the ground truth is joined, logged to MLflow; then run the same checks as a scheduled SageMaker pipeline with SNS alerts |
+| [05-event-driven-deployment.ipynb](05-event-driven-deployment.ipynb) | Make the approval the deployment: an EventBridge rule on `SageMaker Model Package State Change` with `ModelApprovalStatus = Approved` invokes a Lambda function that re-reads the registry and deploys the version to a stable real-time endpoint with data capture (first approval creates it, later approvals update it blue/green; re-approving an earlier version rolls back). The governance officer's approval is the only thing that moves a model to production; the notebook triggers it, watches the endpoint come up, tests it and proves the function is idempotent |
 
-> Each capability is exercised exactly once: the preprocessing logic is prototyped in the notebook and then executed once as a managed job; notebook 01 registers a version by hand and notebook 03 registers one from the pipeline; and there is a single real-time endpoint, created in notebook 04, which serves the approved Model Package version.
+> Each capability is exercised exactly once: the preprocessing logic is prototyped in the notebook and then executed once as a managed job; notebook 01 registers a version by hand and notebook 03 registers one from the pipeline; notebook 04 deploys the approved Model Package version by hand and notebook 05 lets the `Approved` event do it.
 
 ## Model governance: the approval gate
 
@@ -34,7 +35,7 @@ Lifecycle stage is driven from MLflow: setting the alias `sagemakerlifecycle-<st
 
 Provenance follows the shape of the API rather than a preference: SageMaker supports tag operations on Model Package **Groups** only, so group-wide facts (project, use case, team) are resource tags on the group — which is also what `aws:ResourceTag` conditions evaluate — while per-version facts (who registered it, from where, the test AUC, who approved it and when) live in the version's `CustomerMetadataProperties`.
 
-There is no stage check in the workshop code: the register step stops at `staging` and the policies decide the rest.
+There is no stage check in the workshop code: the register step stops at `staging` and the policies decide the rest. Notebook 05 closes the loop on the other side of the gate: the `Approved` status the governance officer sets is the event that deploys the version, so the approval is not only the permission to deploy but the deployment itself.
 
 Both roles are created as part of provisioning of the workshop; the notebooks only look them up. Notebook 00 resolves the roles and prints the policy attached to each, notebook 01 exercises the gate for a version registered by hand, and notebook 03 for a version registered by the pipeline. Shared helpers live in [`governance/approval_gate.py`](governance/approval_gate.py); the JSON files linked above are reference copies of the deployed policies.
 
@@ -47,6 +48,9 @@ Both roles are created as part of provisioning of the workshop; the notebooks on
 ├── governance/           # Approval gate: IAM policy templates for the data-scientist and
 │                         # governance-officer personas, and the helpers notebooks 00/01/03 use
 ├── img/                  # Images and diagrams used in the notebooks
+├── deployment_automation/ # Lambda function deployed by notebook 05: deploys an approved model
+│                         # package version to the production endpoint (EventBridge-triggered),
+│                         # and the reference IAM policy of its execution role
 ├── model_card_automation/ # Lambda function deployed by notebook 02: completes the Model Card
 │                         # of each registered model package version (EventBridge-triggered)
 ├── pipeline_steps/       # Python functions used as pipeline steps in notebook 03

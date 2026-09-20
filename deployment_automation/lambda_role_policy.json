@@ -1,0 +1,56 @@
+{
+  "_comment": "Reference copy of the least-privilege policy for the deployment-automation Lambda execution role (trust policy: lambda.amazonaws.com). Placeholders are filled in by notebook 05 before the policy is shown or applied. Read the registry for the workshop's model package groups only, manage one endpoint and the models / endpoint configurations created for it, and pass exactly one execution role to SageMaker.",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ReadModelRegistry",
+      "Effect": "Allow",
+      "Action": [
+        "sagemaker:DescribeModelPackage"
+      ],
+      "Resource": "arn:aws:sagemaker:${REGION}:${ACCOUNT_ID}:model-package/${MODEL_PACKAGE_GROUP_PREFIX}*"
+    },
+    {
+      "Sid": "ManageTheDeploymentEndpoint",
+      "Effect": "Allow",
+      "Action": [
+        "sagemaker:CreateEndpoint",
+        "sagemaker:UpdateEndpoint",
+        "sagemaker:DeleteEndpoint",
+        "sagemaker:DescribeEndpoint",
+        "sagemaker:CreateEndpointConfig",
+        "sagemaker:DescribeEndpointConfig",
+        "sagemaker:CreateModel",
+        "sagemaker:DescribeModel",
+        "sagemaker:AddTags",
+        "sagemaker:ListTags"
+      ],
+      "Resource": [
+        "arn:aws:sagemaker:${REGION}:${ACCOUNT_ID}:endpoint/${ENDPOINT_NAME}",
+        "arn:aws:sagemaker:${REGION}:${ACCOUNT_ID}:endpoint-config/${ENDPOINT_NAME}-*",
+        "arn:aws:sagemaker:${REGION}:${ACCOUNT_ID}:model/${ENDPOINT_NAME}-*"
+      ]
+    },
+    {
+      "Sid": "PassTheEndpointExecutionRole",
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": "${EXECUTION_ROLE_ARN}",
+      "Condition": {
+        "StringEquals": {
+          "iam:PassedToService": "sagemaker.amazonaws.com"
+        }
+      }
+    },
+    {
+      "Sid": "WriteLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:${REGION}:${ACCOUNT_ID}:log-group:/aws/lambda/${LAMBDA_FUNCTION_NAME}:*"
+    }
+  ]
+}
