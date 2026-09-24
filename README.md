@@ -1,6 +1,6 @@
 # AIM 408 — End-to-end ModelOps on Amazon SageMaker AI
 
-This workshop takes you from developing an ML idea in a simple notebook to a production-ready solution with SageMaker AI processing and training jobs, an automated ML pipeline with model registry, and model monitoring.
+This workshop builds an end-to-end ModelOps reference workflow on SageMaker AI. You prototype and track a model, move the workload to managed jobs, register and govern model versions, automate the workflow with a pipeline, deploy a real-time endpoint, monitor it, and package staged deployment as a SageMaker Project.
 
 It is based on the [Amazon SageMaker MLOps: from idea to production in six steps](https://github.com/aws-samples/amazon-sagemaker-from-idea-to-production) workshop.
 
@@ -10,77 +10,84 @@ Work through the notebooks in order:
 
 | Notebook | What you do |
 |---|---|
-| [00-start-here.ipynb](00-start-here.ipynb) | Environment setup: SageMaker domain, MLflow tracking with Model Registry sync, data download, and the **approval gate**: two IAM persona roles (data scientist, governance officer) separated by Model Registry condition keys |
-| [01-mlflow-and-sagemaker-jobs.ipynb](01-mlflow-and-sagemaker-jobs.ipynb) | **Part 1** — experiment locally in the notebook (data processing, training, evaluation in plain Python) with experiment tracking in SageMaker managed MLflow. **Part 2** — scale the same logic with SageMaker AI processing and training jobs (`@remote`, `ModelTrainer`, a BYOC XGBoost container), explain the selected model with SHAP and standardized fairness metrics as a managed job, register it with a logged inference specification, group and version tags and the `staging` lifecycle stage, and pass the approval gate (data scientist denied, governance officer promotes to `production` and approves) |
-| [02-model-card-automation.ipynb](02-model-card-automation.ipynb) | Automate model governance: an EventBridge rule on `SageMaker Model Package State Change` invokes a Lambda function that completes the Model Card of every registered model package version (one card per version, status aligned with the approval workflow) |
-| [03-sagemaker-pipeline.ipynb](03-sagemaker-pipeline.ipynb) | Operationalize with a SageMaker pipeline built with the `@step` decorator; the register step stages and tags the version in the Model Registry, and the governance officer promotes and approves it |
-| [04-inference-and-monitoring.ipynb](04-inference-and-monitoring.ipynb) | **Inference**: resolve the latest approved Model Package version in the registry, validate its logged `inference.py` in the kernel exactly as the serving container runs it, deploy it to a real-time endpoint with **data capture** enabled (no retraining, no repacking), test the endpoint and log the confusion matrix to the model's MLflow run. **Monitoring**: send production traffic and watch it with **Evidently**: data drift against the training baseline and model quality once the ground truth is joined, logged to MLflow; then run the same checks as a scheduled SageMaker pipeline with SNS alerts |
-| [05-templatize-deployment.ipynb](05-templatize-deployment.ipynb) | Own and automate staged deployment: package the editable [`deployment-seed-code/`](deployment-seed-code/) repository, publish the deployment-only custom Project template to S3, and launch it with `TemplateProviders`. The resulting CodePipeline deploys the latest approved Model Package to staging, runs real CSV inference tests, waits for guarded manual approval, deploys and tests production, and provides guarded cleanup. |
+| [00-start-here.ipynb](00-start-here.ipynb) | Set up the SageMaker domain resources, Python environment, managed MLflow tracking with Model Registry sync, dataset, custom XGBoost container, and data-scientist and governance-officer roles. |
+| [01-mlflow-and-sagemaker-jobs.ipynb](01-mlflow-and-sagemaker-jobs.ipynb) | Prototype and track the model locally, then run preprocessing, training, and explanation as managed SageMaker AI jobs. Register one deployable Model Package version and exercise the two-persona approval gate. |
+| [02-model-card-automation.ipynb](02-model-card-automation.ipynb) | Create an EventBridge rule and Lambda function that complete each registered version's Model Card and keep its status aligned with the approval workflow. |
+| [03-sagemaker-pipeline.ipynb](03-sagemaker-pipeline.ipynb) | Turn the reusable preprocess, train, evaluate, explain, and register functions into a SageMaker pipeline with `@step`. Register only when the evaluation threshold passes, then stage, review, and approve the version. |
+| [04-inference-and-monitoring.ipynb](04-inference-and-monitoring.ipynb) | Resolve the latest registry version and require it to be `production` and `Approved`; validate its logged inference code, deploy it with data capture, and monitor drift and model quality with Evidently, MLflow, a scheduled SageMaker pipeline, and SNS alerts. |
+| [05-templatize-deployment.ipynb](05-templatize-deployment.ipynb) | Package [`deployment-seed-code/`](deployment-seed-code/) and publish an organization-owned deployment-only Project template. Its CodePipeline deploys an approved package to staging, runs CSV inference tests, waits for guarded manual approval, then deploys and tests production. |
 
-> Complete notebooks 00–04 in order, then continue with notebook 05 for staged CI/CD. The template retains CodeCommit for compatibility with this workshop account; AWS labels the original CodeCommit product **not supported**, so treat it as a reference for an organization-owned successor using your supported Git provider.
+Complete notebooks 00–04 for the model-development, governance, inference, and monitoring workflow. Notebook 05 adds a separate staged CI/CD path for the same Model Package Group.
+
+> **CodeCommit caveat:** the notebook 05 template retains CodeCommit because it matches the copied AWS toolchain and the workshop account has existing access. AWS labels the original product not supported, and CodeCommit is unavailable to new customers. Treat this implementation as a reference for an organization-owned successor that uses your supported Git provider.
 
 ## Model governance: the approval gate
 
-The workshop follows the single-account pattern from [Govern models with MLflow and Amazon SageMaker AI Model Registry sync](https://aws.amazon.com/blogs/machine-learning/govern-models-with-mlflow-and-amazon-sagemaker-ai-model-registry-sync-part-1/). Every `mlflow.register_model()` call creates a Model Package version in the SageMaker Model Registry; two personas, separated by IAM rather than by accounts, then move it through its lifecycle:
+The workshop follows the single-account pattern from [Govern models with MLflow and Amazon SageMaker AI Model Registry sync](https://aws.amazon.com/blogs/machine-learning/govern-models-with-mlflow-and-amazon-sagemaker-ai-model-registry-sync-part-1/). With automatic registry sync enabled, each `mlflow.register_model()` call creates a Model Package version in the SageMaker Model Registry. Two IAM personas then move the version through its lifecycle:
 
-| Persona | Does | Denied |
+| Persona | Responsibilities | Explicitly denied |
 |---|---|---|
-| Data scientist ([policy](governance/data_scientist_policy.json)) | registers versions from MLflow, moves them to `staging/pending` with the `sagemakerlifecycle-staging-pending` alias, records their provenance | `UpdateModelPackage` when `sagemaker:ModelLifeCycle/stage = production` or `sagemaker:ModelApprovalStatus = Approved`, and on anything tagged `frozen=true` |
-| Governance officer ([policy](governance/governance_officer_policy.json)) | reviews synced metrics, model card and lineage; promotes to `production/active`; sets `ModelApprovalStatus = Approved`; can freeze the group ([freeze policy](governance/freeze_policy.json)) | — |
+| Data scientist ([policy](governance/data_scientist_policy.json)) | Register versions, move them to `staging/pending` with the `sagemakerlifecycle-staging-pending` alias, and record provenance. | `UpdateModelPackage` for `production`, `ModelApprovalStatus = Approved`, or resources tagged `frozen=true`. |
+| Governance officer ([policy](governance/governance_officer_policy.json)) | Review metrics, Model Card, and lineage; promote to `production/active`; set `ModelApprovalStatus = Approved`; optionally freeze the group with the [freeze policy](governance/freeze_policy.json). | — |
 
-Lifecycle stage is driven from MLflow: setting the alias `sagemakerlifecycle-<stage>-<status>` on a model version updates the `ModelLifeCycle` of the synced Model Package version. Two consequences shape where a guardrail bites:
+Lifecycle stage is driven from MLflow: setting the alias `sagemakerlifecycle-<stage>-<status>` updates the synced Model Package version's `ModelLifeCycle`. The enforcement path matters:
 
-- **Alias-driven lifecycle transitions are performed by the MLflow app's service role**, not by the caller. A deny on the notebook role does not stop them, so the notebooks verify that guardrail with `iam:SimulateCustomPolicy` — IAM's own evaluation of the same request — exactly as the blog's [reference notebook](https://github.com/aws-samples/genai-ml-platform-examples/blob/main/operations/sagemaker-mlflow-model-registry-goverance/01_single_account_governance.ipynb) does. Attach the policy to the data-scientist roles *and* to the MLflow app service role to close that route in production.
-- **`ModelApprovalStatus` is set by a direct `UpdateModelPackage` call**, so the calling role's policy does apply. The notebooks demonstrate that denial live, against the real data-scientist role.
+- Alias-driven lifecycle updates are performed by the MLflow application's service role, not by the notebook caller. The notebooks therefore demonstrate the data-scientist lifecycle deny with `iam:SimulateCustomPolicy`, following the blog's [reference notebook](https://github.com/aws-samples/genai-ml-platform-examples/blob/main/operations/sagemaker-mlflow-model-registry-goverance/01_single_account_governance.ipynb). In production, attach the deny to both the data-scientist roles and the MLflow application service role.
+- `ModelApprovalStatus` is set by a direct `UpdateModelPackage` call, so the calling role's policy applies. Notebooks 01 and 03 demonstrate that denial against the assumed data-scientist role.
 
-Provenance follows the shape of the API rather than a preference: SageMaker supports tag operations on Model Package **Groups** only, so group-wide facts (project, use case, team) are resource tags on the group — which is also what `aws:ResourceTag` conditions evaluate — while per-version facts (who registered it, from where, the test AUC, who approved it and when) live in the version's `CustomerMetadataProperties`.
+SageMaker supports tag operations on Model Package Groups rather than individual versions. Group-wide facts such as project, use case, and team are group resource tags, which IAM `aws:ResourceTag` conditions can evaluate. Per-version facts such as who registered or approved the model, evaluation metrics, and timestamps are stored in `CustomerMetadataProperties`.
 
-There is no stage check in the workshop code: the register step stops at `staging` and the policies decide the rest. Notebook 05 consumes the governance officer's `Approved` status to start the staged deployment pipeline. Staging deployment and its inference gate are automatic; production still requires the pipeline's separate guarded manual approval.
+The register logic in notebooks 01 and 03 stops at `staging/pending`; it never promotes a version to production. Notebook 04 separately verifies that the latest registry version is both `production` and `Approved` before deploying it. Notebook 05's deployment project selects an `Approved` package for staging, runs an automatic inference test, and requires a separate guarded CodePipeline approval before production.
 
-Both roles are created as part of provisioning of the workshop; the notebooks only look them up. Notebook 00 resolves the roles and prints the policy attached to each, notebook 01 exercises the gate for a version registered by hand, and notebook 03 for a version registered by the pipeline. Shared helpers live in [`governance/approval_gate.py`](governance/approval_gate.py); the JSON files linked above are reference copies of the deployed policies.
+The workshop provisioning creates both persona roles; the notebooks look them up rather than creating them. Notebook 00 resolves the roles and displays their policies, notebook 01 exercises the gate for a manually registered version, and notebook 03 repeats it for a pipeline-registered version. Shared helpers live in [`governance/approval_gate.py`](governance/approval_gate.py); the JSON policy files are reference copies of the deployed policies.
 
 ## Repository structure
 
+```text
+├── 0x-*.ipynb             # Workshop notebooks 00–05
+├── byoc/                  # Custom XGBoost training/serving image and ECR build script
+├── cfn/                   # Deployment-only SageMaker Project template used by notebook 05
+├── deployment-seed-code/  # Editable CodePipeline seed: endpoint IaC, stage configs,
+│                          # build logic, buildspecs, and inference tests
+├── explainability/        # Additional dependencies for the managed SHAP/fairness job
+├── governance/            # Approval-gate helpers and reference IAM policies
+├── img/                   # Notebook diagrams and screenshots
+├── model_card_automation/ # EventBridge-triggered Model Card Lambda used by notebook 02
+├── monitoring/            # Evidently drift/quality processing script used by notebook 04
+├── pipeline_steps/        # Reusable preprocess, train, evaluate, explain, register,
+│                          # inference, and runtime helper functions used by notebook 03
+├── processing/            # Processing script and dependencies materialized by notebook 01
+├── training/              # Script-mode training code and dependencies used by notebook 01
+├── deployment_automation/ # Legacy/reference endpoint-deployment Lambda; not used by the
+│                          # current notebook 00–05 workflow
+└── setup-py312.sh         # Creates the Python 3.12 Jupyter kernel
 ```
-├── 0x-*.ipynb            # Workshop notebooks (see table above)
-├── byoc/                 # Bring-your-own-container: Dockerfile, training and serving code,
-│                         # and build_and_push.sh to publish the custom XGBoost image to ECR
-├── cfn/                  # Deployment-only S3 custom Project template used by notebook 05
-├── deployment-seed-code/ # Editable deployment repository seed: endpoint IaC, stage configs,
-│                         # build logic and staging tests copied from the AWS seed ZIP
-├── governance/           # Approval gate: IAM policy templates for the data-scientist and
-│                         # governance-officer personas, and the helpers notebooks 00/01/03 use
-├── img/                  # Images and diagrams used in the notebooks
-├── deployment_automation/ # Lambda function deployed by notebook 05: deploys an approved model
-│                         # package version to the production endpoint (EventBridge-triggered),
-│                         # and the reference IAM policy of its execution role
-├── model_card_automation/ # Lambda function deployed by notebook 02: completes the Model Card
-│                         # of each registered model package version (EventBridge-triggered)
-├── pipeline_steps/       # Python functions used as pipeline steps in notebook 03
-│                         # (preprocess, train_fn, evaluate, register, inference)
-└── setup-py312.sh        # Creates the Python 3.12 kernel required by the notebooks
-```
+
+Notebook execution also creates local runtime artifacts such as downloaded data, temporary model files, monitoring reports, and deployment-template build output. These are not workshop source files and should not be committed.
 
 ## Prerequisites
 
 - An AWS account with a SageMaker AI domain and a JupyterLab space in SageMaker Studio
-- **SageMaker Distribution Image 4.3.2** and **SageMaker Python SDK 3.20.0** — the versions the notebooks were tested with
-- **Python 3.12** — all notebooks must run on a Python 3.12 kernel
+- A workshop environment with permission to run SageMaker jobs and endpoints and to create the IAM, ECR, Lambda, EventBridge, SNS, CloudFormation, CodeCommit, CodePipeline, CodeBuild, S3, and SageMaker Project resources used by the notebooks
+- **SageMaker Distribution Image 4.3.2** and **SageMaker Python SDK 3.20.0**, the tested versions
+- **Python 3.12** for every notebook
 
-If your JupyterLab space does not have a Python 3.12 kernel, open a terminal and run:
+If the JupyterLab space does not have a Python 3.12 kernel, open a terminal from the repository root and run:
 
 ```bash
 ./setup-py312.sh
 ```
 
-Then refresh your browser and select the **Python 3.12** kernel in each notebook.
+Refresh the browser, then select the **Python 3.12** kernel in each notebook.
+
+> **Cost:** managed jobs, real-time endpoints, monitoring jobs, and the notebook 05 Project resources incur AWS charges. Follow the guarded cleanup sections in the notebooks when you finish.
 
 ## Getting started
 
-1. Clone this repository into your JupyterLab space
-2. Open [00-start-here.ipynb](00-start-here.ipynb) and follow the instructions
-3. Continue with the notebooks in order
+1. Clone this repository into the JupyterLab space.
+2. Open [00-start-here.ipynb](00-start-here.ipynb) and complete the environment setup.
+3. Continue through the notebooks in numeric order.
 
 ## License
 
-See the upstream [amazon-sagemaker-from-idea-to-production](https://github.com/aws-samples/amazon-sagemaker-from-idea-to-production) repository for license terms (MIT-0).
+See the upstream [amazon-sagemaker-from-idea-to-production](https://github.com/aws-samples/amazon-sagemaker-from-idea-to-production) repository for the MIT-0 license terms.
