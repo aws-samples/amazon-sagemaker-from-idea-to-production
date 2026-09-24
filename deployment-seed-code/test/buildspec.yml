@@ -6,10 +6,15 @@ phases:
       python: 3.11
   build:
     commands:
-      # Call the test python code
-      - python test/test.py --import-build-config $CODEBUILD_SRC_DIR_BuildArtifact/staging-config-export.json --export-test-results $EXPORT_TEST_RESULTS
-      # Show the test results file
-      - cat $EXPORT_TEST_RESULTS
+      # Invoke the staging endpoint with a real held-out CSV record. Any schema,
+      # endpoint, MIME, cardinality, numeric, or probability assertion fails the gate.
+      - >-
+        python test/test.py
+        --import-build-config "$CODEBUILD_SRC_DIR_BuildArtifact/staging-config-export.json"
+        --export-test-results "$EXPORT_TEST_RESULTS"
+        --payload-file test/payload.csv
+        --expected-feature-count 64
+      - cat "$EXPORT_TEST_RESULTS"
 
 artifacts:
   files:

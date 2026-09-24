@@ -1,6 +1,6 @@
 # Origin and adaptation notes
 
-The files in this directory were copied byte-for-byte from the deployment seed archive referenced by [`cfn/endpoint_deployment_toolchain_template.yml`](../cfn/endpoint_deployment_toolchain_template.yml):
+The files in this directory originated from the AWS deployment seed archive used as the reference for [`cfn/deployment_only_project_template.yml`](../cfn/deployment_only_project_template.yml):
 
 - Source: `s3://sagemaker-servicecatalog-seedcode-us-west-2/toolchain/mpg-deployment-config-v1.1.zip`
 - Retrieved: 2026-09-23
@@ -22,11 +22,11 @@ The custom project template creates a CodeCommit repository from a ZIP in S3. Co
 6. waits for manual approval; and
 7. deploys production.
 
-Notebook [`06-publish-deployment-project-template.ipynb`](../06-publish-deployment-project-template.ipynb) packages this directory at the ZIP root, uploads it and the deployment-only project template to your S3 bucket, marks the template as visible to Studio, and can optionally create a SageMaker Project from it.
+Notebook [`05-templatize-deployment.ipynb`](../05-templatize-deployment.ipynb) packages this directory at the ZIP root, uploads it and the deployment-only project template to your S3 bucket, marks the template as visible to Studio, and can optionally create a SageMaker Project from it.
 
 ## Common adaptations
 
 - `staging-config.json` and `prod-config.json`: instance type/count and data-capture settings.
 - `endpoint-config-template.yml`: endpoint resources, autoscaling, networking, alarms, or tags.
-- `test/test.py`: replace the placeholder invocation with a real request and assertions before treating the staging gate as production quality.
+- `test/test.py` and `test/payload.csv`: run a real one-row CSV inference request and require an `InService`, data-capturing endpoint, HTTP 200, `text/csv`, and one finite probability in `[0, 1]`. Replace the fixture and expected feature count when adapting the seed to another model contract.
 - `build.py`: selection rules for Model Package versions. The original chooses by `Approved` status only; it does not check SageMaker Model Registry lifecycle stage.

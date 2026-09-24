@@ -29,7 +29,10 @@ A description of some of the artifacts is provided below:
  - this configuration file is used to customize `prod` stage in the pipeline. You can configure the instance type, instance count here.
 
 `test\buildspec.yml`
-  - this file is used by the CodePipeline's `staging` stage to run the test code of the following python file
+  - this file is used by the CodePipeline staging stage to run the endpoint smoke test.
 
 `test\test.py`
-  - this python file contains code to describe and invoke the staging endpoint. You can customize to add more tests here.
+  - validates the endpoint and data-capture configuration, invokes it with `test/payload.csv`, and requires HTTP 200, a `text/csv` response, and exactly one finite probability in `[0, 1]`.
+
+`test\payload.csv`
+  - one held-out, headerless 64-feature record used by the staging gate. Replace it and the buildspec's expected feature count when adapting this seed to a different model contract.
