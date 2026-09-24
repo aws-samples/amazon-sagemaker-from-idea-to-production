@@ -282,6 +282,9 @@ def register(
         evaluation_metrics_text = " ".join(
             f"{name}={value:.6g}" for name, value in sorted(evaluation_metrics.items())
         )
+
+        time.sleep(3)
+        
         sm_client.update_model_package(
             ModelPackageArn=sm_model_package_arn,
             ModelApprovalStatus=model_approval_status,
