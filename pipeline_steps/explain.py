@@ -7,9 +7,9 @@ One implementation, two call sites:
   * notebook 03 wraps the *same* function as a **pipeline step**:
     ``step(explain, name=...)(...)``
 
-That mirrors the workshop's own progression - ``@remote`` is the easy path to run
-a function on SageMaker, ``@step`` is the easy path to turn it into a pipeline
-step - so the explainability logic is written once and never diverges.
+Notebook 01 applies ``@remote`` to this function; notebook 03 applies ``@step``.
+The function body is shared, so both paths produce the same SHAP and fairness
+report.
 
 Why SHAP and pandas: both are open-source building blocks with no service
 dependency - SHAP for feature attribution and the standardized fairness-metric

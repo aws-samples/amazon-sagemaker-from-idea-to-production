@@ -1,8 +1,8 @@
 """Register step — MLflow Model Registry sync with inference specification logging.
 
-This follows the "inference specification logging" pattern: instead of repacking
-the model with ModelBuilder and mutating the auto-created Model Package after
-the fact, we make the MLflow artifact store the single source of truth:
+This follows the "inference specification logging" pattern. The MLflow artifact
+store remains the single source of truth, and the synced Model Package is created
+with the serving configuration already attached:
 
 1. Resolve the MLflow *logged model* produced by the training run.
 2. Upload our own ``inference.py`` (pipeline_steps/inference.py, shipped with

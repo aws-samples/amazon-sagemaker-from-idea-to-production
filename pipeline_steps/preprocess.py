@@ -17,7 +17,12 @@ def preprocess(
     pipeline_run_name=None,
     pipeline_run_id=None,
 ):
-    """Preprocess data. MLflow tracking URI and experiment are read from environment."""
+    """Preprocess data and write train, validation, test, and baseline CSVs to S3.
+
+    Notebook 01 runs this function with ``@remote`` on SageMaker TrainingJob
+    infrastructure. Notebook 03 wraps the same function with ``@step``. MLflow
+    tracking URI and experiment are read from the environment.
+    """
     try:
         suffix = strftime('%d-%H-%M-%S', gmtime())
 

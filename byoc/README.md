@@ -1,76 +1,60 @@
 # BYOC: XGBoost container from scratch
 
-This folder contains a minimal **Bring Your Own Container** image for the
-workshop. Unlike the default path in `00-start-here.ipynb` — which *extends*
-the AWS-managed XGBoost container — this image is built **from scratch** on
-top of `python:3.12-slim-bookworm` and installs only what the workshop uses.
-
-The resulting image is a drop-in replacement for the `xgboost_image` variable
-stored by `00-start-here.ipynb`, so notebooks 02–06 work unchanged.
+Notebook 00 builds this custom image from `python:3.12-slim-bookworm`, pushes it to ECR, and stores its URI as `xgboost_image`. The image contains the dependencies and entrypoints used by the workshop's remote functions, pipeline steps, processing job, and real-time endpoint.
 
 ## What's inside
 
-| Layer | What | Why |
-|---|---|---|
-| `python:3.12-slim-bookworm` | Debian slim + CPython 3.12 | Minimal, matches workshop kernel version |
-| `build-essential`, `libgomp1` | OpenMP runtime | Required by XGBoost and scikit-learn wheels |
-| `sudo` | sudo binary | Required by SageMaker SDK `@remote` / `@step` bootstrap |
-| `xgboost`, `scikit-learn`, `pandas`, `numpy` | ML stack | Training and preprocessing |
-| `boto3`, `s3fs` | AWS + S3 | Reading inputs from S3 |
-| `sagemaker`, `sagemaker-core`, `sagemaker-train`, `sagemaker-mlops` | SageMaker SDK v3 | Same pins as the rest of the workshop |
-| `mlflow`, `sagemaker-mlflow` | Experiment tracking | Notebooks 01+ log to MLflow from inside jobs |
-| `sagemaker-training` | Training toolkit | Makes the container script-mode compatible |
-| `fastapi`, `uvicorn` | Native inference server | Our `serve` script implements `/ping` + `/invocations` directly |
+| Layer | Purpose |
+|---|---|
+| `python:3.12-slim-bookworm` | Matches the workshop kernel version |
+| `build-essential`, `libgomp1` | XGBoost and scikit-learn runtime support |
+| `sudo` | Required by the SageMaker SDK `@remote` and `@step` bootstrap |
+| XGBoost, scikit-learn, pandas, NumPy | Preprocessing and training |
+| boto3, s3fs | Reading and writing S3 data |
+| SageMaker SDK v3 packages | Remote functions, pipelines, processing, and resources |
+| MLflow and `sagemaker-mlflow` | Experiment tracking and registry sync |
+| `sagemaker-training` | The SageMaker `train` entrypoint and script-mode compatibility |
+| FastAPI and uvicorn | Native `/ping` and `/invocations` inference server |
 
-## How SageMaker uses it
+SHAP and matplotlib are installed only for explainability jobs from `explainability/requirements.txt`; they are not baked into the base image.
 
-The image implements the SageMaker container contract without any custom
-entrypoint code:
+## How the workshop uses the image
 
-- **Training** — SageMaker runs `docker run <image> train`. The
-  `sagemaker-training` toolkit installs a `train` executable on `PATH` that
-  reads `$SAGEMAKER_PROGRAM` (set by the SDK) and executes the user script
-  uploaded to `/opt/ml/code/`. Standard I/O paths apply:
-  `/opt/ml/input/data/<channel>/`, `/opt/ml/input/config/hyperparameters.json`,
-  `/opt/ml/model/`, `/opt/ml/output/`.
-- **Processing** — The SDK invokes your processing script directly; no
-  special entrypoint is used.
-- **Inference** — SageMaker runs `docker run <image> serve`. Our `serve`
-  script (a small FastAPI/uvicorn app baked into the image) listens on port
-  `8080`, exposes `GET /ping` and `POST /invocations`, and delegates to
-  `model_fn`, `input_fn`, `predict_fn`, and `output_fn` defined in the
-  `inference.py` the SDK uploads at deploy time (resolved via
-  `$SAGEMAKER_PROGRAM` / `$SAGEMAKER_SUBMIT_DIRECTORY`). Defaults are
-  provided for everything except `model_fn`. This replaces the archived
-  `sagemaker-inference` toolkit and its JVM-based Multi Model Server —
-  same script-mode contract, no Java, ~200 MB smaller image.
+- **Remote functions in notebook 01** — `@remote` runs the reusable preprocess, train, and explain functions on SageMaker TrainingJob infrastructure. All three use this image; explainability adds its two job-specific dependencies at startup.
+- **Pipeline steps in notebook 03** — `@step` wraps the same functions and uses the same image through `config.yaml`.
+- **Monitoring in notebook 04** — `FrameworkProcessor` uses the image for a native SageMaker ProcessingJob and scheduled `ProcessingStep`.
+- **Inference in notebooks 04 and 05** — SageMaker starts the image with `serve`; the FastAPI application loads the `inference.py` stored with the registered model.
 
-You keep script-mode flexibility: the image has no training or inference
-logic baked in.
+`ModelTrainer` remains a supported alternative for script-first training with explicit channels and output artifacts, but the current notebook flow does not execute a second training path.
+
+## Container contract
+
+- **Training and remote functions** — SageMaker runs `docker run <image> train`. The `sagemaker-training` toolkit reads `SAGEMAKER_PROGRAM` and executes the code staged under `/opt/ml/code/`. Standard training paths such as `/opt/ml/input/data/` and `/opt/ml/model/` remain available to script-mode jobs.
+- **Processing** — `FrameworkProcessor` invokes the supplied processing script directly; no special image entrypoint is required.
+- **Inference** — SageMaker runs `docker run <image> serve`. The launcher starts uvicorn on port 8080 and exposes `GET /ping` and `POST /invocations`. `serving_app.py` delegates to `model_fn`, `input_fn`, `predict_fn`, and `output_fn` from the model's `inference.py`.
+
+The image contains no model-specific training or inference implementation. Those functions and scripts are supplied at job or deployment time.
 
 ## Build and push
 
-From a SageMaker Studio terminal (Docker must already be installed — the
-`00-start-here.ipynb` notebook handles that):
+From a SageMaker Studio terminal, after notebook 00 enables Docker access:
 
 ```bash
-cd ~/amazon-sagemaker-from-idea-to-production/byoc
+cd ~/aim-408-end-to-end-modelops-on-sagemaker-ai/byoc
 ./build_and_push.sh
 ```
 
-Optional arguments: `./build_and_push.sh <region> <repo_name> <tag>`.
+Optional arguments:
 
-The script:
-1. Resolves your AWS account ID.
-2. Creates the ECR repository if it doesn't exist.
-3. Logs Docker in to your account's ECR.
-4. Builds with `--network sagemaker` (required in Studio).
-5. Pushes to `<account>.dkr.ecr.<region>.amazonaws.com/<repo>:<tag>`.
+```bash
+./build_and_push.sh <region> <repository-name> <tag>
+```
 
-## Use this image in the workshop
+The script resolves the account and Region, creates the ECR repository when needed, authenticates Docker, builds with Studio's `sagemaker` network, and pushes the image.
 
-In a notebook cell, replace the value of `xgboost_image` stored by
-`00-start-here.ipynb`:
+## Use an existing build
+
+Set and store the image URI if you want to reuse an image instead of rebuilding it:
 
 ```python
 account_id = session.account_id()
@@ -79,34 +63,23 @@ xgboost_image = f"{account_id}.dkr.ecr.{region}.amazonaws.com/sagemaker-xgboost-
 %store xgboost_image
 ```
 
-Notebooks 02–06 use `%store -r xgboost_image`, so they'll pick up the new
-URI automatically. To go back to the extended image, rerun the relevant
-cells in `00-start-here.ipynb`.
+Notebooks 01, 03, and 04 restore this value directly. The inference specification registered by notebooks 01 and 03 carries the same image URI into deployment.
 
-## Trade-offs vs. the extended image
+## Trade-offs
 
-| | Extended (default) | BYOC (this folder) |
+| | AWS-managed base image | BYOC image |
 |---|---|---|
-| Base | `sagemaker-xgboost:3.0-5` (AWS-managed) | `python:3.12-slim-bookworm` |
-| Size | Larger (inherits full AWS image) | Smaller (only what's needed) |
-| Cross-account ECR pull | Yes (`246618743249.dkr.ecr...`) | No |
-| Transparency | Limited (base is opaque) | Full (you see every layer) |
-| Maintenance | AWS maintains base | You maintain every layer |
+| Ownership | AWS maintains the base | You maintain every layer |
+| Transparency | Base implementation is external | Dockerfile shows the complete runtime |
+| Cross-account ECR pull | May be required | No; image is in your account |
 | Patch cadence | Follows AWS releases | Follows your rebuild cadence |
 
-Both paths produce a SageMaker-compatible image; pick based on whether you
-value ownership (BYOC) or managed maintenance (extended).
+## Verify the build
 
-## Verifying the build
-
-After `docker push` succeeds, a quick sanity check:
+Run a local import check after the image is built:
 
 ```bash
-# Confirm the image can start and the runtime stack is installed
 docker run --rm <image-uri> python -c "import fastapi, uvicorn, sagemaker_training, xgboost, sklearn, mlflow; print('ok')"
 ```
 
-End-to-end verification is running notebook `01-mlflow-and-sagemaker-jobs.ipynb`
-against the new image: the managed processing job, `@remote` training, the
-`ModelTrainer` local-container and managed training jobs, and the real-time
-endpoint deployed from the Model Registry all use this image.
+The end-to-end verification is the workshop itself: notebook 01 runs the reusable functions with `@remote`, notebook 03 runs them with `@step`, and notebook 04 deploys the registered model and runs native ProcessingJob-based monitoring.

@@ -55,9 +55,9 @@ The workshop provisioning creates both persona roles; the notebooks look them up
 ├── model_card_automation/ # EventBridge-triggered Model Card Lambda used by notebook 02
 ├── monitoring/            # Evidently drift/quality processing script used by notebook 04
 ├── pipeline_steps/        # Reusable preprocess, train, evaluate, explain, register,
-│                          # inference, and runtime helper functions used by notebook 03
-├── processing/            # Processing script and dependencies materialized by notebook 01
-├── training/              # Script-mode training code and dependencies used by notebook 01
+│                          # inference, and runtime functions used by notebooks 01 and 03
+├── processing/            # Legacy native-ProcessingJob script retained for reference
+├── training/              # Legacy ModelTrainer script retained for reference
 ├── deployment_automation/ # Legacy/reference endpoint-deployment Lambda; not used by the
 │                          # current notebook 00–05 workflow
 └── setup-py312.sh         # Creates the Python 3.12 Jupyter kernel
