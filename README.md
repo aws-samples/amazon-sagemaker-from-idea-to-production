@@ -14,7 +14,7 @@ Work through the notebooks in order:
 | [01-mlflow-and-sagemaker-jobs.ipynb](01-mlflow-and-sagemaker-jobs.ipynb) | Prototype and track the model locally, then run preprocessing, training, and explanation as managed SageMaker AI jobs. Register one deployable Model Package version and exercise the two-persona approval gate. |
 | [02-model-card-automation.ipynb](02-model-card-automation.ipynb) | Create an EventBridge rule and Lambda function that complete each registered version's Model Card and keep its status aligned with the approval workflow. |
 | [03-sagemaker-pipeline.ipynb](03-sagemaker-pipeline.ipynb) | Turn the reusable preprocess, train, evaluate, explain, and register functions into a SageMaker pipeline with `@step`. Register only when the evaluation threshold passes, then stage, review, and approve the version. |
-| [04-inference-and-monitoring.ipynb](04-inference-and-monitoring.ipynb) | Resolve the latest registry version and require it to be `production` and `Approved`; validate its logged inference code, deploy it with data capture, inspect the endpoint-to-model lineage, and monitor drift and model quality with Evidently and MLflow; then run the same checks as a scheduled SageMaker pipeline with SNS alerts. |
+| [04-inference-and-monitoring.ipynb](04-inference-and-monitoring.ipynb) | Resolve the latest registry version and require it to be `production` and `Approved`; validate its logged inference code, deploy it with data capture, inspect the endpoint-to-model lineage, and monitor drift and model quality with Evidently and MLflow. Links to examples for automating the checks in production with SageMaker Model Monitor or Evidently pipelines. |
 | [05-templatize-deployment.ipynb](05-templatize-deployment.ipynb) | Package [`deployment-seed-code/`](deployment-seed-code/) and publish an organization-owned deployment-only Project template. Its CodePipeline deploys an approved package to staging, runs CSV inference tests, waits for guarded manual approval, then deploys and tests production. |
 
 Complete notebooks 00–04 for the model-development, governance, inference, and monitoring workflow. Notebook 05 adds a separate staged CI/CD path for the same Model Package Group.
@@ -53,7 +53,8 @@ The workshop provisioning creates both persona roles; the notebooks look them up
 ├── governance/            # Approval-gate helpers and reference IAM policies
 ├── img/                   # Notebook diagrams and screenshots
 ├── model_card_automation/ # EventBridge-triggered Model Card Lambda used by notebook 02
-├── monitoring/            # Evidently drift/quality processing script used by notebook 04
+├── monitoring/            # Reference Evidently drift/quality Processing-job script with SNS
+│                          # alerts; not run by the notebooks
 ├── pipeline_steps/        # Reusable preprocess, train, evaluate, explain, register,
 │                          # inference, and runtime functions used by notebooks 01 and 03
 ├── processing/            # Legacy native-ProcessingJob script retained for reference

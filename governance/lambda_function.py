@@ -161,7 +161,7 @@ def build_card_content(described, existing_content):
         "Rank customers for outbound marketing campaigns. Not intended for credit or eligibility decisions.",
     ))
     intended.setdefault("factors_affecting_model_efficiency",
-                        "Data drift in customer demographics or campaign timing; see the Evidently monitoring pipeline.")
+                        "Data drift in customer demographics or campaign timing; see the Evidently drift monitoring in notebook 04.")
     intended.setdefault("risk_rating", _env("MODEL_CARD_RISK_RATING", "Low"))
     intended.setdefault("explanations_for_risk_rating",
                         "Marketing prioritization only; a wrong prediction costs one call, not a customer outcome.")
@@ -198,7 +198,7 @@ def build_card_content(described, existing_content):
 
     additional = content.setdefault("additional_information", {})
     additional.setdefault("caveats_and_recommendations",
-                          "Re-train when the monitoring pipeline reports drift on critical features.")
+                          "Re-train when drift monitoring reports drift on critical features.")
     custom = additional.setdefault("custom_details", {})
     custom[AUTOMATION_MARKER] = AUTOMATION_VERSION
     custom["ModelPackageGroupName"] = described["ModelPackageGroupName"]
