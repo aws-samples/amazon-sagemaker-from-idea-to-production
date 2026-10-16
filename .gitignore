@@ -6,3 +6,5 @@ build.log
 data/
 evaluation.json
 .build/
+.DS_Store
+.DS_Store/

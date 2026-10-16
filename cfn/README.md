@@ -22,13 +22,13 @@ The seed `build.py` selects the newest `Approved` Model Package in the configure
 
 ## IAM roles
 
-The Project is launched with `AmazonSageMakerProjectsLaunchRole`; resources use the verified per-service role family:
+The Project is launched with `AIM408-AmazonSageMakerProjectsLaunchRole`; resources use the verified per-service role family:
 
-- `AmazonSageMakerProjectsEventsRole`
-- `AmazonSageMakerProjectsCodeBuildRole`
-- `AmazonSageMakerProjectsCodePipelineRole`
-- `AmazonSageMakerProjectsCloudformationRole`
-- `AmazonSageMakerProjectsExecutionRole`
+- `AIM408-AmazonSageMakerProjectsEventsRole`
+- `AIM408-AmazonSageMakerProjectsCodeBuildRole`
+- `AIM408-AmazonSageMakerProjectsCodePipelineRole`
+- `AIM408-AmazonSageMakerProjectsCloudformationRole`
+- `AIM408-AmazonSageMakerProjectsExecutionRole`
 
 The launch role must also allow `codecommit:CreateRepository` for `sagemaker-*` repositories and `iam:PassRole` for those service roles.
 

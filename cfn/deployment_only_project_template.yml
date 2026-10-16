@@ -68,7 +68,7 @@
             - 'Ref': 'AWS::Partition'
             - 'iam:'
             - 'Ref': 'AWS::AccountId'
-            - 'role/service-role/AmazonSageMakerProjectsEventsRole'
+            - 'role/service-role/AIM408-AmazonSageMakerProjectsEventsRole'
         'Id':
           'Fn::Sub': 'sagemaker-${SageMakerProjectName}-trigger'
   'ModelDeployCodeCommitEventRule':
@@ -108,7 +108,7 @@
             - 'Ref': 'AWS::Partition'
             - 'iam:'
             - 'Ref': 'AWS::AccountId'
-            - 'role/service-role/AmazonSageMakerProjectsEventsRole'
+            - 'role/service-role/AIM408-AmazonSageMakerProjectsEventsRole'
         'Id':
           'Fn::Sub': 'codecommit-${SageMakerProjectName}-trigger'
   'ModelDeployCodeCommitRepository':
@@ -140,7 +140,7 @@
           - 'Ref': 'AWS::Partition'
           - 'iam:'
           - 'Ref': 'AWS::AccountId'
-          - 'role/service-role/AmazonSageMakerProjectsCodeBuildRole'
+          - 'role/service-role/AIM408-AmazonSageMakerProjectsCodeBuildRole'
       'Artifacts':
         'Type': 'CODEPIPELINE'
       'Environment':
@@ -165,7 +165,7 @@
               - 'Ref': 'AWS::Partition'
               - 'iam:'
               - 'Ref': 'AWS::AccountId'
-              - 'role/service-role/AmazonSageMakerProjectsExecutionRole'
+              - 'role/service-role/AIM408-AmazonSageMakerProjectsExecutionRole'
         - 'Name': 'SOURCE_MODEL_PACKAGE_GROUP_NAME'
           'Value':
             'Ref': 'SourceModelPackageGroupName'
@@ -195,7 +195,7 @@
           - 'Ref': 'AWS::Partition'
           - 'iam:'
           - 'Ref': 'AWS::AccountId'
-          - 'role/service-role/AmazonSageMakerProjectsCodeBuildRole'
+          - 'role/service-role/AIM408-AmazonSageMakerProjectsCodeBuildRole'
       'Artifacts':
         'Type': 'CODEPIPELINE'
       'Environment':
@@ -233,7 +233,7 @@
           - 'Ref': 'AWS::Partition'
           - 'iam:'
           - 'Ref': 'AWS::AccountId'
-          - 'role/service-role/AmazonSageMakerProjectsCodePipelineRole'
+          - 'role/service-role/AIM408-AmazonSageMakerProjectsCodePipelineRole'
       'ArtifactStore':
         'Type': 'S3'
         'Location':
@@ -290,7 +290,7 @@
                 - 'Ref': 'AWS::Partition'
                 - 'iam:'
                 - 'Ref': 'AWS::AccountId'
-                - 'role/service-role/AmazonSageMakerProjectsCloudformationRole'
+                - 'role/service-role/AIM408-AmazonSageMakerProjectsCloudformationRole'
             'StackName':
               'Fn::Sub': 'sagemaker-${SageMakerProjectName}-${SageMakerProjectId}-deploy-staging'
             'TemplateConfiguration': 'BuildArtifact::staging-config-export.json'
@@ -340,7 +340,7 @@
                 - 'Ref': 'AWS::Partition'
                 - 'iam:'
                 - 'Ref': 'AWS::AccountId'
-                - 'role/service-role/AmazonSageMakerProjectsCloudformationRole'
+                - 'role/service-role/AIM408-AmazonSageMakerProjectsCloudformationRole'
             'Capabilities': 'CAPABILITY_NAMED_IAM'
             'StackName':
               'Fn::Sub': 'sagemaker-${SageMakerProjectName}-${SageMakerProjectId}-deploy-prod'

@@ -7,7 +7,7 @@
 #
 # Defaults:
 #   region    = $AWS_REGION (or us-east-1 if unset)
-#   repo_name = sagemaker-xgboost-byoc
+#   repo_name = aim408-sagemaker-xgboost-byoc
 #   tag       = 1.0
 #
 # Requirements:
@@ -17,7 +17,7 @@
 set -euo pipefail
 
 REGION="${1:-${AWS_REGION:-us-east-1}}"
-REPO_NAME="${2:-sagemaker-xgboost-byoc}"
+REPO_NAME="${2:-aim408-sagemaker-xgboost-byoc}"
 TAG="${3:-1.0}"
 
 # Resolve account ID so the full image URI can be built.

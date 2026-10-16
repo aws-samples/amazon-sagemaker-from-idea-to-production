@@ -59,7 +59,7 @@ Set and store the image URI if you want to reuse an image instead of rebuilding 
 ```python
 account_id = session.account_id()
 region = session.boto_region_name
-xgboost_image = f"{account_id}.dkr.ecr.{region}.amazonaws.com/sagemaker-xgboost-byoc:1.0"
+xgboost_image = f"{account_id}.dkr.ecr.{region}.amazonaws.com/aim408-sagemaker-xgboost-byoc:1.0"
 %store xgboost_image
 ```
 

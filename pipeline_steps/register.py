@@ -140,7 +140,7 @@ def _ensure_registered_model(mlflow_client, name, group_tags):
         mlflow_client.create_registered_model(
             name,
             tags=tags,
-            description="Bank-marketing propensity model (XGBoost). Registered by the from-idea-to-prod workshop.",
+            description="Bank-marketing propensity model (XGBoost). Registered by the aim408-from-idea-to-prod workshop.",
         )
         print(f"## Created registered model '{name}' with group tags {sorted(tags)}")
     except MlflowException as e:

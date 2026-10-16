@@ -147,7 +147,7 @@ def build_card_content(described, existing_content):
         artifacts.append(customer_metadata["MlflowArtifactLocation"])
 
     overview = content.setdefault("model_overview", {})
-    overview.setdefault("model_creator", _env("MODEL_CARD_CREATOR", "from-idea-to-prod workshop"))
+    overview.setdefault("model_creator", _env("MODEL_CARD_CREATOR", "aim408-from-idea-to-prod workshop"))
     if artifacts:
         overview["model_artifact"] = artifacts[:15]
 

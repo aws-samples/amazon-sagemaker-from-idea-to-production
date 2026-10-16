@@ -48,8 +48,8 @@ GOVERNANCE_OFFICER = "governance-officer"
 
 # The two persona roles are pre-provisioned in the workshop account.
 PERSONA_ROLE_NAMES = {
-    DATA_SCIENTIST: "from-idea-to-prod-data-scientist-role",
-    GOVERNANCE_OFFICER: "from-idea-to-prod-governance-officer-role",
+    DATA_SCIENTIST: "aim408-from-idea-to-prod-data-scientist-role",
+    GOVERNANCE_OFFICER: "aim408-from-idea-to-prod-governance-officer-role",
 }
 
 LIFECYCLE_STAGES = ("staging", "production")
