@@ -31,7 +31,3 @@ The Project is launched with `AIM408-AmazonSageMakerProjectsLaunchRole`; resourc
 - `AIM408-AmazonSageMakerProjectsExecutionRole`
 
 The launch role must also allow `codecommit:CreateRepository` for `sagemaker-*` repositories and `iam:PassRole` for those service roles.
-
-## Support limitation
-
-The template retains CodeCommit to match this workshop account and the original SageMaker deployment pattern. AWS labels the original CodeCommit Project product **not supported**, and CodeCommit is unavailable to new customers. Treat this implementation as a reference for an organization-owned successor using CodeConnections and your supported Git provider.

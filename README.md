@@ -19,8 +19,6 @@ Work through the notebooks in order:
 
 Complete notebooks 00–04 for the model-development, governance, inference, and monitoring workflow. Notebook 05 adds a separate staged CI/CD path for the same Model Package Group.
 
-> **CodeCommit caveat:** the notebook 05 template retains CodeCommit because it matches the copied AWS toolchain and the workshop account has existing access. AWS labels the original product not supported, and CodeCommit is unavailable to new customers. Treat this implementation as a reference for an organization-owned successor that uses your supported Git provider.
-
 ## Model governance: the approval gate
 
 The workshop follows the single-account pattern from [Govern models with MLflow and Amazon SageMaker AI Model Registry sync](https://aws.amazon.com/blogs/machine-learning/govern-models-with-mlflow-and-amazon-sagemaker-ai-model-registry-sync-part-1/). With automatic registry sync enabled, each `mlflow.register_model()` call creates a Model Package version in the SageMaker Model Registry. Two IAM personas then move the version through its lifecycle:
@@ -29,6 +27,8 @@ The workshop follows the single-account pattern from [Govern models with MLflow 
 |---|---|---|
 | Data scientist ([policy](governance/data_scientist_policy.json)) | Register versions, move them to `staging/pending` with the `sagemakerlifecycle-staging-pending` alias, and record provenance. | `UpdateModelPackage` for `production`, `ModelApprovalStatus = Approved`, or resources tagged `frozen=true`. |
 | Governance officer ([policy](governance/governance_officer_policy.json)) | Review metrics, Model Card, and lineage; promote to `production/active`; set `ModelApprovalStatus = Approved`; optionally freeze the group with the [freeze policy](governance/freeze_policy.json). | — |
+
+![Approval gate](img/approval-gate-aws.svg)
 
 Lifecycle stage is driven from MLflow: setting the alias `sagemakerlifecycle-<stage>-<status>` updates the synced Model Package version's `ModelLifeCycle`. The enforcement path matters:
 
@@ -53,12 +53,8 @@ The workshop provisioning creates both persona roles; the notebooks look them up
 ├── governance/            # Approval-gate helpers and reference IAM policies
 ├── img/                   # Notebook diagrams and screenshots
 ├── model_card_automation/ # EventBridge-triggered Model Card Lambda used by notebook 02
-├── monitoring/            # Reference Evidently drift/quality Processing-job script with SNS
-│                          # alerts; not run by the notebooks
 ├── pipeline_steps/        # Reusable preprocess, train, evaluate, explain, register,
 │                          # inference, and runtime functions used by notebooks 01 and 03
-├── processing/            # Legacy native-ProcessingJob script retained for reference
-├── training/              # Legacy ModelTrainer script retained for reference
 ├── deployment_automation/ # Legacy/reference endpoint-deployment Lambda; not used by the
 │                          # current notebook 00–05 workflow
 └── setup-py312.sh         # Creates the Python 3.12 Jupyter kernel
