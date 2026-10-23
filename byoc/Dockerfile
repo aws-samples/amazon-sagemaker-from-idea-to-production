@@ -60,10 +60,14 @@ RUN pip install --no-cache-dir uv \
 #                        the SageMaker inference contract (/ping, /invocations)
 #                        natively. This replaces the archived sagemaker-inference
 #                        toolkit + multi-model-server (and their JVM dependency).
+#   pandas               re-stated here so this second resolve can never
+#                        upgrade past the requirements.txt pin (pandas 3.x
+#                        breaks Evidently).
 RUN uv pip install --system --no-cache \
       sagemaker-training \
       "fastapi>=0.115,<1" \
-      "uvicorn>=0.30,<1"
+      "uvicorn>=0.30,<1" \
+      "pandas>2,<3"
 
 # Install our custom serving stack. SageMaker invokes `docker run <image> serve`
 # to start inference, so the launcher script must be on $PATH and executable.
@@ -78,7 +82,7 @@ ENV PYTHONPATH="/opt/serving:${PYTHONPATH}"
 
 # Sanity check: every import the container needs at runtime must resolve,
 # including the serving app module the uvicorn workers import.
-RUN python -c "import fastapi, uvicorn, sagemaker_training, xgboost, sklearn, mlflow, pandas, numpy, serving_app; print('ok')"
+RUN python -c "import fastapi, uvicorn, sagemaker_training, xgboost, sklearn, mlflow, pandas, numpy, serving_app; assert pandas.__version__.startswith('2.'), pandas.__version__; print('ok')"
 
 # SageMaker convention: user code may be copied into /opt/program.
 ENV PATH="/opt/program:${PATH}"
