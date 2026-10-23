@@ -8,7 +8,6 @@ from time import gmtime, strftime, sleep
 import traceback
 
 user_profile_name = os.getenv('USER')
-print(os.environ)
 def _parse_args():
     
     parser = argparse.ArgumentParser()
