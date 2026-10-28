@@ -1,0 +1,4 @@
+evidently==0.7.17
+pandas>2,<3
+mlflow<4
+sagemaker-mlflow
