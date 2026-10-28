@@ -17,9 +17,9 @@ You follow along the six notebooks and develop your ML idea from an experimental
 |1. |Experiment in a notebook |[01-idea-development](01-idea-development.ipynb)|
 |2. |Scale with SageMaker AI processing jobs and Python SDK |[02-sagemaker-containers](02-sagemaker-containers.ipynb)|
 |3. |Operationalize with ML pipeline, model registry |[03-sagemaker-pipeline](03-sagemaker-pipeline.ipynb)|
-|4. |Add a model building CI/CD pipeline |[04-sagemaker-project](04-sagemaker-project.ipynb)|
-|5. |Add a model deployment pipeline |[05-deploy](05-deploy.ipynb)|
-|6. |Add model and data monitoring |[06-monitoring](06-monitoring.ipynb)|
+|4. |Add model and data monitoring |[04-monitoring-with-evidently](04-monitoring-with-evidently.ipynb)|
+|5. |Add a model building CI/CD pipeline |[05-sagemaker-project](05-sagemaker-project.ipynb)|
+|6. |Add a model deployment pipeline |[06-deploy](06-deploy.ipynb)|
 
 ## Additional topics
 There are also additional hands-on examples of other SageMaker AI features and ML topics, like [A/B testing](https://docs.aws.amazon.com/sagemaker/latest/dg/model-validation.html), custom [processing](https://docs.aws.amazon.com/sagemaker/latest/dg/build-your-own-processing-container.html), [training](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.html) and [inference](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-inference-main.html) containers, [debugging and profiling](https://docs.aws.amazon.com/sagemaker/latest/dg/train-debugger.html), [security](https://docs.aws.amazon.com/sagemaker/latest/dg/security.html), [multi-model](https://docs.aws.amazon.com/sagemaker/latest/dg/multi-model-endpoints.html) and [multi-container](https://docs.aws.amazon.com/sagemaker/latest/dg/multi-container-endpoints.html) endpoints, and [serial inference pipelines](https://docs.aws.amazon.com/sagemaker/latest/dg/inference-pipelines.html).
