@@ -17,7 +17,7 @@ You follow along the six notebooks and develop your ML idea from an experimental
 |1. |Experiment in a notebook |[01-idea-development](01-idea-development.ipynb)|
 |2. |Scale with SageMaker AI processing jobs and Python SDK |[02-sagemaker-containers](02-sagemaker-containers.ipynb)|
 |3. |Operationalize with ML pipeline, model registry |[03-sagemaker-pipeline](03-sagemaker-pipeline.ipynb)|
-|4. |Add model and data monitoring |[04-monitoring-with-evidently](04-monitoring-with-evidently.ipynb)|
+|4. |Deploy the model and add data and model monitoring |[04-monitoring-with-evidently](04-monitoring-with-evidently.ipynb)|
 |5. |Add a model building CI/CD pipeline |[05-sagemaker-project](05-sagemaker-project.ipynb)|
 |6. |Add a model deployment pipeline |[06-deploy](06-deploy.ipynb)|
 
