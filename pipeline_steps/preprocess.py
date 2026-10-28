@@ -11,6 +11,54 @@ except ImportError:
     def log_runtime_info(): pass
 
 
+def engineer_features(df_data, target_col="y"):
+    """Turn the raw bank-marketing DataFrame into the model's feature table.
+
+    Returns the label column (named ``target_col``) followed by the features, in
+    the exact column order the model is trained on. Notebook 06 imports this to
+    recover the feature names for the header-less CSVs the pipeline writes.
+    Note: adds the ``no_previous_contact`` / ``not_working`` indicators to
+    ``df_data`` in place.
+    """
+    # Indicator variable to capture when pdays takes a value of 999
+    df_data["no_previous_contact"] = np.where(df_data["pdays"] == 999, 1, 0)
+
+    # Indicator for individuals not actively employed
+    df_data["not_working"] = np.where(
+        np.isin(df_data["job"], ["student", "retired", "unemployed"]), 1, 0
+    )
+
+    # remove data not used for the modelling
+    df_model_data = df_data.drop(
+        ["duration", "emp.var.rate", "cons.price.idx", "cons.conf.idx", "euribor3m", "nr.employed"],
+        axis=1,
+    )
+
+    bins = [18, 30, 40, 50, 60, 70, 90]
+    labels = ['18-29', '30-39', '40-49', '50-59', '60-69', '70-plus']
+
+    df_model_data['age_range'] = pd.cut(df_model_data.age, bins, labels=labels, include_lowest=True)
+    df_model_data = pd.concat([df_model_data, pd.get_dummies(df_model_data['age_range'], prefix='age', dtype=int)], axis=1)
+    df_model_data.drop('age', axis=1, inplace=True)
+    df_model_data.drop('age_range', axis=1, inplace=True)
+
+    # Scale features
+    scaled_features = ['pdays', 'previous', 'campaign']
+    df_model_data[scaled_features] = MinMaxScaler().fit_transform(df_model_data[scaled_features])
+
+    # Convert categorical variables to sets of indicators
+    df_model_data = pd.get_dummies(df_model_data, dtype=int)
+
+    # Replace "y_no" and "y_yes" with a single label column, and bring it to the front:
+    return pd.concat(
+        [
+            df_model_data["y_yes"].rename(target_col),
+            df_model_data.drop(["y_no", "y_yes"], axis=1),
+        ],
+        axis=1,
+    )
+
+
 def preprocess(
     input_data_s3_path,
     output_s3_prefix,
@@ -38,44 +86,7 @@ def preprocess(
         mlflow.log_input(input_dataset, context="raw_input")
         
         target_col = "y"
-    
-        # Indicator variable to capture when pdays takes a value of 999
-        df_data["no_previous_contact"] = np.where(df_data["pdays"] == 999, 1, 0)
-    
-        # Indicator for individuals not actively employed
-        df_data["not_working"] = np.where(
-            np.isin(df_data["job"], ["student", "retired", "unemployed"]), 1, 0
-        )
-    
-        # remove data not used for the modelling
-        df_model_data = df_data.drop(
-            ["duration", "emp.var.rate", "cons.price.idx", "cons.conf.idx", "euribor3m", "nr.employed"],
-            axis=1,
-        )
-    
-        bins = [18, 30, 40, 50, 60, 70, 90]
-        labels = ['18-29', '30-39', '40-49', '50-59', '60-69', '70-plus']
-    
-        df_model_data['age_range'] = pd.cut(df_model_data.age, bins, labels=labels, include_lowest=True)
-        df_model_data = pd.concat([df_model_data, pd.get_dummies(df_model_data['age_range'], prefix='age', dtype=int)], axis=1)
-        df_model_data.drop('age', axis=1, inplace=True)
-        df_model_data.drop('age_range', axis=1, inplace=True)
-
-        # Scale features
-        scaled_features = ['pdays', 'previous', 'campaign']
-        df_model_data[scaled_features] = MinMaxScaler().fit_transform(df_model_data[scaled_features])
-
-        # Convert categorical variables to sets of indicators
-        df_model_data = pd.get_dummies(df_model_data, dtype=int)  
-    
-        # Replace "y_no" and "y_yes" with a single label column, and bring it to the front:
-        df_model_data = pd.concat(
-            [
-                df_model_data["y_yes"].rename(target_col),
-                df_model_data.drop(["y_no", "y_yes"], axis=1),
-            ],
-            axis=1,
-        )
+        df_model_data = engineer_features(df_data, target_col)
 
         model_dataset = mlflow.data.from_pandas(df_data)
         mlflow.log_input(model_dataset, context="model_dataset")
