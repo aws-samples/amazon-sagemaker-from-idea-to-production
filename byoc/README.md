@@ -107,4 +107,4 @@ docker run --rm <image-uri> python -c "import fastapi, uvicorn, sagemaker_traini
 ```
 
 End-to-end verification is running notebook `02-sagemaker-containers.ipynb`
-against the new image (both local mode and a managed training job).
+against the new image (processing and training jobs).
