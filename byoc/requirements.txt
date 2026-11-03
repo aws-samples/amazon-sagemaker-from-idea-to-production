@@ -13,7 +13,7 @@ torch==2.13.0+cpu
 # ML stack
 xgboost==3.4.0
 scikit-learn==1.9.0
-pandas
+pandas>=2,<3
 numpy
 
 # Data access and AWS
