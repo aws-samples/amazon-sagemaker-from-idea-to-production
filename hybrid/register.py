@@ -40,7 +40,7 @@ def _build_model_artifacts(container_image, model_uri, tracking_uri):
             return "\n".join(map(str, model.predict(dmatrix)))
 
     schema_builder = SchemaBuilder(
-        sample_input="0.0," * 58 + "0.0",
+        sample_input="0.0," * 36 + "0.0",  # 37 features
         sample_output="0.5",
     )
 
