@@ -10,19 +10,20 @@ You start with a notebook with basic ML code for data preprocessing, feature eng
 
 Each notebook also provides links to useful hands-on resources and proposes real-world ideas for additional development.
 
-You follow along the six notebooks and develop your ML idea from an experimental notebook to a production-ready solution following the recommended MLOps practices:
+You follow along the notebooks and develop your ML idea from an experimental notebook to a production-ready solution following the recommended MLOps practices:
 
 |Step|What|Notebook|
 |---|---|---|
 |1. |Experiment in a notebook |[01-idea-development](01-idea-development.ipynb)|
 |2. |Scale with SageMaker AI processing jobs and Python SDK |[02-sagemaker-containers](02-sagemaker-containers.ipynb)|
 |3. |Operationalize with ML pipeline, model registry |[03-sagemaker-pipeline](03-sagemaker-pipeline.ipynb)|
-|4. |Deploy the model and add data and model monitoring |[04-monitoring-with-evidently](04-monitoring-with-evidently.ipynb)|
-|5. |Add a model building CI/CD pipeline |[05-sagemaker-project](05-sagemaker-project.ipynb)|
-|6. |Add a model deployment pipeline |[06-deploy](06-deploy.ipynb)|
+|4. |Deploy the model and add data and model monitoring |[04-deployment-and-monitoring](04-deployment-and-monitoring.ipynb)|
+|5. |Automate model deployment with a SageMaker project |[05-templatize-deployment](05-templatize-deployment.ipynb)|
 
 ## Additional topics
 There are also additional hands-on examples of other SageMaker AI features and ML topics, like [A/B testing](https://docs.aws.amazon.com/sagemaker/latest/dg/model-validation.html), custom [processing](https://docs.aws.amazon.com/sagemaker/latest/dg/build-your-own-processing-container.html), [training](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.html) and [inference](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-inference-main.html) containers, [debugging and profiling](https://docs.aws.amazon.com/sagemaker/latest/dg/train-debugger.html), [security](https://docs.aws.amazon.com/sagemaker/latest/dg/security.html), [multi-model](https://docs.aws.amazon.com/sagemaker/latest/dg/multi-model-endpoints.html) and [multi-container](https://docs.aws.amazon.com/sagemaker/latest/dg/multi-container-endpoints.html) endpoints, and [serial inference pipelines](https://docs.aws.amazon.com/sagemaker/latest/dg/inference-pipelines.html).
+
+The notebooks [05-sagemaker-project](additional-topics/05-sagemaker-project.ipynb) and [06-deploy](additional-topics/06-deploy.ipynb) in the `additional-topics` folder show a SageMaker project with CI/CD pipelines for both model building and model deployment, connected to your own GitHub repositories.
 
 ## Getting started
 For the full version of the instructions and detailed setup of the account refer to the public AWS workshop [Amazon SageMaker MLOps: from idea to production in six steps](https://catalog.workshops.aws/mlops-from-idea-to-production).
@@ -145,7 +146,7 @@ The following diagram shows the possible flows of the workshop:
 ![](design/workshop-flow.drawio.svg)
 
 ### Execution mode
-Use this mode if you're not familiar with Python programming and new to Jupyter notebooks. You follow each notebook `00-...`, `01-...`, ..., `06-...`and execute all code cells with `Shift` + `Enter`. The given instructions explain what code is doing and why. You need about two and half hours to run through all code cells in all notebooks. 
+Use this mode if you're not familiar with Python programming and new to Jupyter notebooks. You follow each notebook `00-...`, `01-...`, ..., `05-...` and execute all code cells with `Shift` + `Enter`. The given instructions explain what code is doing and why. You need about two and half hours to run through all code cells in all notebooks. 
 All notebooks and all code cells are idempotent. Make sure you run all code cells sequentially, top to bottom.
 
 ## Clean-up
