@@ -23,6 +23,9 @@ import xgboost as xgb
 
 from time import gmtime, strftime
 
+# MLflow run URLs printed to stdout point to the tracking API, not the MLflow UI, so suppress them
+os.environ["MLFLOW_SUPPRESS_PRINTING_URL_TO_STDOUT"] = "true"
+
 suffix = strftime('%d-%H-%M-%S', gmtime())
 user_profile_name = os.getenv('USER', 'sagemaker')
 experiment_name = os.getenv('MLFLOW_EXPERIMENT_NAME')

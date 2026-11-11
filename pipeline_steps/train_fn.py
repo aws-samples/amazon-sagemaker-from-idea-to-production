@@ -9,6 +9,10 @@ try:
 except ImportError:
     def log_runtime_info(): pass
 
+# MLflow run URLs printed to stdout point to the tracking API, not the MLflow UI, so suppress them
+os.environ["MLFLOW_SUPPRESS_PRINTING_URL_TO_STDOUT"] = "true"
+
+
 
 def train(
     train_data_s3_path,

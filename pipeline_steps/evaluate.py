@@ -14,6 +14,10 @@ try:
 except ImportError:
     def log_runtime_info(): pass
 
+# MLflow run URLs printed to stdout point to the tracking API, not the MLflow UI, so suppress them
+os.environ["MLFLOW_SUPPRESS_PRINTING_URL_TO_STDOUT"] = "true"
+
+
 
 def load_model(model_data_s3_uri):
     bucket, key = model_data_s3_uri.replace("s3://", "").split("/", 1)
