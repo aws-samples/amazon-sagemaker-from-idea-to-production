@@ -66,7 +66,7 @@ Notebook execution also creates local runtime artifacts such as downloaded data,
 
 - An AWS account with a SageMaker AI domain and a JupyterLab space in SageMaker Studio
 - A workshop environment with permission to run SageMaker jobs and endpoints and to create the IAM, ECR, Lambda, EventBridge, SNS, CloudFormation, CodeCommit, CodePipeline, CodeBuild, S3, and SageMaker Project resources used by the notebooks
-- **SageMaker Distribution Image 4.3.2** and **SageMaker Python SDK 3.20.0**, the tested versions
+- **SageMaker Distribution Image 4.6.2** and **SageMaker Python SDK 3.28.0**, the tested versions
 - **Python 3.12** for every notebook
 
 If the JupyterLab space does not have a Python 3.12 kernel, open a terminal from the repository root and run:
