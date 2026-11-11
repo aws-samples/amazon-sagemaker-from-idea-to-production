@@ -73,6 +73,7 @@ Resources:
           - Sid: AmazonSageMakerProjectsCodeBuildPermission
             Effect: Allow
             Action:
+              - codebuild:BatchGetProjects
               - codebuild:CreateProject
               - codebuild:DeleteProject
               - codebuild:UpdateProject
@@ -90,6 +91,27 @@ Resources:
               - codepipeline:UpdatePipeline
             Resource:
               - arn:aws:codepipeline:*:*:sagemaker-*
+          - Sid: AmazonSageMakerProjectsCodeCommitPermission
+            Effect: Allow
+            Action:
+              - codecommit:CreateRepository
+              - codecommit:CreateCommit
+              - codecommit:DeleteRepository
+              - codecommit:GetRepository
+              - codecommit:GetRepositoryTriggers
+              - codecommit:PutRepositoryTriggers
+              - codecommit:ListTagsForResource
+              - codecommit:TagResource
+              - codecommit:UntagResource
+              - codecommit:UpdateRepositoryDescription
+              - codecommit:UpdateRepositoryName
+            Resource:
+              - arn:aws:codecommit:*:*:sagemaker-*
+          - Sid: AmazonSageMakerProjectsCodeCommitListPermission
+            Effect: Allow
+            Action:
+              - codecommit:ListRepositories
+            Resource: '*'
           - Sid: AmazonSageMakerProjectsECRPermission
             Effect: Allow
             Action:
