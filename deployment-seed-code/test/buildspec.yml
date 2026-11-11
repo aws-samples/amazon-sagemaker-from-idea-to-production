@@ -1,0 +1,23 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.12
+    commands:
+      - pip install --quiet --upgrade boto3
+  build:
+    commands:
+      # Invoke the staging endpoint with a real held-out CSV record. Any schema,
+      # endpoint, MIME, cardinality, numeric, or probability assertion fails the gate.
+      - >-
+        python test/test.py
+        --import-build-config "$CODEBUILD_SRC_DIR_BuildArtifact/staging-config-export.json"
+        --export-test-results "$EXPORT_TEST_RESULTS"
+        --payload-file test/payload.csv
+        --expected-feature-count 64
+      - cat "$EXPORT_TEST_RESULTS"
+
+artifacts:
+  files:
+    - $EXPORT_TEST_RESULTS
