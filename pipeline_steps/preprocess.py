@@ -10,6 +10,10 @@ try:
 except ImportError:
     def log_runtime_info(): pass
 
+# MLflow run URLs printed to stdout point to the tracking API, not the MLflow UI, so suppress them
+os.environ["MLFLOW_SUPPRESS_PRINTING_URL_TO_STDOUT"] = "true"
+
+
 
 def engineer_features(df_data, target_col="y"):
     """Turn the raw bank-marketing DataFrame into the model's feature table.

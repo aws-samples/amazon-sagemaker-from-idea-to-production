@@ -37,6 +37,10 @@ try:
 except ImportError:
     def log_runtime_info(): pass
 
+# MLflow run URLs printed to stdout point to the tracking API, not the MLflow UI, so suppress them
+os.environ["MLFLOW_SUPPRESS_PRINTING_URL_TO_STDOUT"] = "true"
+
+
 
 def _resolve_logged_model(mlflow_client, mlflow_run_id):
     """Return the MLflow LoggedModel entity produced by the training run."""

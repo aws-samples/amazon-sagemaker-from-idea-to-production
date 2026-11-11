@@ -11,6 +11,10 @@ import pandas as pd
 from evidently import BinaryClassification, Dataset, DataDefinition, Report
 from evidently.presets import ClassificationPreset, DataDriftPreset, DataSummaryPreset
 
+# MLflow run URLs printed to stdout point to the tracking API, not the MLflow UI, so suppress them
+os.environ["MLFLOW_SUPPRESS_PRINTING_URL_TO_STDOUT"] = "true"
+
+
 
 def parse_args():
     p = argparse.ArgumentParser()
