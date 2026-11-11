@@ -12,6 +12,7 @@ except ImportError:
     def log_runtime_info():
         pass
 
+os.environ["MLFLOW_SUPPRESS_PRINTING_URL_TO_STDOUT"] = "true"
 
 def train(
     train_data_s3_path,

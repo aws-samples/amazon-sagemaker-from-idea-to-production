@@ -55,6 +55,7 @@ from governance.approval_gate import (
     wait_for_lifecycle,
 )
 
+os.environ["MLFLOW_SUPPRESS_PRINTING_URL_TO_STDOUT"] = "true"
 
 def _resolve_logged_model(mlflow_client, mlflow_run_id):
     """Return the MLflow LoggedModel entity produced by the training run."""

@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pandas as pd
 import xgboost as xgb
@@ -10,6 +11,7 @@ try:
 except ImportError:
     def log_runtime_info(): pass
 
+os.environ["MLFLOW_SUPPRESS_PRINTING_URL_TO_STDOUT"] = "true"
 
 def plot_roc_curve(fpr, tpr):
     fn = "roc-curve.png"

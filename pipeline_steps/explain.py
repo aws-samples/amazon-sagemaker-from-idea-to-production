@@ -41,6 +41,7 @@ except ImportError:  # running as a flat module inside a job
     def log_runtime_info():
         pass
 
+os.environ["MLFLOW_SUPPRESS_PRINTING_URL_TO_STDOUT"] = "true"
 
 # --------------------------------------------------------------------------- #
 # Standardized bias metrics (pandas implementation of the usual fairness metrics)
