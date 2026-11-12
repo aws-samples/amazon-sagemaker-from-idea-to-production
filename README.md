@@ -1,4 +1,4 @@
-# Amazon SageMaker AI MLOps: from idea to production in six steps
+# Amazon SageMaker AI MLOps: from idea to production in five steps
 
 ![](./img/MLOps-with-SageMaker-small.png)
 
