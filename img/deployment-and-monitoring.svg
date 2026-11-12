@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="900" viewBox="0 0 1800 900" role="img" aria-labelledby="title desc">
+<title id="title">Deployment and monitoring workflow of step 4</title>
+<desc id="desc">The ML pipeline of step 3 registers the model package and writes the baseline to S3. The notebook approves the model package and deploys it to a real-time endpoint with data capture. The notebook sends test traffic with simulated drift and stores the ground truth labels in S3. A monitoring pipeline, started from the notebook or by an optional EventBridge Scheduler schedule, runs a processing job with Evidently on the baseline, the captured data, and the ground truth. It logs reports and metrics in the MLflow app, writes HTML reports to S3, and publishes an SNS email alert when a check fails.</desc>
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#687078"/></marker>
+  <marker id="arrow-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#E07B00"/></marker>
+  <style>
+    text { font-family: 'Amazon Ember', Arial, Helvetica, sans-serif; fill: #37475A; }
+    .heading { font-size: 31px; font-weight: 700; fill: #232F3E; }
+    .group { fill: #F8F9F9; stroke: #AAB7B8; stroke-width: 2; }
+    .group-label { font-size: 22px; font-weight: 700; fill: #232F3E; }
+    .node { fill: #FFFFFF; stroke: #AAB7B8; stroke-width: 2; }
+    .store { fill: #FFF3E0; stroke: #FF9900; stroke-width: 2; }
+    .dark { fill: #232F3E; stroke: #232F3E; stroke-width: 2; }
+    .optional { fill: #FFFFFF; stroke: #AAB7B8; stroke-width: 2; stroke-dasharray: 8 6; }
+    .label { font-size: 20px; font-weight: 700; fill: #232F3E; }
+    .label-light { font-size: 20px; font-weight: 700; fill: #FFFFFF; }
+    .detail { font-size: 16px; fill: #687078; }
+    .detail-light { font-size: 16px; fill: #D5DBDB; }
+    .code { font-family: 'Courier New', monospace; font-size: 16px; font-weight: 700; fill: #232F3E; }
+    .num { font-size: 17px; font-weight: 700; fill: #FFFFFF; }
+    .flow { stroke: #687078; stroke-width: 3; fill: none; }
+    .data { stroke: #E07B00; stroke-width: 3; fill: none; }
+    .dashed { stroke: #687078; stroke-width: 2.5; fill: none; stroke-dasharray: 8 6; }
+    .flow-label { font-size: 16px; font-weight: 600; fill: #687078; }
+    .legend { font-size: 17px; fill: #37475A; }
+  </style>
+</defs>
+<rect width="1800" height="900" fill="#FFFFFF"/>
+<text x="40" y="58" class="heading">Step 4: deploy and monitor</text>
+<line x1="1150" y1="46" x2="1200" y2="46" class="flow"/><text x="1210" y="53" class="legend">Control</text>
+<line x1="1310" y1="46" x2="1360" y2="46" class="data"/><text x="1370" y="53" class="legend">Data</text>
+<rect x="1450" y="34" width="34" height="24" rx="5" class="store"/><text x="1494" y="53" class="legend">Data store</text>
+
+<!-- ================= Part 1 ================= -->
+<rect x="20" y="90" width="1760" height="330" rx="16" class="group"/>
+<text x="44" y="126" class="group-label">Part 1: Deploy the approved model</text>
+
+<rect x="44" y="150" width="250" height="230" rx="12" class="dark"/>
+<text x="66" y="190" class="label-light">ML pipeline</text>
+<text x="66" y="216" class="detail-light">from step 3</text>
+<text x="66" y="262" class="detail-light">preprocess, train,</text>
+<text x="66" y="286" class="detail-light">evaluate, register</text>
+
+<rect x="360" y="150" width="320" height="100" rx="12" class="node"/>
+<circle cx="382" cy="150" r="17" fill="#E07B00"/><text x="382" y="156" class="num" text-anchor="middle">1</text>
+<text x="382" y="192" class="label">SageMaker Model Registry</text>
+<text x="382" y="220" class="detail">approve the model package</text>
+
+<rect x="360" y="280" width="320" height="100" rx="12" class="store"/>
+<text x="382" y="320" class="label">Amazon S3</text>
+<text x="382" y="348" class="detail">baseline and test data</text>
+
+<rect x="770" y="150" width="340" height="100" rx="12" class="node"/>
+<circle cx="792" cy="150" r="17" fill="#E07B00"/><text x="792" y="156" class="num" text-anchor="middle">2</text>
+<text x="792" y="192" class="label">Real-time endpoint</text>
+<text x="792" y="220" class="detail">data capture of all requests</text>
+
+<rect x="770" y="280" width="340" height="100" rx="12" class="node"/>
+<text x="792" y="320" class="label">Notebook</text>
+<text x="792" y="348" class="detail">test traffic with simulated drift</text>
+
+<rect x="1200" y="150" width="300" height="100" rx="12" class="store"/>
+<text x="1222" y="192" class="label">Amazon S3</text>
+<text x="1222" y="220" class="detail">captured data, JSON Lines</text>
+
+<rect x="1200" y="280" width="300" height="100" rx="12" class="store"/>
+<text x="1222" y="320" class="label">Amazon S3</text>
+<text x="1222" y="348" class="detail">ground truth labels</text>
+
+<path d="M 294 200 L 356 200" class="flow" marker-end="url(#arrow)"/>
+<path d="M 294 330 L 356 330" class="data" marker-end="url(#arrow-orange)"/>
+<path d="M 680 200 L 766 200" class="flow" marker-end="url(#arrow)"/>
+<text x="723" y="188" class="flow-label" text-anchor="middle">deploy</text>
+<path d="M 940 280 L 940 254" class="data" marker-end="url(#arrow-orange)"/>
+<text x="952" y="272" class="flow-label">invoke</text>
+<path d="M 1110 200 L 1196 200" class="data" marker-end="url(#arrow-orange)"/>
+<path d="M 1110 330 L 1196 330" class="data" marker-end="url(#arrow-orange)"/>
+
+<!-- ================= Part 2 ================= -->
+<rect x="20" y="450" width="1760" height="430" rx="16" class="group"/>
+<text x="44" y="486" class="group-label">Part 2: Monitor the model</text>
+
+<rect x="44" y="520" width="250" height="130" rx="12" class="optional"/>
+<text x="66" y="560" class="label">EventBridge</text>
+<text x="66" y="586" class="label">Scheduler</text>
+<text x="66" y="616" class="detail">daily, off by default</text>
+
+<rect x="44" y="690" width="250" height="130" rx="12" class="node"/>
+<text x="66" y="730" class="label">Notebook</text>
+<text x="66" y="758" class="code">pipeline.start()</text>
+<text x="66" y="790" class="detail">also runs the same</text>
+<text x="66" y="812" class="detail">checks in the notebook</text>
+
+<rect x="360" y="520" width="580" height="300" rx="12" class="node"/>
+<circle cx="382" cy="520" r="17" fill="#E07B00"/><text x="382" y="526" class="num" text-anchor="middle">3</text>
+<text x="382" y="562" class="label">Monitoring pipeline</text>
+<text x="382" y="588" class="detail">SageMaker Pipelines, one ProcessingStep</text>
+<rect x="382" y="610" width="536" height="186" rx="10" class="store" style="fill:#FFFFFF"/>
+<text x="404" y="646" class="label">Processing job</text>
+<text x="404" y="676" class="code">scripts/evidently_monitor.py</text>
+<text x="404" y="708" class="detail">Evidently data drift, data summary,</text>
+<text x="404" y="732" class="detail">and classification quality reports</text>
+<text x="404" y="766" class="detail">scikit-learn image + scripts/requirements.txt</text>
+
+<path d="M 294 585 L 356 620" class="dashed" marker-end="url(#arrow)"/>
+<path d="M 294 755 L 356 720" class="flow" marker-end="url(#arrow)"/>
+<text x="300" y="672" class="flow-label">start</text>
+
+<!-- inputs from the three S3 stores -->
+<path d="M 520 380 L 520 516" class="data" marker-end="url(#arrow-orange)"/>
+<path d="M 1350 250 L 1350 265 L 1540 265 L 1540 435 L 760 435 L 760 516" class="data" marker-end="url(#arrow-orange)"/>
+<path d="M 1350 380 L 1350 435" class="data"/>
+<text x="540" y="470" class="flow-label">baseline</text>
+<text x="780" y="470" class="flow-label">captured data, ground truth</text>
+
+<!-- outputs -->
+<rect x="1030" y="520" width="340" height="90" rx="12" class="node"/>
+<circle cx="1052" cy="520" r="17" fill="#E07B00"/><text x="1052" y="526" class="num" text-anchor="middle">4</text>
+<text x="1052" y="558" class="label">SageMaker AI MLflow app</text>
+<text x="1052" y="586" class="detail">reports and metrics per run</text>
+
+<rect x="1030" y="630" width="340" height="80" rx="12" class="store"/>
+<text x="1052" y="664" class="label">Amazon S3</text>
+<text x="1052" y="690" class="detail">HTML reports</text>
+
+<rect x="1030" y="730" width="340" height="90" rx="12" class="node"/>
+<circle cx="1052" cy="730" r="17" fill="#E07B00"/><text x="1052" y="736" class="num" text-anchor="middle">5</text>
+<text x="1052" y="768" class="label">Amazon SNS topic</text>
+<text x="1052" y="796" class="detail">alert if a check fails</text>
+
+<path d="M 940 565 L 1026 565" class="data" marker-end="url(#arrow-orange)"/>
+<path d="M 940 670 L 1026 670" class="data" marker-end="url(#arrow-orange)"/>
+<path d="M 940 775 L 1026 775" class="flow" marker-end="url(#arrow)"/>
+
+<rect x="1440" y="520" width="316" height="90" rx="12" class="node"/>
+<text x="1462" y="558" class="label">MLflow UI</text>
+<text x="1462" y="586" class="detail">compare the monitoring runs</text>
+<rect x="1440" y="730" width="316" height="90" rx="12" class="node"/>
+<text x="1462" y="768" class="label">Email</text>
+<text x="1462" y="796" class="detail">drift share, critical feature, F1</text>
+<path d="M 1370 565 L 1436 565" class="flow" marker-end="url(#arrow)"/>
+<path d="M 1370 775 L 1436 775" class="flow" marker-end="url(#arrow)"/>
+</svg>
