@@ -4,13 +4,13 @@
 
 This repository contains a sequence of Jupyter notebooks demonstrating how to move from an ML idea to production by using [Amazon SageMaker AI](https://aws.amazon.com/sagemaker-ai).
 
-The notebooks make use of SageMaker AI [processing](https://docs.aws.amazon.com/sagemaker/latest/dg/processing-job.html) and [training](https://docs.aws.amazon.com/sagemaker/latest/dg/train-model.html) jobs, and SageMaker AI MLOps features such as [SageMaker Pipelines](https://aws.amazon.com/sagemaker/pipelines/), [SageMaker Feature Store](https://aws.amazon.com/sagemaker/feature-store/), [SageMaker Model Registry](https://docs.aws.amazon.com/sagemaker/latest/dg/model-registry.html), [SageMaker managed MLflow experiments](https://docs.aws.amazon.com/sagemaker/latest/dg/mlflow.html), and [SageMaker Model Monitor](https://aws.amazon.com/sagemaker/model-monitor/).
+The notebooks use SageMaker AI [processing](https://docs.aws.amazon.com/sagemaker/latest/dg/processing-job.html) and [training](https://docs.aws.amazon.com/sagemaker/latest/dg/train-model.html) jobs with the [`@remote` decorator](https://docs.aws.amazon.com/sagemaker/latest/dg/train-remote-decorator.html) and `ModelTrainer`, and SageMaker AI MLOps features such as [SageMaker Pipelines](https://aws.amazon.com/sagemaker/pipelines/), [SageMaker Model Registry](https://docs.aws.amazon.com/sagemaker/latest/dg/model-registry.html), [SageMaker managed MLflow](https://docs.aws.amazon.com/sagemaker/latest/dg/mlflow.html), and [SageMaker projects](https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-projects.html). Optional notebooks show [SageMaker Feature Store](https://aws.amazon.com/sagemaker/feature-store/) and [SageMaker Model Monitor](https://aws.amazon.com/sagemaker/model-monitor/).
 
-You start with a notebook with basic ML code for data preprocessing, feature engineering, and model training, all local to the notebook. Each subsequent notebook builds on top of the previous and introduces one or several SageMaker AI MLOps features.
+You start with a notebook with basic ML code for data preprocessing, feature engineering, and model training, all in the notebook. Each next notebook builds on the previous one and adds one or more SageMaker AI MLOps features.
 
 Each notebook also provides links to useful hands-on resources and proposes real-world ideas for additional development.
 
-You follow along the notebooks and develop your ML idea from an experimental notebook to a production-ready solution following the recommended MLOps practices:
+You develop your ML idea from an experimental notebook to a production-ready solution that follows the recommended MLOps practices. Notebook [00-start-here](00-start-here.ipynb) sets up the environment for all steps:
 
 |Step|What|Notebook|
 |---|---|---|
@@ -21,9 +21,15 @@ You follow along the notebooks and develop your ML idea from an experimental not
 |5. |Automate model deployment with a SageMaker project |[05-templatize-deployment](05-templatize-deployment.ipynb)|
 
 ## Additional topics
-There are also additional hands-on examples of other SageMaker AI features and ML topics, like [A/B testing](https://docs.aws.amazon.com/sagemaker/latest/dg/model-validation.html), custom [processing](https://docs.aws.amazon.com/sagemaker/latest/dg/build-your-own-processing-container.html), [training](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.html) and [inference](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-inference-main.html) containers, [debugging and profiling](https://docs.aws.amazon.com/sagemaker/latest/dg/train-debugger.html), [security](https://docs.aws.amazon.com/sagemaker/latest/dg/security.html), [multi-model](https://docs.aws.amazon.com/sagemaker/latest/dg/multi-model-endpoints.html) and [multi-container](https://docs.aws.amazon.com/sagemaker/latest/dg/multi-container-endpoints.html) endpoints, and [serial inference pipelines](https://docs.aws.amazon.com/sagemaker/latest/dg/inference-pipelines.html).
+The `additional-topics` folder has optional notebooks that extend the main steps:
 
-The notebooks [05-sagemaker-project](additional-topics/05-sagemaker-project.ipynb) and [06-deploy](additional-topics/06-deploy.ipynb) in the `additional-topics` folder show a SageMaker project with CI/CD pipelines for both model building and model deployment, connected to your own GitHub repositories.
+|Notebook|What|
+|---|---|
+|[03b-quality-checks-batch-transform](additional-topics/03b-quality-checks-batch-transform.ipynb)|Add data quality checks, model quality checks, and batch transform to the pipeline|
+|[03c-feature-store](additional-topics/03c-feature-store.ipynb)|Manage the features in SageMaker Feature Store and use them in the pipeline|
+|[04-monitoring-sagemaker-native](additional-topics/04-monitoring-sagemaker-native.ipynb)|Monitor the endpoint with SageMaker Model Monitor|
+|[A-B-testing](additional-topics/A-B-testing.ipynb)|Test model variants on one endpoint with [production variants](https://docs.aws.amazon.com/sagemaker/latest/dg/model-validation.html)|
+|[05-sagemaker-project](additional-topics/05-sagemaker-project.ipynb) and [06-deploy](additional-topics/06-deploy.ipynb)|A SageMaker project with CI/CD pipelines for model building and model deployment, connected to your own GitHub repositories|
 
 ## Getting started
 For the full version of the instructions and detailed setup of the account refer to the public AWS workshop [Amazon SageMaker MLOps: from idea to production in six steps](https://catalog.workshops.aws/mlops-from-idea-to-production).
@@ -32,7 +38,7 @@ For the full version of the instructions and detailed setup of the account refer
 You need an **AWS account**. If you don't already have an account, follow the [Setting Up Your AWS Environment](https://aws.amazon.com/getting-started/guides/setup-environment/) getting started guide for a quick overview.
 
 ### AWS Instructor-led workshop
-If you participating in an AWS Immersion Day or a similar instructor-led event or workshop and would like to use a provided AWS account, please follow this [instructions](https://catalog.workshops.aws/mlops-from-idea-to-production/en-US/00-introduction/20-getting-started-workshop-studio) how to claim your temporary AWS account and how to start SageMaker AI Studio. 
+If you participate in an AWS Immersion Day or a similar instructor-led event and use a provided AWS account, follow these [instructions](https://catalog.workshops.aws/mlops-from-idea-to-production/en-US/00-introduction/20-getting-started-workshop-studio) to claim your temporary AWS account and to start SageMaker AI Studio.
 
 ❗ Skip the following steps **Set up Amazon SageMaker AI domain** and **Deploy CloudFormation template** if you use an AWS-provisioned account.
 
@@ -102,7 +108,7 @@ After launching the Studio:
 
    ![JupyterLab selector](img/jupyterlab-app.png)
    
-2. Each application in SageMaker AI studio gets its own space. Spaces are used to manage the storage and resource needs of each application. If you're participating in an AWS-led workshop or used the provided CloudFormation template, the required space is already created for you, otherwise you must create a new JupyterLab space as described in the [the Developer Guide](ttps://docs.aws.amazon.com/sagemaker/latest/dg/studio-updated-jl-user-guide.html) or re-use an existing one
+2. Each application in SageMaker AI studio gets its own space. Spaces are used to manage the storage and resource needs of each application. If you're participating in an AWS-led workshop or used the provided CloudFormation template, the required space is already created for you, otherwise you must create a new JupyterLab space as described in the [Developer Guide](https://docs.aws.amazon.com/sagemaker/latest/dg/studio-updated-jl-user-guide.html) or re-use an existing one
 
 3. Run the space by selecting the run button on the right. This process can take a few seconds.
 
@@ -138,16 +144,19 @@ After executing the `00-start-here.ipynb` notebook, you can move to the first no
 
 ## How to use this workshop
 You can do this workshop in two ways:
-- Go through the provided notebooks, execute code cells sequentially, and follow the instructions and execution flow
-- Write your own code with hands-on assignments and exercises
+- **Execution mode**: go through the notebooks, run the code cells in order, and follow the instructions
+- **Assignment mode**: write your own code with the hands-on exercises in the `assignments` folder
 
-The following diagram shows the possible flows of the workshop:
+The following diagram shows the flow of the workshop:
 
 ![Workshop flow: 00 setup, steps 01 to 05, optional notebooks, and 99 clean-up](design/workshop-flow.svg)
 
 ### Execution mode
-Use this mode if you're not familiar with Python programming and new to Jupyter notebooks. You follow each notebook `00-...`, `01-...`, ..., `05-...` and execute all code cells with `Shift` + `Enter`. The given instructions explain what code is doing and why. You need about two and half hours to run through all code cells in all notebooks. 
-All notebooks and all code cells are idempotent. Make sure you run all code cells sequentially, top to bottom.
+Use this mode if you're new to Python or to Jupyter notebooks. Go through the notebooks `00-...`, `01-...`, ..., `05-...` and run all code cells with `Shift` + `Enter`. The instructions explain what the code does and why. You need about two and a half hours for all notebooks.
+All notebooks are idempotent. Run the code cells in order, from top to bottom.
+
+### Assignment mode
+Use this mode if you want to write the code yourself. Each notebook in the `assignments` folder describes the tasks of one step and links to the documentation. The assignments follow an earlier version of the workshop flow, so their numbers after step 4 differ from the main notebooks.
 
 ## Clean-up
 ❗ You don't need to perform a clean-up if you run an AWS-instructor led workshop.
@@ -155,9 +164,9 @@ All notebooks and all code cells are idempotent. Make sure you run all code cell
 To avoid charges, you must remove all project-provisioned and generated resources from your AWS account. 
 
 First, run all steps in the provided [clean-up notebook](99-clean-up.ipynb).
-Second, if you used the AWS Console to provision a domain for this workshop, and don't need the domain, you can delete the domain by following [this instructions](https://docs.aws.amazon.com/sagemaker/latest/dg/gs-studio-delete-domain.html). 
+Second, if you used the AWS Console to provision a domain for this workshop, and don't need the domain, you can delete the domain by following [these instructions](https://docs.aws.amazon.com/sagemaker/latest/dg/gs-studio-delete-domain.html). 
 
-If you provisioned a domain use a CloudFormation template, you can delete the CloudFormation stack in the AWS console.
+If you provisioned the domain with the CloudFormation template, you can delete the CloudFormation stack in the AWS console.
 
 If you provisioned a new VPC for the domain, go to the [VPC console](https://console.aws.amazon.com/vpc/home?#vpcs) and delete the provisioned VPC.
 
@@ -166,7 +175,7 @@ This example uses the [direct marketing dataset](https://archive.ics.uci.edu/ml/
 > [Moro et al., 2014] S. Moro, P. Cortez and P. Rita. A Data-Driven Approach to Predict the Success of Bank Telemarketing. Decision Support Systems, Elsevier, 62:22-31, June 2014
 
 ## Resources
-The following list presents some useful hands-on resources to help you to get started with ML development on Amazon SageMaker AI.
+Hands-on resources to get started with ML development on Amazon SageMaker AI:
 
 - [Get started with Amazon SageMaker](https://aws.amazon.com/sagemaker/getting-started/)
 - [Deep Learning MLOps workshop with Amazon SageMaker](https://catalog.us-east-1.prod.workshops.aws/workshops/47906c57-854e-4c73-abdb-6b49fe364370/en-US)
@@ -174,8 +183,6 @@ The following list presents some useful hands-on resources to help you to get st
 - [Amazon SageMaker 101 workshop](https://catalog.us-east-1.prod.workshops.aws/workshops/0c6b8a23-b837-4e0f-b2e2-4a3ffd7d645b/en-US)
 - [Amazon SageMaker 101 workshop code repository](https://github.com/aws-samples/sagemaker-101-workshop)
 - [Amazon SageMaker Immersion Day](https://catalog.us-east-1.prod.workshops.aws/workshops/63069e26-921c-4ce1-9cc7-dd882ff62575/en-US)
-- [Amazon SageMaker End to End Workshop](https://github.com/aws-samples/sagemaker-end-to-end-workshop)
-- [Amazon SageMaker workshop with BYOM and BYOC examples](https://sagemaker-workshop.com/)
 - [End to end Machine Learning with Amazon SageMaker](https://github.com/aws-samples/amazon-sagemaker-build-train-deploy)
 - [SageMaker MLOps Workshop](https://catalog.us-east-1.prod.workshops.aws/workshops/1bb7ba03-e533-464f-8726-91a74513b1a1/en-US)
 - [Amazon SageMaker MLOps Workshop](https://catalog.us-east-1.prod.workshops.aws/workshops/7acdc7d8-0ac0-44de-bd9b-e3407147a59c/en-US)
