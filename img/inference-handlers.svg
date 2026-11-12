@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="700" viewBox="0 0 1800 700" role="img" aria-labelledby="title desc">
+<title id="title">How the endpoint container calls inference.py</title>
+<desc id="desc">The serving app in the container answers GET /ping and POST /invocations on port 8080. At startup it calls model_fn once with /opt/ml/model to load the model. For each request it calls input_fn to parse the request body, predict_fn to run the model, and output_fn to build the response body.</desc>
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#687078"/></marker>
+  <marker id="arrow-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#E07B00"/></marker>
+  <style>
+    text { font-family: 'Amazon Ember', Arial, Helvetica, sans-serif; fill: #37475A; }
+    .heading { font-size: 31px; font-weight: 700; fill: #232F3E; }
+    .group { fill: #F8F9F9; stroke: #AAB7B8; stroke-width: 2; }
+    .script { fill: #FFF3E0; stroke: #FF9900; stroke-width: 2; }
+    .node { fill: #FFFFFF; stroke: #AAB7B8; stroke-width: 2; }
+    .dark { fill: #232F3E; stroke: #232F3E; stroke-width: 2; }
+    .group-label { font-size: 22px; font-weight: 700; fill: #232F3E; }
+    .eyebrow { font-size: 16px; font-weight: 700; letter-spacing: 1.2px; fill: #687078; }
+    .code { font-family: 'Courier New', monospace; font-size: 20px; font-weight: 700; fill: #232F3E; }
+    .code-light { font-family: 'Courier New', monospace; font-size: 19px; font-weight: 700; fill: #FFFFFF; }
+    .detail { font-size: 16px; fill: #687078; }
+    .detail-light { font-size: 16px; fill: #D5DBDB; }
+    .flow { stroke: #687078; stroke-width: 3; fill: none; }
+    .request { stroke: #E07B00; stroke-width: 3; fill: none; }
+    .flow-label { font-size: 17px; font-weight: 600; fill: #687078; }
+    .request-label { font-size: 17px; font-weight: 600; fill: #E07B00; }
+  </style>
+</defs>
+<rect width="1800" height="700" fill="#FFFFFF"/>
+<text x="40" y="58" class="heading">How the endpoint container calls inference.py</text>
+
+<!-- Client -->
+<rect x="40" y="300" width="200" height="120" rx="12" class="dark"/>
+<text x="62" y="342" class="code-light">invoke_endpoint</text>
+<text x="62" y="372" class="detail-light">CSV or JSON request</text>
+<text x="62" y="396" class="detail-light">with test features</text>
+
+<!-- Container -->
+<rect x="300" y="100" width="1460" height="560" rx="16" class="group"/>
+<text x="324" y="138" class="group-label">Endpoint container: your image, started with docker run &lt;image&gt; serve</text>
+
+<!-- Serving app -->
+<rect x="330" y="170" width="360" height="460" rx="12" class="node"/>
+<text x="352" y="206" class="eyebrow">SERVING APP</text>
+<text x="352" y="236" class="detail">byoc/serving_app.py, port 8080</text>
+<text x="352" y="300" class="code">GET  /ping</text>
+<text x="352" y="326" class="detail">200 when the model is loaded</text>
+<text x="352" y="390" class="code">POST /invocations</text>
+<text x="352" y="416" class="detail">calls the three request handlers</text>
+<text x="352" y="480" class="detail">Loads the script named by</text>
+<text x="352" y="504" class="code">SAGEMAKER_PROGRAM</text>
+<text x="352" y="530" class="detail">from the folder in</text>
+<text x="352" y="554" class="code">SAGEMAKER_SUBMIT_DIRECTORY</text>
+
+<line x1="240" y1="380" x2="326" y2="380" class="request" marker-end="url(#arrow-orange)"/>
+
+<!-- inference.py -->
+<rect x="740" y="170" width="990" height="460" rx="12" class="script"/>
+<text x="762" y="206" class="eyebrow">YOUR CODE: /opt/ml/model/code/inference.py</text>
+
+<!-- startup -->
+<text x="762" y="250" class="flow-label">Once, at startup</text>
+<rect x="762" y="264" width="340" height="96" rx="10" class="node"/>
+<text x="782" y="300" class="code">model_fn(model_dir)</text>
+<text x="782" y="330" class="detail">load the model from /opt/ml/model</text>
+<path d="M 690 230 C 720 230, 730 312, 758 312" class="flow" marker-end="url(#arrow)"/>
+<rect x="1150" y="264" width="260" height="96" rx="10" class="node"/>
+<text x="1170" y="300" class="code">model</text>
+<text x="1170" y="330" class="detail">kept in memory</text>
+<line x1="1102" y1="312" x2="1146" y2="312" class="flow" marker-end="url(#arrow)"/>
+
+<!-- per request -->
+<text x="762" y="410" class="request-label">For each request</text>
+<rect x="762" y="424" width="290" height="110" rx="10" class="node"/>
+<text x="782" y="462" class="code">input_fn(body, type)</text>
+<text x="782" y="492" class="detail">request body to a</text>
+<text x="782" y="514" class="detail">numpy array</text>
+<rect x="1094" y="424" width="290" height="110" rx="10" class="node"/>
+<text x="1114" y="462" class="code">predict_fn(data, model)</text>
+<text x="1114" y="492" class="detail">run the model:</text>
+<text x="1114" y="514" class="detail">probabilities</text>
+<rect x="1426" y="424" width="290" height="110" rx="10" class="node"/>
+<text x="1446" y="462" class="code">output_fn(pred, accept)</text>
+<text x="1446" y="492" class="detail">predictions to the</text>
+<text x="1446" y="514" class="detail">response body</text>
+<path d="M 690 400 C 720 400, 730 479, 758 479" class="request" marker-end="url(#arrow-orange)"/>
+<line x1="1052" y1="479" x2="1090" y2="479" class="request" marker-end="url(#arrow-orange)"/>
+<line x1="1384" y1="479" x2="1422" y2="479" class="request" marker-end="url(#arrow-orange)"/>
+<path d="M 1280 360 L 1240 420" class="flow" marker-end="url(#arrow)"/>
+<path d="M 1571 534 L 1571 590 L 694 590" class="request" marker-end="url(#arrow-orange)"/>
+<text x="1130" y="578" class="request-label" text-anchor="middle">response body and content type</text>
+<line x1="330" y1="410" x2="244" y2="410" class="request" marker-end="url(#arrow-orange)"/>
+<text x="140" y="456" class="request-label" text-anchor="middle">response</text>
+</svg>
