@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="660" viewBox="0 0 1800 660" role="img" aria-labelledby="title desc">
+<title id="title">SageMaker AI training options</title>
+<desc id="desc">Four ways to train a model with SageMaker AI: built-in algorithms, your script on a SageMaker framework container, your own container, and AWS Marketplace algorithms. In all options SageMaker AI provides the managed infrastructure and orchestration. This workshop uses its own container.</desc>
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#687078"/></marker>
+  <style>
+    text { font-family: 'Amazon Ember', Arial, Helvetica, sans-serif; fill: #37475A; }
+    .heading { font-size: 31px; font-weight: 700; fill: #232F3E; }
+    .col-title { font-size: 23px; font-weight: 700; fill: #232F3E; }
+    .node { fill: #FFFFFF; stroke: #AAB7B8; stroke-width: 2; }
+    .you { fill: #232F3E; stroke: #232F3E; stroke-width: 2; }
+    .sm { fill: #FFF3E0; stroke: #FF9900; stroke-width: 2; }
+    .highlight { fill: none; stroke: #E07B00; stroke-width: 4; }
+    .label { font-size: 19px; font-weight: 700; fill: #232F3E; }
+    .label-light { font-size: 19px; font-weight: 700; fill: #FFFFFF; }
+    .detail { font-size: 16px; fill: #687078; }
+    .badge { font-size: 16px; font-weight: 700; fill: #FFFFFF; }
+    .legend { font-size: 17px; fill: #37475A; }
+    .flow { stroke: #687078; stroke-width: 3; fill: none; }
+  </style>
+</defs>
+<rect width="1800" height="660" fill="#FFFFFF"/>
+<text x="40" y="58" class="heading">SageMaker AI training options</text>
+<rect x="1130" y="34" width="34" height="24" rx="5" class="you"/>
+<text x="1174" y="53" class="legend">You provide</text>
+<rect x="1310" y="34" width="34" height="24" rx="5" class="sm"/>
+<text x="1354" y="53" class="legend">SageMaker AI provides</text>
+
+<!-- Column template: x0, width 400 -->
+<!-- 1: built-in -->
+<text x="60" y="130" class="col-title">Built-in algorithms</text>
+<rect x="60" y="160" width="380" height="60" rx="10" class="you"/><text x="80" y="198" class="label-light">Data and hyperparameters</text>
+<rect x="60" y="250" width="380" height="60" rx="10" class="sm"/><text x="80" y="288" class="label">Algorithm and container</text>
+<rect x="60" y="340" width="380" height="60" rx="10" class="sm"/><text x="80" y="378" class="label">Managed infrastructure</text>
+<text x="60" y="450" class="detail">XGBoost, Linear Learner, k-means, and more,</text>
+<text x="60" y="474" class="detail">without writing training code</text>
+
+<!-- 2: script mode -->
+<text x="490" y="130" class="col-title">Script mode</text>
+<rect x="490" y="160" width="380" height="60" rx="10" class="you"/><text x="510" y="198" class="label-light">Data and training script</text>
+<rect x="490" y="250" width="380" height="60" rx="10" class="sm"/><text x="510" y="288" class="label">Framework container</text>
+<rect x="490" y="340" width="380" height="60" rx="10" class="sm"/><text x="510" y="378" class="label">Managed infrastructure</text>
+<text x="490" y="450" class="detail">PyTorch, TensorFlow, XGBoost, scikit-learn,</text>
+<text x="490" y="474" class="detail">Hugging Face containers run your script</text>
+
+<!-- 3: BYOC, highlighted -->
+<rect x="900" y="88" width="440" height="460" rx="16" class="highlight"/>
+<rect x="1150" y="72" width="170" height="32" rx="16" fill="#E07B00"/>
+<text x="1235" y="94" class="badge" text-anchor="middle">This workshop</text>
+<text x="920" y="130" class="col-title">Your own container</text>
+<rect x="920" y="160" width="400" height="60" rx="10" class="you"/><text x="940" y="198" class="label-light">Data and training script</text>
+<rect x="920" y="250" width="400" height="60" rx="10" class="you"/><text x="940" y="288" class="label-light">Container image in Amazon ECR</text>
+<rect x="920" y="340" width="400" height="60" rx="10" class="sm"/><text x="940" y="378" class="label">Managed infrastructure</text>
+<text x="920" y="450" class="detail">Any framework and dependencies. The image</text>
+<text x="920" y="474" class="detail">follows the SageMaker AI container contract</text>
+<text x="920" y="498" class="detail">(/opt/ml layout, train and serve entry points).</text>
+
+<!-- 4: marketplace -->
+<text x="1380" y="130" class="col-title">AWS Marketplace</text>
+<rect x="1380" y="160" width="380" height="60" rx="10" class="you"/><text x="1400" y="198" class="label-light">Data and hyperparameters</text>
+<rect x="1380" y="250" width="380" height="60" rx="10" class="node"/><text x="1400" y="288" class="label">Third-party algorithm</text>
+<rect x="1380" y="340" width="380" height="60" rx="10" class="sm"/><text x="1400" y="378" class="label">Managed infrastructure</text>
+<text x="1380" y="450" class="detail">Algorithms and models that you subscribe to</text>
+
+<!-- Common output -->
+<line x1="40" y1="580" x2="1760" y2="580" stroke="#D5DBDB" stroke-width="2"/>
+<text x="40" y="625" class="legend">In all options SageMaker AI starts the instances, copies the data from S3, runs the training, saves the model to S3, and stops the instances.</text>
+</svg>
