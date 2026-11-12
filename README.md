@@ -15,7 +15,7 @@ You follow along the notebooks and develop your ML idea from an experimental not
 |Step|What|Notebook|
 |---|---|---|
 |1. |Experiment in a notebook |[01-idea-development](01-idea-development.ipynb)|
-|2. |Scale with SageMaker AI processing jobs and Python SDK |[02-sagemaker-containers](02-sagemaker-containers.ipynb)|
+|2. |Scale with SageMaker AI jobs and Python SDK |[02-sagemaker-containers](02-sagemaker-containers.ipynb)|
 |3. |Operationalize with ML pipeline, model registry |[03-sagemaker-pipeline](03-sagemaker-pipeline.ipynb)|
 |4. |Deploy the model and add data and model monitoring |[04-deployment-and-monitoring](04-deployment-and-monitoring.ipynb)|
 |5. |Automate model deployment with a SageMaker project |[05-templatize-deployment](05-templatize-deployment.ipynb)|
