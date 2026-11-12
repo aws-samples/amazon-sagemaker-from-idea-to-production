@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1580" height="530" viewBox="0 0 1580 530" role="img" aria-labelledby="title desc">
+<title id="title">Register a deployable model</title>
+<desc id="desc">Log inference.py and an inference specification on the MLflow logged model, then register it in MLflow. The automatic model registration creates a SageMaker model package version with the inference specification. An endpoint created from the model package downloads the model files directly from the MLflow artifact store.</desc>
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#687078"/></marker>
+  <style>
+    text { font-family: 'Amazon Ember', Arial, Helvetica, sans-serif; fill: #37475A; }
+    .heading { font-size: 31px; font-weight: 700; fill: #232F3E; }
+    .node { fill: #FFFFFF; stroke: #AAB7B8; stroke-width: 2; }
+    .store { fill: #FFF3E0; stroke: #FF9900; stroke-width: 2; }
+    .label { font-size: 21px; font-weight: 700; fill: #232F3E; }
+    .detail { font-size: 16px; fill: #687078; }
+    .code { font-family: 'Courier New', monospace; font-size: 16px; font-weight: 700; fill: #232F3E; }
+    .step { font-size: 17px; font-weight: 700; fill: #FFFFFF; }
+    .flow { stroke: #687078; stroke-width: 3; fill: none; }
+    .serve { stroke: #E07B00; stroke-width: 3; fill: none; stroke-dasharray: 10 7; }
+    .flow-label { font-size: 17px; font-weight: 600; fill: #687078; }
+    .serve-label { font-size: 17px; font-weight: 600; fill: #E07B00; }
+  </style>
+</defs>
+<rect width="1580" height="530" fill="#FFFFFF"/>
+<text x="40" y="58" class="heading">Register a deployable model</text>
+
+<!-- MLflow artifact store -->
+<rect x="40" y="110" width="400" height="250" rx="12" class="store"/>
+<text x="62" y="148" class="label">MLflow logged model</text>
+<text x="62" y="174" class="detail">S3 artifact store of the MLflow app</text>
+<text x="62" y="214" class="code">MLmodel</text>
+<text x="62" y="240" class="code">model.ubj</text>
+<text x="62" y="266" class="code">conda.yaml</text>
+<text x="62" y="292" class="code">code/inference.py</text>
+<text x="62" y="330" class="detail">+ inference specification</text>
+
+<!-- Steps -->
+<circle cx="520" cy="170" r="18" fill="#E07B00"/><text x="520" y="176" class="step" text-anchor="middle">1</text>
+<text x="550" y="164" class="flow-label">log_model_artifacts()</text>
+<text x="550" y="186" class="detail">add code/inference.py</text>
+<circle cx="520" cy="250" r="18" fill="#E07B00"/><text x="520" y="256" class="step" text-anchor="middle">2</text>
+<text x="550" y="244" class="flow-label">log_inference_specification()</text>
+<text x="550" y="266" class="detail">image, model data, environment</text>
+<line x1="440" y1="235" x2="496" y2="235" class="flow"/>
+
+<!-- Register -->
+<rect x="840" y="150" width="300" height="120" rx="12" class="node"/>
+<circle cx="862" cy="150" r="18" fill="#E07B00"/><text x="862" y="156" class="step" text-anchor="middle">3</text>
+<text x="862" y="196" class="label">MLflow Model Registry</text>
+<text x="862" y="224" class="code">mlflow.register_model()</text>
+<text x="862" y="250" class="detail">new model version</text>
+<line x1="800" y1="210" x2="836" y2="210" class="flow" marker-end="url(#arrow)"/>
+
+<!-- Sync -->
+<rect x="1240" y="150" width="300" height="120" rx="12" class="node"/>
+<text x="1262" y="196" class="label">SageMaker Model</text>
+<text x="1262" y="222" class="label">Registry</text>
+<text x="1262" y="250" class="detail">deployable model package</text>
+<line x1="1140" y1="210" x2="1236" y2="210" class="flow" marker-end="url(#arrow)"/>
+<text x="1188" y="196" class="flow-label" text-anchor="middle">auto-sync</text>
+
+<!-- Endpoint -->
+<rect x="1240" y="380" width="300" height="110" rx="12" class="node"/>
+<text x="1262" y="424" class="label">Endpoint</text>
+<text x="1262" y="452" class="detail">steps 4 and 5</text>
+<line x1="1390" y1="270" x2="1390" y2="376" class="flow" marker-end="url(#arrow)"/>
+<text x="1404" y="330" class="flow-label">deploy</text>
+
+<!-- Serving path -->
+<path d="M 1236 435 L 240 435 L 240 364" class="serve" marker-end="url(#arrow)"/>
+<text x="740" y="424" class="serve-label" text-anchor="middle">downloads the model files to /opt/ml/model, no repacking or copies</text>
+</svg>

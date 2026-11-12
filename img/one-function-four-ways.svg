@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="640" viewBox="0 0 1800 640" role="img" aria-labelledby="title desc">
+<title id="title">One function, four ways to run it</title>
+<desc id="desc">The train function in pipeline_steps/train_fn.py runs in four ways: called in the notebook, wrapped with remote as a SageMaker training job, as the entry script of a ModelTrainer training job, and wrapped with step as a pipeline step. A native TrainingStep can run the same ModelTrainer in a pipeline.</desc>
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#687078"/></marker>
+  <style>
+    text { font-family: 'Amazon Ember', Arial, Helvetica, sans-serif; fill: #37475A; }
+    .heading { font-size: 31px; font-weight: 700; fill: #232F3E; }
+    .center { fill: #232F3E; stroke: #232F3E; stroke-width: 2; }
+    .node { fill: #FFFFFF; stroke: #AAB7B8; stroke-width: 2; }
+    .optional { fill: #F8F9F9; stroke: #AAB7B8; stroke-width: 2; stroke-dasharray: 8 6; }
+    .code-light { font-family: 'Courier New', monospace; font-size: 22px; font-weight: 700; fill: #FFFFFF; }
+    .detail-light { font-size: 17px; fill: #D5DBDB; }
+    .eyebrow { font-size: 16px; font-weight: 700; letter-spacing: 1.2px; fill: #E07B00; }
+    .label { font-size: 21px; font-weight: 700; fill: #232F3E; }
+    .code { font-family: 'Courier New', monospace; font-size: 18px; font-weight: 700; fill: #232F3E; }
+    .detail { font-size: 16px; fill: #687078; }
+    .flow { stroke: #687078; stroke-width: 3; fill: none; }
+    .optional-flow { stroke: #AAB7B8; stroke-width: 2.5; fill: none; stroke-dasharray: 6 6; }
+  </style>
+</defs>
+<rect width="1800" height="640" fill="#FFFFFF"/>
+<text x="40" y="58" class="heading">One function, four ways to run it</text>
+
+<!-- Center: the function -->
+<rect x="640" y="100" width="520" height="110" rx="12" class="center"/>
+<text x="900" y="148" class="code-light" text-anchor="middle">train()</text>
+<text x="900" y="182" class="detail-light" text-anchor="middle">pipeline_steps/train_fn.py</text>
+
+<!-- Four ways -->
+<g>
+  <rect x="40" y="300" width="400" height="200" rx="12" class="node"/>
+  <text x="62" y="334" class="eyebrow">NOTEBOOK 02</text>
+  <text x="62" y="368" class="label">Call it in the notebook</text>
+  <text x="62" y="404" class="code">train(...)</text>
+  <text x="62" y="442" class="detail">Quick check of the code before</text>
+  <text x="62" y="466" class="detail">you start a job</text>
+</g>
+<g>
+  <rect x="480" y="300" width="400" height="200" rx="12" class="node"/>
+  <text x="502" y="334" class="eyebrow">NOTEBOOK 02</text>
+  <text x="502" y="368" class="label">Run it as a job</text>
+  <text x="502" y="404" class="code">remote(...)(train)</text>
+  <text x="502" y="442" class="detail">SageMaker AI runs the function and</text>
+  <text x="502" y="466" class="detail">returns its result to the notebook</text>
+</g>
+<g>
+  <rect x="920" y="300" width="400" height="200" rx="12" class="node"/>
+  <text x="942" y="334" class="eyebrow">NOTEBOOK 02</text>
+  <text x="942" y="368" class="label">Run the file as a job</text>
+  <text x="942" y="404" class="code">ModelTrainer(...).train()</text>
+  <text x="942" y="442" class="detail">Script mode: main() reads input</text>
+  <text x="942" y="466" class="detail">channels and hyperparameters</text>
+</g>
+<g>
+  <rect x="1360" y="300" width="400" height="200" rx="12" class="node"/>
+  <text x="1382" y="334" class="eyebrow">NOTEBOOK 03</text>
+  <text x="1382" y="368" class="label">Run it in a pipeline</text>
+  <text x="1382" y="404" class="code">step(...)(train)</text>
+  <text x="1382" y="442" class="detail">Pipeline step, wired to the other</text>
+  <text x="1382" y="466" class="detail">steps by return values</text>
+</g>
+
+<path d="M 700 210 C 700 260, 240 250, 240 296" class="flow" marker-end="url(#arrow)"/>
+<path d="M 820 210 C 820 255, 680 255, 680 296" class="flow" marker-end="url(#arrow)"/>
+<path d="M 980 210 C 980 255, 1120 255, 1120 296" class="flow" marker-end="url(#arrow)"/>
+<path d="M 1100 210 C 1100 260, 1560 250, 1560 296" class="flow" marker-end="url(#arrow)"/>
+
+<!-- Native step -->
+<rect x="1140" y="550" width="620" height="64" rx="12" class="optional"/>
+<text x="1162" y="590" class="detail">Notebook 03: a native <tspan class="code">TrainingStep</tspan> runs the same <tspan class="code">ModelTrainer</tspan></text>
+<path d="M 1120 500 C 1120 530, 1160 540, 1200 548" class="optional-flow" marker-end="url(#arrow)"/>
+<text x="40" y="590" class="detail">preprocess(), evaluate(), and register() run the same way in the notebook, with remote(), and with step().</text>
+</svg>
