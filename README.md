@@ -143,7 +143,7 @@ You can do this workshop in two ways:
 
 The following diagram shows the possible flows of the workshop:
 
-![](design/workshop-flow.drawio.svg)
+![Workshop flow: 00 setup, steps 01 to 05, optional notebooks, and 99 clean-up](design/workshop-flow.svg)
 
 ### Execution mode
 Use this mode if you're not familiar with Python programming and new to Jupyter notebooks. You follow each notebook `00-...`, `01-...`, ..., `05-...` and execute all code cells with `Shift` + `Enter`. The given instructions explain what code is doing and why. You need about two and half hours to run through all code cells in all notebooks. 
