@@ -125,7 +125,7 @@ def one_function_four_ways():
     d.node(1040, 660, 720, 50, "", [], None, None, cls="node-optional")
     d.text(1400, 692, "Notebook 03: a native TrainingStep runs the same ModelTrainer", "node-detail", "middle")
     d.arrow("M 1120 630 L 1120 656", "arrow-dashed")
-    d.text(40, 692, "preprocess(), evaluate(), and register() run the same way in the notebook, with remote(), and with step().", "node-detail")
+    d.text(40, 692, "preprocess(), explain(), evaluate(), and register() run the same way in the notebook, with remote(), and with step().", "node-detail")
     d.save(ROOT / "img/one-function-four-ways.svg")
 
 
