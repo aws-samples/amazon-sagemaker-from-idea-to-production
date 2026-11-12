@@ -142,6 +142,8 @@ def preprocess(
             "test_y_data": test_y_data_output_s3_path,
             "baseline_data": baseline_data_output_s3_path,
             "pipeline_run_id": pipeline_run.info.run_id if pipeline_run else '',
+            # The CSV files have no header, so the feature names travel as data (used by explain)
+            "feature_names": [c for c in df_model_data.columns if c != target_col],
         }
 
     except Exception as e:
