@@ -81,5 +81,5 @@
 <rect x="1040" y="660" width="720" height="50" rx="14" class="node-optional"/>
 <text x="1400" y="692" class="node-detail" text-anchor="middle">Notebook 03: a native TrainingStep runs the same ModelTrainer</text>
 <path d="M 1120 630 L 1120 656" class="arrow-dashed"/>
-<text x="40" y="692" class="node-detail" text-anchor="start">preprocess(), evaluate(), and register() run the same way in the notebook, with remote(), and with step().</text>
+<text x="40" y="692" class="node-detail" text-anchor="start">preprocess(), explain(), evaluate(), and register() run the same way in the notebook, with remote(), and with step().</text>
 </svg>
