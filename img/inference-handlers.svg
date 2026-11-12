@@ -1,91 +1,97 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="700" viewBox="0 0 1800 700" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="760" viewBox="0 0 1800 760" role="img" aria-labelledby="title desc">
 <title id="title">How the endpoint container calls inference.py</title>
 <desc id="desc">The serving app in the container answers GET /ping and POST /invocations on port 8080. At startup it calls model_fn once with /opt/ml/model to load the model. For each request it calls input_fn to parse the request body, predict_fn to run the model, and output_fn to build the response body.</desc>
 <defs>
   <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#687078"/></marker>
-  <marker id="arrow-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#E07B00"/></marker>
+  <marker id="arrow-highlight" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#E07B00"/></marker>
   <style>
     text { font-family: 'Amazon Ember', Arial, Helvetica, sans-serif; fill: #37475A; }
     .heading { font-size: 31px; font-weight: 700; fill: #232F3E; }
-    .group { fill: #F8F9F9; stroke: #AAB7B8; stroke-width: 2; }
-    .script { fill: #FFF3E0; stroke: #FF9900; stroke-width: 2; }
-    .node { fill: #FFFFFF; stroke: #AAB7B8; stroke-width: 2; }
-    .dark { fill: #232F3E; stroke: #232F3E; stroke-width: 2; }
-    .group-label { font-size: 22px; font-weight: 700; fill: #232F3E; }
     .eyebrow { font-size: 16px; font-weight: 700; letter-spacing: 1.2px; fill: #687078; }
-    .code { font-family: 'Courier New', monospace; font-size: 20px; font-weight: 700; fill: #232F3E; }
-    .code-light { font-family: 'Courier New', monospace; font-size: 19px; font-weight: 700; fill: #FFFFFF; }
-    .detail { font-size: 16px; fill: #687078; }
-    .detail-light { font-size: 16px; fill: #D5DBDB; }
-    .flow { stroke: #687078; stroke-width: 3; fill: none; }
-    .request { stroke: #E07B00; stroke-width: 3; fill: none; }
-    .flow-label { font-size: 17px; font-weight: 600; fill: #687078; }
-    .request-label { font-size: 17px; font-weight: 600; fill: #E07B00; }
+    .group-label { font-size: 24px; font-weight: 700; fill: #232F3E; }
+    .node { fill: #FFFFFF; stroke: #AAB7B8; stroke-width: 2; }
+    .node-optional { fill: #FFFFFF; stroke: #AAB7B8; stroke-width: 2; stroke-dasharray: 8 6; }
+    .node-dark { fill: #232F3E; stroke: #232F3E; stroke-width: 2; }
+    .node-required { fill: #FFFFFF; stroke: #232F3E; stroke-width: 3.5; }
+    .node-label { font-size: 21px; font-weight: 700; fill: #232F3E; }
+    .node-label-light { font-size: 21px; font-weight: 700; fill: #FFFFFF; }
+    .node-detail { font-size: 16px; font-weight: 400; fill: #687078; }
+    .node-detail-light { font-size: 16px; font-weight: 400; fill: #D5DBDB; }
+    .code { font-family: 'Courier New', monospace; font-size: 17px; font-weight: 700; fill: #232F3E; }
+    .code-light { font-family: 'Courier New', monospace; font-size: 17px; font-weight: 700; fill: #FFFFFF; }
+    .flow-label { font-size: 16px; font-weight: 600; fill: #687078; paint-order: stroke; stroke: #FFFFFF; stroke-width: 7px; stroke-linejoin: round; }
+    .highlight-label { font-size: 17px; font-weight: 700; fill: #E07B00; paint-order: stroke; stroke: #FFFFFF; stroke-width: 7px; stroke-linejoin: round; }
+    .legend { font-size: 17px; fill: #37475A; }
+    .step { font-size: 17px; font-weight: 700; fill: #FFFFFF; }
+    .badge { font-size: 16px; font-weight: 700; fill: #FFFFFF; }
+    .arrow { fill: none; stroke: #687078; stroke-width: 3; marker-end: url(#arrow); }
+    .arrow-dashed { fill: none; stroke: #687078; stroke-width: 3; stroke-dasharray: 9 7; marker-end: url(#arrow); }
+    .arrow-highlight { fill: none; stroke: #E07B00; stroke-width: 3; stroke-dasharray: 10 7; marker-end: url(#arrow-highlight); }
+    .line-dashed { fill: none; stroke: #687078; stroke-width: 3; stroke-dasharray: 9 7; }
+    .group { fill: #F9FAFB; stroke: #7D8998; stroke-width: 3; }
+    .subgroup { fill: #FFFFFF; stroke: #0073BB; stroke-width: 3; }
+    .note { fill: #FFF7E6; stroke: #FF9900; stroke-width: 2; }
+    .provided { fill: #E6F6F6; stroke: #00A4A6; stroke-width: 2; }
   </style>
 </defs>
-<rect width="1800" height="700" fill="#FFFFFF"/>
-<text x="40" y="58" class="heading">How the endpoint container calls inference.py</text>
-
-<!-- Client -->
-<rect x="40" y="300" width="200" height="120" rx="12" class="dark"/>
-<text x="62" y="342" class="code-light">invoke_endpoint</text>
-<text x="62" y="372" class="detail-light">CSV or JSON request</text>
-<text x="62" y="396" class="detail-light">with test features</text>
-
-<!-- Container -->
-<rect x="300" y="100" width="1460" height="560" rx="16" class="group"/>
-<text x="324" y="138" class="group-label">Endpoint container: your image, started with docker run &lt;image&gt; serve</text>
-
-<!-- Serving app -->
-<rect x="330" y="170" width="360" height="460" rx="12" class="node"/>
-<text x="352" y="206" class="eyebrow">SERVING APP</text>
-<text x="352" y="236" class="detail">byoc/serving_app.py, port 8080</text>
-<text x="352" y="300" class="code">GET  /ping</text>
-<text x="352" y="326" class="detail">200 when the model is loaded</text>
-<text x="352" y="390" class="code">POST /invocations</text>
-<text x="352" y="416" class="detail">calls the three request handlers</text>
-<text x="352" y="480" class="detail">Loads the script named by</text>
-<text x="352" y="504" class="code">SAGEMAKER_PROGRAM</text>
-<text x="352" y="530" class="detail">from the folder in</text>
-<text x="352" y="554" class="code">SAGEMAKER_SUBMIT_DIRECTORY</text>
-
-<line x1="240" y1="380" x2="326" y2="380" class="request" marker-end="url(#arrow-orange)"/>
-
-<!-- inference.py -->
-<rect x="740" y="170" width="990" height="460" rx="12" class="script"/>
-<text x="762" y="206" class="eyebrow">YOUR CODE: /opt/ml/model/code/inference.py</text>
-
-<!-- startup -->
-<text x="762" y="250" class="flow-label">Once, at startup</text>
-<rect x="762" y="264" width="340" height="96" rx="10" class="node"/>
-<text x="782" y="300" class="code">model_fn(model_dir)</text>
-<text x="782" y="330" class="detail">load the model from /opt/ml/model</text>
-<path d="M 690 230 C 720 230, 730 312, 758 312" class="flow" marker-end="url(#arrow)"/>
-<rect x="1150" y="264" width="260" height="96" rx="10" class="node"/>
-<text x="1170" y="300" class="code">model</text>
-<text x="1170" y="330" class="detail">kept in memory</text>
-<line x1="1102" y1="312" x2="1146" y2="312" class="flow" marker-end="url(#arrow)"/>
-
-<!-- per request -->
-<text x="762" y="410" class="request-label">For each request</text>
-<rect x="762" y="424" width="290" height="110" rx="10" class="node"/>
-<text x="782" y="462" class="code">input_fn(body, type)</text>
-<text x="782" y="492" class="detail">request body to a</text>
-<text x="782" y="514" class="detail">numpy array</text>
-<rect x="1094" y="424" width="290" height="110" rx="10" class="node"/>
-<text x="1114" y="462" class="code">predict_fn(data, model)</text>
-<text x="1114" y="492" class="detail">run the model:</text>
-<text x="1114" y="514" class="detail">probabilities</text>
-<rect x="1426" y="424" width="290" height="110" rx="10" class="node"/>
-<text x="1446" y="462" class="code">output_fn(pred, accept)</text>
-<text x="1446" y="492" class="detail">predictions to the</text>
-<text x="1446" y="514" class="detail">response body</text>
-<path d="M 690 400 C 720 400, 730 479, 758 479" class="request" marker-end="url(#arrow-orange)"/>
-<line x1="1052" y1="479" x2="1090" y2="479" class="request" marker-end="url(#arrow-orange)"/>
-<line x1="1384" y1="479" x2="1422" y2="479" class="request" marker-end="url(#arrow-orange)"/>
-<path d="M 1280 360 L 1240 420" class="flow" marker-end="url(#arrow)"/>
-<path d="M 1571 534 L 1571 590 L 694 590" class="request" marker-end="url(#arrow-orange)"/>
-<text x="1130" y="578" class="request-label" text-anchor="middle">response body and content type</text>
-<line x1="330" y1="410" x2="244" y2="410" class="request" marker-end="url(#arrow-orange)"/>
-<text x="140" y="456" class="request-label" text-anchor="middle">response</text>
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+<text x="40" y="58" class="heading" text-anchor="start">How the endpoint container calls inference.py</text>
+<rect x="40" y="300" width="220" height="220" rx="14" class="node"/>
+<rect x="40" y="300" width="6" height="220" rx="3" fill="#232F3E"/>
+<image href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNDhweCIgaGVpZ2h0PSI0OHB4IiB2aWV3Qm94PSIwIDAgNDggNDgiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+SWNvbi1SZXNvdXJjZS9HZW5lcmFsLVJlc291cmNlL1Jlc19DbGllbnRfNDhfTGlnaHQ8L3RpdGxlPgogICAgPGcgaWQ9Ikljb24tUmVzb3VyY2UvR2VuZXJhbC1SZXNvdXJjZS9SZXNfQ2xpZW50XzQ4IiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj4KICAgICAgICA8cGF0aCBkPSJNNDIuMjk5LDM4Ljc3MyBMNDIuMjk5LDQwLjY5NiBDNDIuMjk5LDQxLjEzNCA0MS45NDUsNDEuNDkgNDEuNTA2LDQxLjQ5IEwzMC43NjIsNDEuNDkgQzMwLjMyMyw0MS40OSAyOS45NjgsNDEuMTM0IDI5Ljk2OCw0MC42OTYgTDI5Ljk2OCwzOC43NzMgQzI5Ljk2OCwzOC4zMzUgMzAuMzIzLDM3Ljk4IDMwLjc2MiwzNy45OCBMNDEuNTA2LDM3Ljk4IEM0MS45NDUsMzcuOTggNDIuMjk5LDM4LjMzNSA0Mi4yOTksMzguNzczIEw0Mi4yOTksMzguNzczIFogTTQzLjc5Nyw0Mi4zOTkgQzQzLjc5Nyw0Mi43NTQgNDMuNTA4LDQzLjA0NCA0My4xNTMsNDMuMDQ0IEw0LjY0NSw0My4wNDQgQzQuMjg5LDQzLjA0NCA0LDQyLjc1NCA0LDQyLjM5OSBMNCwzNy4wMTEgQzQsMzYuNjU2IDQuMjg5LDM2LjM2NyA0LjY0NSwzNi4zNjcgTDQzLjE1MywzNi4zNjcgQzQzLjUwOCwzNi4zNjcgNDMuNzk3LDM2LjY1NiA0My43OTcsMzcuMDExIEw0My43OTcsNDIuMzk5IFogTTQzLjE1MywzNC4zNjcgTDQuNjQ1LDM0LjM2NyBDMy4xODcsMzQuMzY3IDIsMzUuNTUzIDIsMzcuMDExIEwyLDQyLjM5OSBDMiw0My44NTcgMy4xODcsNDUuMDQ0IDQuNjQ1LDQ1LjA0NCBMNDMuMTUzLDQ1LjA0NCBDNDQuNjExLDQ1LjA0NCA0NS43OTcsNDMuODU3IDQ1Ljc5Nyw0Mi4zOTkgTDQ1Ljc5NywzNy4wMTEgQzQ1Ljc5NywzNS41NTMgNDQuNjExLDM0LjM2NyA0My4xNTMsMzQuMzY3IEw0My4xNTMsMzQuMzY3IFogTTcuNTAxLDI3LjIxIEw0MC4yNjQsMjcuMjEgTDQwLjI2NCw3LjUwMiBMNy41MDEsNy41MDIgTDcuNTAxLDI3LjIxIFogTTQwLjg0Miw1LjUwMiBMNi45MjQsNS41MDIgQzYuMTQsNS41MDIgNS41MDEsNi4xMzkgNS41MDEsNi45MjMgTDUuNTAxLDI3Ljc4OCBDNS41MDEsMjguNTcyIDYuMTQsMjkuMjEgNi45MjQsMjkuMjEgTDQwLjg0MiwyOS4yMSBDNDEuNjI2LDI5LjIxIDQyLjI2NCwyOC41NzIgNDIuMjY0LDI3Ljc4OCBMNDIuMjY0LDYuOTIzIEM0Mi4yNjQsNi4xMzkgNDEuNjI2LDUuNTAyIDQwLjg0Miw1LjUwMiBMNDAuODQyLDUuNTAyIFogTTQzLjc5NywzMC4wNjcgQzQzLjc5NywzMC40MjIgNDMuNTA4LDMwLjcxMSA0My4xNTMsMzAuNzExIEw0LjY0NSwzMC43MTEgQzQuMjg5LDMwLjcxMSA0LDMwLjQyMiA0LDMwLjA2NyBMNCw0LjY0NCBDNCw0LjI4OSA0LjI4OSw0IDQuNjQ1LDQgTDQzLjE1Myw0IEM0My41MDgsNCA0My43OTcsNC4yODkgNDMuNzk3LDQuNjQ0IEw0My43OTcsMzAuMDY3IFogTTQzLjE1MywyIEw0LjY0NSwyIEMzLjE4NywyIDIsMy4xODYgMiw0LjY0NCBMMiwzMC4wNjcgQzIsMzEuNTI1IDMuMTg3LDMyLjcxMSA0LjY0NSwzMi43MTEgTDQzLjE1MywzMi43MTEgQzQ0LjYxMSwzMi43MTEgNDUuNzk3LDMxLjUyNSA0NS43OTcsMzAuMDY3IEw0NS43OTcsNC42NDQgQzQ1Ljc5NywzLjE4NiA0NC42MTEsMiA0My4xNTMsMiBMNDMuMTUzLDIgWiIgaWQ9IkZpbGwtMyIgZmlsbD0iIzIzMkYzRCI+PC9wYXRoPgogICAgPC9nPgo8L3N2Zz4=" x="118.0" y="324" width="64" height="64" preserveAspectRatio="xMidYMid meet"/>
+<text x="150.0" y="418" class="node-label" text-anchor="middle">Client</text>
+<text x="150.0" y="444" class="code" text-anchor="middle">invoke_endpoint</text>
+<text x="150.0" y="474" class="node-detail" text-anchor="middle">CSV or JSON request</text>
+<rect x="300" y="90" width="1460" height="640" rx="18" class="group"/>
+<image href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iODBweCIgaGVpZ2h0PSI4MHB4IiB2aWV3Qm94PSIwIDAgODAgODAiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+SWNvbi1BcmNoaXRlY3R1cmUvNjQvQXJjaF9BbWF6b24tU2FnZU1ha2VyXzY0PC90aXRsZT4KICAgIDxnIGlkPSJJY29uLUFyY2hpdGVjdHVyZS82NC9BcmNoX0FtYXpvbi1TYWdlTWFrZXJfNjQiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgICAgIDxnIGlkPSJJY29uLUFyY2hpdGVjdHVyZS1CRy82NC9NYWNoaW5lLUxlYXJuaW5nIiBmaWxsPSIjMDFBODhEIj4KICAgICAgICAgICAgPHJlY3QgaWQ9IlJlY3RhbmdsZSIgeD0iMCIgeT0iMCIgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIj48L3JlY3Q+CiAgICAgICAgPC9nPgogICAgICAgIDxwYXRoIGQ9Ik01NC4wMzQsMjYuMDMzNTczMSBDNTQuMDM0LDI2LjU5MzU2NTQgNTMuNTc4LDI3LjA0OTU1OTIgNTMuMDE3LDI3LjA0OTU1OTIgQzUyLjQ1OCwyNy4wNDk1NTkyIDUyLjAwMiwyNi41OTM1NjU0IDUyLjAwMiwyNi4wMzM1NzMxIEM1Mi4wMDIsMjUuNDczNTgwNyA1Mi40NTgsMjUuMDE3NTg2OSA1My4wMTcsMjUuMDE3NTg2OSBDNTMuNTc4LDI1LjAxNzU4NjkgNTQuMDM0LDI1LjQ3MzU4MDcgNTQuMDM0LDI2LjAzMzU3MzEgTDU0LjAzNCwyNi4wMzM1NzMxIFogTTQ4LjAwMiwzNi4wMDA0MzcgQzQ4LjAwMiwzNS40NDk0NDQ1IDQ4LjQ1LDM1LjAwMDQ1MDYgNDkuMDAyLDM1LjAwMDQ1MDYgQzQ5LjU1NCwzNS4wMDA0NTA2IDUwLjAwMiwzNS40NDk0NDQ1IDUwLjAwMiwzNi4wMDA0MzcgQzUwLjAwMiwzNi41NTE0Mjk0IDQ5LjU1NCwzNy4wMDA0MjMzIDQ5LjAwMiwzNy4wMDA0MjMzIEM0OC40NSwzNy4wMDA0MjMzIDQ4LjAwMiwzNi41NTE0Mjk0IDQ4LjAwMiwzNi4wMDA0MzcgTDQ4LjAwMiwzNi4wMDA0MzcgWiBNNDguMDAyLDU1LjAwMDE3NzUgQzQ4LjAwMiw1NC40NDkxODUgNDguNDUsNTQuMDAwMTkxMiA0OS4wMDIsNTQuMDAwMTkxMiBDNDkuNTU0LDU0LjAwMDE5MTIgNTAuMDAyLDU0LjQ0OTE4NSA1MC4wMDIsNTUuMDAwMTc3NSBDNTAuMDAyLDU1LjU1MTE3IDQ5LjU1NCw1Ni4wMDAxNjM5IDQ5LjAwMiw1Ni4wMDAxNjM5IEM0OC40NSw1Ni4wMDAxNjM5IDQ4LjAwMiw1NS41NTExNyA0OC4wMDIsNTUuMDAwMTc3NSBMNDguMDAyLDU1LjAwMDE3NzUgWiBNNTguMDAyLDQyLjAwMDM1NSBDNTguMDAyLDQyLjU1MTM0NzUgNTcuNTU0LDQzLjAwMDM0MTQgNTcuMDAyLDQzLjAwMDM0MTQgQzU2LjQ1LDQzLjAwMDM0MTQgNTYuMDAyLDQyLjU1MTM0NzUgNTYuMDAyLDQyLjAwMDM1NSBDNTYuMDAyLDQxLjQ0OTM2MjYgNTYuNDUsNDEuMDAwMzY4NyA1Ny4wMDIsNDEuMDAwMzY4NyBDNTcuNTU0LDQxLjAwMDM2ODcgNTguMDAyLDQxLjQ0OTM2MjYgNTguMDAyLDQyLjAwMDM1NSBMNTguMDAyLDQyLjAwMDM1NSBaIE02NSw0NS4yNzIzMTA0IEw1OS45NjMsNDIuMzgyMzQ5OCBDNTkuOTc5LDQyLjI1NjM1MTUgNjAuMDAyLDQyLjEzMTM1MzIgNjAuMDAyLDQyLjAwMDM1NSBDNjAuMDAyLDQwLjM0NjM3NzYgNTguNjU2LDM5LjAwMDM5NiA1Ny4wMDIsMzkuMDAwMzk2IEM1NS4zNDcsMzkuMDAwMzk2IDU0LjAwMiw0MC4zNDYzNzc2IDU0LjAwMiw0Mi4wMDAzNTUgQzU0LjAwMiw0My42NTQzMzI0IDU1LjM0Nyw0NS4wMDAzMTQxIDU3LjAwMiw0NS4wMDAzMTQxIEM1Ny44MDEsNDUuMDAwMzE0MSA1OC41MjMsNDQuNjgxMzE4NCA1OS4wNjEsNDQuMTcxMzI1NCBMNjMuODg2LDQ2LjkzOTI4NzYgTDU5LjU1NSw0OS4xMDUyNTggQzU5LjIxNiw0OS4yNzUyNTU3IDU5LjAwMiw0OS42MjEyNTEgNTkuMDAyLDUwLjAwMDI0NTggTDU5LjAwMiw1OC40NDExMzA1IEw0Ni45ODMsNjUuODM3MDI5NSBMNDEuMDAzLDYyLjQyMDA3NjIgTDQxLjAwMyw1Ni4wMDAxNjM5IEw0Ni4xODYsNTYuMDAwMTYzOSBDNDYuNiw1Ny4xNjExNDggNDcuNyw1OC4wMDAxMzY2IDQ5LjAwMiw1OC4wMDAxMzY2IEM1MC42NTYsNTguMDAwMTM2NiA1Mi4wMDIsNTYuNjU0MTU0OSA1Mi4wMDIsNTUuMDAwMTc3NSBDNTIuMDAyLDUzLjM0NTIwMDEgNTAuNjU2LDUyLjAwMDIxODUgNDkuMDAyLDUyLjAwMDIxODUgQzQ3LjcsNTIuMDAwMjE4NSA0Ni42LDUyLjgzODIwNyA0Ni4xODYsNTQuMDAwMTkxMiBMNDEuMDAzLDU0LjAwMDE5MTIgTDQxLjAwMyw0MC4wMDAzODIzIEM0MS4wMDMsMzkuNjQ5Mzg3MSA0MC44MTgsMzkuMzIzMzkxNiA0MC41MTcsMzkuMTQyMzk0MSBMMzUuNTE2LDM2LjE0MjQzNSBMMzQuNDg3LDM3Ljg1NzQxMTYgTDM5LjAwMyw0MC41NjYzNzQ2IEwzOS4wMDMsNDMuNTA3MzM0NSBMMzMuMDAyLDQ4LjEyMzI3MTQgTDMzLjAwMiw0NC4wMDAzMjc3IEMzMy4wMDIsNDMuNjk2MzMxOSAzMi44NjQsNDMuNDA4MzM1OCAzMi42MjcsNDMuMjE5MzM4NCBMMjguMDAyLDM5LjUxOTM4ODkgTDI4LjAwMiwzNC41MzU0NTcgTDMzLjU1NiwzMC44MzI1MDc1IEMzMy44MzUsMzAuNjQ2NTEwMSAzNC4wMDIsMzAuMzM0NTE0MyAzNC4wMDIsMzAuMDAwNTE4OSBMMzQuMDAyLDI0LjAwMDYwMDggTDMyLjAwMiwyNC4wMDA2MDA4IEwzMi4wMDIsMjkuNDY1NTI2MiBMMjcuMDEzLDMyLjc5MDQ4MDggTDIyLjAwMiwyOS40NjM1MjYyIEwyMi4wMDIsMjEuNTc0NjMzOSBMMjcuMDAyLDE4LjY1ODY3MzggTDI3LjAwMiwyNy4wMDA1NTk5IEwyOS4wMDIsMjcuMDAwNTU5OSBMMjkuMDAyLDE3LjQ5MTY4OTcgTDMzLjAwNSwxNS4xNTY3MjE2IEwzOS4wMDEsMTguNjE1Njc0NCBMMzkuMDAyLDMxLjAwMDUwNTIgQzM5LjAwMiwzMS4zNTk1MDAzIDM5LjE5NCwzMS42OTA0OTU4IDM5LjUwNiwzMS44Njg0OTM0IEw0Ni4wNDIsMzUuNjAzNDQyNCBDNDYuMDI0LDM1LjczNDQ0MDYgNDYuMDAyLDM1Ljg2NDQzODggNDYuMDAyLDM2LjAwMDQzNyBDNDYuMDAyLDM3LjY1NDQxNDQgNDcuMzQ3LDM5LjAwMDM5NiA0OS4wMDIsMzkuMDAwMzk2IEM1MC42NTYsMzkuMDAwMzk2IDUyLjAwMiwzNy42NTQ0MTQ0IDUyLjAwMiwzNi4wMDA0MzcgQzUyLjAwMiwzNC4zNDY0NTk1IDUwLjY1NiwzMy4wMDA0Nzc5IDQ5LjAwMiwzMy4wMDA0Nzc5IEM0OC4yMDgsMzMuMDAwNDc3OSA0Ny40OSwzMy4zMTU0NzM2IDQ2Ljk1MywzMy44MjA0NjY3IEw0MS4wMDIsMzAuNDE5NTEzMiBMNDEuMDAxLDE4LjYxNzY3NDMgTDQ2Ljk2NCwxNS4xNzY3MjEzIEw1OC4wMDIsMjIuNTM1NjIwOCBMNTguMDAyLDI1LjAwMDU4NzIgTDU1Ljg1MSwyNS4wMDA1ODcyIEM1NS40MjksMjMuODQ0NjAzIDU0LjMxOCwyMy4wMTc2MTQyIDUzLjAxNywyMy4wMTc2MTQyIEM1MS4zNTQsMjMuMDE3NjE0MiA1MC4wMDIsMjQuMzcwNTk1OCA1MC4wMDIsMjYuMDMzNTczMSBDNTAuMDAyLDI3LjY5NjU1MDQgNTEuMzU0LDI5LjA0OTUzMTkgNTMuMDE3LDI5LjA0OTUzMTkgQzU0LjM0MywyOS4wNDk1MzE5IDU1LjQ3MSwyOC4xOTA1NDM2IDU1Ljg3NSwyNy4wMDA1NTk5IEw1OC4wMDIsMjcuMDAwNTU5OSBMNTguMDAyLDMwLjAwMDUxODkgQzU4LjAwMiwzMC4zNTk1MTQgNTguMTk0LDMwLjY5MDUwOTUgNTguNTA2LDMwLjg2ODUwNyBMNjUsMzQuNTgwNDU2NCBMNjUsNDUuMjcyMzEwNCBaIE0zMy4wMiw2NS44MzcwMjk1IEwyOS44NjcsNjMuODk3MDU2IEwzNS41ODMsNTkuODE0MTExOCBMMzQuNDIxLDU4LjE4NjEzNCBMMjguMDE4LDYyLjc1OTA3MTYgTDIxLjAwMiw1OC40NDExMzA1IEwyMS4wMDIsNTAuNTY2MjM4MSBMMjUuNTE2LDQ3Ljg1NzI3NTEgTDI0LjQ4Nyw0Ni4xNDIyOTg1IEwxOS45NTgsNDguODYwMjYxNCBMMTUuMDAyLDQ2LjM4MjI5NTIgTDE1LjAwMSw0MC42MTczNzM5IEwyMC40NDksMzcuODk0NDExMSBMMTkuNTU1LDM2LjEwNTQzNTUgTDE1LjAwMSwzOC4zODE0MDQ0IEwxNS4wMDIsMzQuNTgwNDU2NCBMMjAuOTYzLDMxLjE3NDUwMjkgTDI2LjAwMiwzNC41MTk0NTcyIEwyNi4wMDIsMzkuNDgwMzg5NCBMMjAuNDQ5LDQzLjE2NzMzOTEgTDIxLjU1NSw0NC44MzMzMTYzIEwyNi45NTgsNDEuMjQ1MzY1MyBMMzEuMDAyLDQ0LjQ4MDMyMTIgTDMxLjAwMiw0OS42NjIyNTA0IEwyNi4zOTIsNTMuMjA3MjAyIEwyNy42MTEsNTQuNzkyMTgwNCBMMzkuMDAzLDQ2LjAzMDMgTDM5LjAwMyw2Mi40MTkwNzYyIEwzMy4wMiw2NS44MzcwMjk1IFogTTY2LjQ5NiwzMy4xMzI0NzYxIEw2MC4wMDIsMjkuNDIwNTI2OCBMNjAuMDAyLDIyLjAwMDYyODEgQzYwLjAwMiwyMS42NjU2MzI3IDU5LjgzNSwyMS4zNTM2MzcgNTkuNTU2LDIxLjE2ODYzOTUgTDQ3LjU1NiwxMy4xNjg3NDg3IEM0Ny4yNCwxMi45NTg3NTE2IDQ2LjgzMiwxMi45NDQ3NTE4IDQ2LjUwMiwxMy4xMzQ3NDkyIEw0MC4wMDQsMTYuODg0Njk4IEwzMy41MDIsMTMuMTM0NzQ5MiBDMzMuMTksMTIuOTU0NzUxNyAzMi44MDcsMTIuOTU0NzUxNyAzMi40OTgsMTMuMTM2NzQ5MiBMMjAuNDk4LDIwLjEzNjY1MzYgQzIwLjE5LDIwLjMxNTY1MTEgMjAuMDAyLDIwLjY0NDY0NjYgMjAuMDAyLDIxLjAwMDY0MTggTDIwLjAwMiwyOS40MjA1MjY4IEwxMy41MDYsMzMuMTMyNDc2MSBDMTMuMTk0LDMzLjMwOTQ3MzcgMTMuMDAyLDMzLjY0MTQ2OTIgMTMuMDAyLDM0LjAwMDQ2NDMgTDEzLjAwMiwzNC40MTc0NTg2IEMxMy4wMDEsMzQuNDM4NDU4MyAxMywzNC40NTg0NTggMTMsMzQuNDc5NDU3NyBMMTMsNDUuMzYzMzA5MSBDMTMsNDUuMzgzMzA4OCAxMy4wMDEsNDUuNDAzMzA4NiAxMy4wMDIsNDUuNDIyMzA4MyBMMTMuMDAyLDQ3LjAwMDI4NjggQzEzLjAwMiw0Ny4zNzkyODE2IDEzLjIxNiw0Ny43MjUyNzY5IDEzLjU1NSw0Ny44OTQyNzQ1IEwxOS4wMDIsNTAuNjE4MjM3NCBMMTkuMDAyLDU5LjAwMDEyMjkgQzE5LjAwMiw1OS4zNDcxMTgyIDE5LjE4MSw1OS42NjkxMTM4IDE5LjQ3Nyw1OS44NTExMTEzIEwzMi40NzcsNjcuODUxMDAyIEMzMi42MzgsNjcuOTUwMDAwNyAzMi44Miw2OCAzMy4wMDIsNjggQzMzLjE3Myw2OCAzMy4zNDQsNjcuOTU2MDAwNiAzMy40OTgsNjcuODY4MDAxOCBMNDAuMDAzLDY0LjE1MjA1MjUgTDQ2LjUwNiw2Ny44NjgwMDE4IEM0Ni44MjEsNjguMDQ4OTk5MyA0Ny4yMTMsNjguMDQxOTk5NCA0Ny41MjYsNjcuODUxMDAyIEw2MC41MjYsNTkuODUxMTExMyBDNjAuODIyLDU5LjY2OTExMzggNjEuMDAyLDU5LjM0NzExODIgNjEuMDAyLDU5LjAwMDEyMjkgTDYxLjAwMiw1MC42MTgyMzc0IEw2Ni40NDcsNDcuODk0Mjc0NSBDNjYuNzg2LDQ3LjcyNTI3NjkgNjcsNDcuMzc5MjgxNiA2Nyw0Ny4wMDAyODY4IEw2NywzNC4wMDA0NjQzIEM2NywzMy42NDE0NjkyIDY2LjgwNywzMy4zMTA0NzM3IDY2LjQ5NiwzMy4xMzI0NzYxIEw2Ni40OTYsMzMuMTMyNDc2MSBaIiBpZD0iQW1hem9uLVNhZ2VNYWtlcl9JY29uXzY0X1NxdWlkIiBmaWxsPSIjRkZGRkZGIj48L3BhdGg+CiAgICA8L2c+Cjwvc3ZnPg==" x="324" y="110" width="48" height="48" preserveAspectRatio="xMidYMid meet"/>
+<text x="388" y="143" class="group-label" text-anchor="start">SageMaker AI endpoint: your container, docker run &lt;image&gt; serve</text>
+<rect x="330" y="170" width="360" height="530" rx="14" class="node"/>
+<rect x="330" y="170" width="6" height="530" rx="3" fill="#ED7100"/>
+<image href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNDhweCIgaGVpZ2h0PSI0OHB4IiB2aWV3Qm94PSIwIDAgNDggNDgiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+SWNvbi1SZXNvdXJjZS9HZW5lcmFsLVJlc291cmNlL1Jlc19UcmFkaXRpb25hbC1zZXJ2ZXJfNDhfTGlnaHQ8L3RpdGxlPgogICAgPGcgaWQ9Ikljb24tUmVzb3VyY2UvR2VuZXJhbC1SZXNvdXJjZS9SZXNfVHJhZGl0aW9uYWwtc2VydmVyXzQ4IiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj4KICAgICAgICA8cGF0aCBkPSJNMTUuNDM3LDIxLjUyIEwzMi4wNjQsMjEuNTIgTDMyLjA2NCwxOS41MiBMMTUuNDM3LDE5LjUyIEwxNS40MzcsMjEuNTIgWiBNMTUuNDM3LDE3LjE5NiBMMzIuMDY0LDE3LjE5NiBMMzIuMDY0LDE1LjE5NiBMMTUuNDM3LDE1LjE5NiBMMTUuNDM3LDE3LjE5NiBaIE0xNS40MzcsMTIuNzYyIEwzMi4wNjQsMTIuNzYyIEwzMi4wNjQsMTAuNzYyIEwxNS40MzcsMTAuNzYyIEwxNS40MzcsMTIuNzYyIFogTTE1LjQzNyw4LjQ5NCBMMzIuMDY0LDguNDk0IEwzMi4wNjQsNi40OTQgTDE1LjQzNyw2LjQ5NCBMMTUuNDM3LDguNDk0IFogTTEzLDQ0LjAxMyBMMzQuNDk5LDQ0LjAxMyBMMzQuNDk5LDQgTDEzLDQgTDEzLDQ0LjAxMyBaIE0zNS4wMzIsMiBMMTIuNDY4LDIgQzExLjY1OSwyIDExLDIuNjU5IDExLDMuNDY5IEwxMSw0NC41NDUgQzExLDQ1LjM1NSAxMS42NTksNDYuMDEzIDEyLjQ2OCw0Ni4wMTMgTDM1LjAzMiw0Ni4wMTMgQzM1Ljg0MSw0Ni4wMTMgMzYuNDk5LDQ1LjM1NSAzNi40OTksNDQuNTQ1IEwzNi40OTksMy40NjkgQzM2LjQ5OSwyLjY1OSAzNS44NDEsMiAzNS4wMzIsMiBMMzUuMDMyLDIgWiIgaWQ9IkZpbGwtMTgiIGZpbGw9IiMyMzJGM0QiPjwvcGF0aD4KICAgIDwvZz4KPC9zdmc+" x="478.0" y="194" width="64" height="64" preserveAspectRatio="xMidYMid meet"/>
+<text x="510.0" y="288" class="node-label" text-anchor="middle">Serving app</text>
+<text x="510.0" y="314" class="code" text-anchor="middle">byoc/serving_app.py</text>
+<text x="510" y="360" class="code" text-anchor="middle">GET /ping</text>
+<text x="510" y="386" class="node-detail" text-anchor="middle">200 when the model is loaded</text>
+<text x="510" y="440" class="code" text-anchor="middle">POST /invocations</text>
+<text x="510" y="466" class="node-detail" text-anchor="middle">calls the request handlers</text>
+<text x="510" y="540" class="node-detail" text-anchor="middle">Loads the script</text>
+<text x="510" y="566" class="code" text-anchor="middle">SAGEMAKER_PROGRAM</text>
+<text x="510" y="600" class="node-detail" text-anchor="middle">from the folder</text>
+<text x="510" y="626" class="code" text-anchor="middle">SAGEMAKER_SUBMIT_DIRECTORY</text>
+<path d="M 260 390 L 326 390" class="arrow"/>
+<path d="M 330 440 L 264 440" class="arrow"/>
+<text x="295" y="468" class="flow-label" text-anchor="middle">response</text>
+<rect x="730" y="170" width="1000" height="530" rx="18" class="subgroup"/>
+<image href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNDhweCIgaGVpZ2h0PSI0OHB4IiB2aWV3Qm94PSIwIDAgNDggNDgiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+SWNvbi1SZXNvdXJjZS9HZW5lcmFsLVJlc291cmNlL1Jlc19Tb3VyY2UtQ29kZV80OF9MaWdodDwvdGl0bGU+CiAgICA8ZyBpZD0iSWNvbi1SZXNvdXJjZS9HZW5lcmFsLVJlc291cmNlL1Jlc19Tb3VyY2UtQ29kZV80OCIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICAgICAgPHBhdGggZD0iTTI1LjA1MTgsMTkuNjg0IEwyNi45NDc4LDIwLjMxNyBMMjIuOTQ3OCwzMi4zMTcgTDIxLjA1MTgsMzEuNjg0IEwyNS4wNTE4LDE5LjY4NCBaIE0zNC42MjQ4LDI1LjIyIEMzNC44NjI4LDI1LjQwOSAzNC45OTk4LDI1LjY5NyAzNC45OTk4LDI2IEMzNC45OTk4LDI2LjMwNCAzNC44NjI4LDI2LjU5MiAzNC42MjQ4LDI2Ljc4MSBMMjkuNjI0OCwzMC43ODEgTDI4LjM3NDgsMjkuMjIgTDMyLjM5OTgsMjYgTDI4LjM3NDgsMjIuNzgxIEwyOS42MjQ4LDIxLjIyIEwzNC42MjQ4LDI1LjIyIFogTTE5LjYyNDgsMjIuNzgxIEwxNS42MDA4LDI2IEwxOS42MjQ4LDI5LjIyIEwxOC4zNzQ4LDMwLjc4MSBMMTMuMzc0OCwyNi43ODEgQzEzLjEzNzgsMjYuNTkyIDEyLjk5OTgsMjYuMzA0IDEyLjk5OTgsMjYgQzEyLjk5OTgsMjUuNjk3IDEzLjEzNzgsMjUuNDA5IDEzLjM3NDgsMjUuMjIgTDE4LjM3NDgsMjEuMjIgTDE5LjYyNDgsMjIuNzgxIFogTTkuOTk5OCw0NCBMMTAuMDA2OCw0IEwyNy45OTk4LDQgTDI3Ljk5OTgsMTMgQzI3Ljk5OTgsMTMuNTUyIDI4LjQ0NzgsMTQgMjguOTk5OCwxNCBMMzcuOTk5OCwxNCBMMzcuOTk5OCw0NCBMOS45OTk4LDQ0IFogTTI5Ljk5OTgsNS40MTQgTDM2LjU4NTgsMTIgTDI5Ljk5OTgsMTIgTDI5Ljk5OTgsNS40MTQgWiBNMzkuNzA2OCwxMi4yOTMgTDI5LjcwNjgsMi4yOTMgQzI5LjUxOTgsMi4xMDUgMjkuMjY1OCwyIDI4Ljk5OTgsMiBMOS45OTk4LDIgQzguODIyOCwyIDcuOTk5OCwyLjgyMiA3Ljk5OTgsNCBMNy45OTk4LDQ0IEM3Ljk5OTgsNDUuMTQgOC44NTk4LDQ2IDkuOTk5OCw0NiBMMzcuOTk5OCw0NiBDMzkuMTQwOCw0NiAzOS45OTk4LDQ1LjE0IDM5Ljk5OTgsNDQgTDM5Ljk5OTgsMTMgQzM5Ljk5OTgsMTIuNzM0IDM5Ljg5NDgsMTIuNDggMzkuNzA2OCwxMi4yOTMgTDM5LjcwNjgsMTIuMjkzIFoiIGlkPSJGaWxsLTEiIGZpbGw9IiMyMzJGM0QiPjwvcGF0aD4KICAgIDwvZz4KPC9zdmc+" x="754" y="190" width="48" height="48" preserveAspectRatio="xMidYMid meet"/>
+<text x="818" y="223" class="group-label" text-anchor="start">Your code: /opt/ml/model/code/inference.py</text>
+<text x="760" y="270" class="eyebrow" text-anchor="start">Once, at startup</text>
+<rect x="760" y="285" width="330" height="110" rx="14" class="node"/>
+<rect x="760" y="285" width="6" height="110" rx="3" fill="#00A4A6"/>
+<text x="925.0" y="335" class="code" text-anchor="middle">model_fn(model_dir)</text>
+<text x="925.0" y="365" class="node-detail" text-anchor="middle">load the model from /opt/ml/model</text>
+<rect x="1150" y="285" width="260" height="110" rx="14" class="node"/>
+<rect x="1150" y="285" width="6" height="110" rx="3" fill="#00A4A6"/>
+<text x="1280.0" y="335" class="code" text-anchor="middle">model</text>
+<text x="1280.0" y="365" class="node-detail" text-anchor="middle">kept in memory</text>
+<path d="M 1090 340 L 1146 340" class="arrow"/>
+<path d="M 690 230 C 725 230, 725 340, 756 340" class="arrow"/>
+<text x="760" y="455" class="eyebrow" text-anchor="start">For each request</text>
+<rect x="760" y="470" width="300" height="110" rx="14" class="node"/>
+<rect x="760" y="470" width="6" height="110" rx="3" fill="#00A4A6"/>
+<text x="910.0" y="520" class="code" text-anchor="middle">input_fn(body, type)</text>
+<text x="910.0" y="550" class="node-detail" text-anchor="middle">request body to a numpy array</text>
+<rect x="1085" y="470" width="300" height="110" rx="14" class="node"/>
+<rect x="1085" y="470" width="6" height="110" rx="3" fill="#00A4A6"/>
+<text x="1235.0" y="520" class="code" text-anchor="middle">predict_fn(data, model)</text>
+<text x="1235.0" y="550" class="node-detail" text-anchor="middle">run the model: probabilities</text>
+<path d="M 1060 525 L 1081 525" class="arrow"/>
+<rect x="1410" y="470" width="300" height="110" rx="14" class="node"/>
+<rect x="1410" y="470" width="6" height="110" rx="3" fill="#00A4A6"/>
+<text x="1560.0" y="520" class="code" text-anchor="middle">output_fn(pred, accept)</text>
+<text x="1560.0" y="550" class="node-detail" text-anchor="middle">predictions to the response body</text>
+<path d="M 1385 525 L 1406 525" class="arrow"/>
+<path d="M 690 440 C 725 440, 725 525, 756 525" class="arrow"/>
+<path d="M 1280 395 L 1240 466" class="arrow-dashed"/>
+<path d="M 1560 580 L 1560 640 L 694 640" class="arrow"/>
+<text x="1130" y="628" class="flow-label" text-anchor="middle">response body and content type</text>
 </svg>
