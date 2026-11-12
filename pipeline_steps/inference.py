@@ -1,8 +1,8 @@
 """SageMaker inference handler for the MLflow-logged XGBoost model.
 
 This script is logged into the MLflow model's artifact store (under ``code/``)
-by ``register.py`` and served by the custom BYOC XGBoost container, which is
-script-mode compatible (``sagemaker-inference``): it runs the program named by
+by notebook 02 and by ``register.py``, and served by the custom BYOC XGBoost
+container: its serving app (``byoc/serving_app.py``) loads the script named by
 ``SAGEMAKER_PROGRAM`` and dispatches requests to the functions below.
 
 Because the model is registered with an ``S3Prefix`` ``ModelDataSource`` pointing
