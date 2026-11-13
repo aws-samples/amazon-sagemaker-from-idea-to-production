@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1800" height="760" viewBox="0 0 1800 760" role="img" aria-labelledby="title desc">
 <title id="title">Workshop flow</title>
-<desc id="desc">Run 00-start-here first. The main path goes through steps 01 to 05. A fast track goes from 00 directly to step 03 and continues with steps 04 and 05. Optional notebooks in the additional-topics folder extend steps 03, 04, and 05. Always finish with 99-clean-up.</desc>
+<desc id="desc">Run 00-start-here first. The main path goes through steps 01 to 05. A fast track goes from 00 directly to step 03 and continues with steps 04 and 05. Optional notebooks in the additional-topics folder extend steps 03 and 05. Always finish with 99-clean-up.</desc>
 <defs>
   <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#687078"/></marker>
   <marker id="arrow-highlight" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#E07B00"/></marker>
@@ -104,22 +104,17 @@
 <text x="1651.0" y="367" class="node-detail" text-anchor="middle">avoid costs in</text>
 <text x="1651.0" y="387" class="node-detail" text-anchor="middle">your account</text>
 <path d="M 1512 295.0 L 1538 295.0" class="arrow"/>
-<path d="M 151 170 C 151 115, 901 115, 901 166" class="arrow-highlight"/>
-<text x="526" y="112" class="highlight-label" text-anchor="middle">Fast track: pipelines only, 00 → 03 → 04 → 05</text>
-<rect x="700" y="520" width="360" height="140" rx="14" class="node-optional"/>
-<text x="880.0" y="566" class="node-label" text-anchor="middle">Extend the pipeline</text>
-<text x="880.0" y="596" class="node-detail" text-anchor="middle">03b: quality checks, batch transform</text>
-<text x="880.0" y="616" class="node-detail" text-anchor="middle">03c: SageMaker Feature Store</text>
-<path d="M 901 420 L 880.0 516" class="arrow-dashed"/>
-<rect x="1090" y="520" width="300" height="140" rx="14" class="node-optional"/>
-<text x="1240.0" y="566" class="node-label" text-anchor="middle">Native monitoring</text>
-<text x="1240.0" y="596" class="node-detail" text-anchor="middle">04: SageMaker Model Monitor</text>
-<text x="1240.0" y="616" class="node-detail" text-anchor="middle">A-B-testing: production variants</text>
-<path d="M 1151 420 L 1240.0 516" class="arrow-dashed"/>
-<rect x="1420" y="520" width="340" height="140" rx="14" class="node-optional"/>
-<text x="1590.0" y="566" class="node-label" text-anchor="middle">Build and deploy CI/CD</text>
-<text x="1590.0" y="596" class="node-detail" text-anchor="middle">05, 06: SageMaker project with</text>
-<text x="1590.0" y="616" class="node-detail" text-anchor="middle">GitHub repositories</text>
-<path d="M 1401 420 L 1590.0 516" class="arrow-dashed"/>
-<text x="700" y="700" class="node-detail" text-anchor="start">Optional notebooks are in the additional-topics folder. Run them after the step they extend.</text>
+<path d="M 151 168 L 151 132 Q 151 118 165 118 L 887 118 Q 901 118 901 132 L 901 164" class="arrow-highlight"/>
+<text x="526" y="106" class="highlight-label" text-anchor="middle">Fast track: pipelines only, 00 → 03 → 04 → 05</text>
+<rect x="721" y="520" width="360" height="140" rx="14" class="node-optional"/>
+<text x="901.0" y="566" class="node-label" text-anchor="middle">Extend the pipeline</text>
+<text x="901.0" y="596" class="node-detail" text-anchor="middle">03b: quality checks, batch transform</text>
+<text x="901.0" y="616" class="node-detail" text-anchor="middle">03c: SageMaker Feature Store</text>
+<path d="M 901 420 L 901.0 516" class="arrow-dashed"/>
+<rect x="1231" y="520" width="340" height="140" rx="14" class="node-optional"/>
+<text x="1401.0" y="566" class="node-label" text-anchor="middle">Build and deploy CI/CD</text>
+<text x="1401.0" y="596" class="node-detail" text-anchor="middle">05, 06: SageMaker project with</text>
+<text x="1401.0" y="616" class="node-detail" text-anchor="middle">GitHub repositories</text>
+<path d="M 1401 420 L 1401.0 516" class="arrow-dashed"/>
+<text x="721" y="700" class="node-detail" text-anchor="start">Optional notebooks are in the additional-topics folder. Run them after the step they extend.</text>
 </svg>
