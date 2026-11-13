@@ -19,7 +19,7 @@ You follow along the six notebooks and develop your ML idea from an experimental
 |3. |Operationalize with ML pipeline, model registry |[03-sagemaker-pipeline](03-sagemaker-pipeline.ipynb)|
 |4. |Add a model building CI/CD pipeline |[04-sagemaker-project](04-sagemaker-project.ipynb)|
 |5. |Add a model deployment pipeline |[05-deploy](05-deploy.ipynb)|
-|6. |Add model and data monitoring |[06-monitoring](06-monitoring.ipynb)|
+|6. |Add model and data monitoring |[06-monitoring-with-evidently](06-monitoring-with-evidently.ipynb)|
 
 ## Additional topics
 There are also additional hands-on examples of other SageMaker AI features and ML topics, like [A/B testing](https://docs.aws.amazon.com/sagemaker/latest/dg/model-validation.html), custom [processing](https://docs.aws.amazon.com/sagemaker/latest/dg/build-your-own-processing-container.html), [training](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.html) and [inference](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-inference-main.html) containers, [debugging and profiling](https://docs.aws.amazon.com/sagemaker/latest/dg/train-debugger.html), [security](https://docs.aws.amazon.com/sagemaker/latest/dg/security.html), [multi-model](https://docs.aws.amazon.com/sagemaker/latest/dg/multi-model-endpoints.html) and [multi-container](https://docs.aws.amazon.com/sagemaker/latest/dg/multi-container-endpoints.html) endpoints, and [serial inference pipelines](https://docs.aws.amazon.com/sagemaker/latest/dg/inference-pipelines.html).
@@ -161,8 +161,11 @@ If you provisioned a domain use a CloudFormation template, you can delete the Cl
 If you provisioned a new VPC for the domain, go to the [VPC console](https://console.aws.amazon.com/vpc/home?#vpcs) and delete the provisioned VPC.
 
 ## Dataset
-This example uses the [direct marketing dataset](https://archive.ics.uci.edu/ml/datasets/bank+marketing) from UCI's ML Repository:
-> [Moro et al., 2014] S. Moro, P. Cortez and P. Rita. A Data-Driven Approach to Predict the Success of Bank Telemarketing. Decision Support Systems, Elsevier, 62:22-31, June 2014
+The notebooks `00`-`06` use a **synthetic** dataset of healthcare practitioners (HCPs), shaped like a typical pharma commercial analytics problem: for each HCP, every week, predict whether the HCP will write at least one prescription for our brand in the next 4 weeks. No real HCPs, brands, patients or prescriptions are included.
+
+The data is created by the generator script [`datasets/synthetic-hcp/generate_hcp_data.py`](datasets/synthetic-hcp/generate_hcp_data.py), which the `00-start-here` notebook runs. It is released under the same MIT-0 license as this repository and produces identical data on every run. A simulated competitor launch in week 21 provides real drift for the monitoring notebook. See the [dataset README](datasets/synthetic-hcp/README.md) for all columns and what is built into the data.
+
+❗ The notebooks in `additional-topics/` and `assignments/` have not been updated yet and still assume the [UCI Bank Marketing dataset](https://archive.ics.uci.edu/dataset/222/bank+marketing) used by earlier versions of this workshop.
 
 ## Resources
 The following list presents some useful hands-on resources to help you to get started with ML development on Amazon SageMaker AI.

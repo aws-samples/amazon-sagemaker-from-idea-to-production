@@ -29,6 +29,7 @@ def input_fn(request_body, request_content_type):
 
     - ``text/csv``: one record per line, comma-separated features (no header,
       no label column) — matching the preprocessing output used at training.
+      Missing values can be sent as empty fields or as ``nan``.
     - ``application/json``: a list of records, or a dict with an ``instances``
       / ``inputs`` key holding a list of records.
     """
@@ -38,8 +39,10 @@ def input_fn(request_body, request_content_type):
     content_type = (request_content_type or "").split(";")[0].strip()
 
     if content_type == "text/csv":
+        # Empty fields and "nan" are both read as missing values (NaN),
+        # which XGBoost handles natively.
         rows = [
-            [float(value) for value in line.split(",")]
+            [float(value) if value.strip() else np.nan for value in line.split(",")]
             for line in request_body.strip().splitlines()
             if line.strip()
         ]
