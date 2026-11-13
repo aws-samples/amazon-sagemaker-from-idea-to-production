@@ -20,6 +20,8 @@ You develop your ML idea from an experimental notebook to a production-ready sol
 |4. |Deploy the model and add data and model monitoring |[04-deployment-and-monitoring](04-deployment-and-monitoring.ipynb)|
 |5. |Automate model deployment with a SageMaker project |[05-templatize-deployment](05-templatize-deployment.ipynb)|
 
+![Overview of the five workshop steps with their key activities, a table that maps the @remote and @step decorators to their native counterparts ModelTrainer, TrainingStep, and ProcessingStep, and the model lifecycle from MLflow run to model version, approval, staging and production endpoints, captured data, and drift and quality reports](img/workshop-overview.png)
+
 ## Additional topics
 The `additional-topics` folder has optional notebooks that extend the main steps:
 
