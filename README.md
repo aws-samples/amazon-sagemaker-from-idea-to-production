@@ -4,7 +4,7 @@
 
 This repository contains a sequence of Jupyter notebooks demonstrating how to move from an ML idea to production by using [Amazon SageMaker AI](https://aws.amazon.com/sagemaker-ai).
 
-The notebooks use SageMaker AI [processing](https://docs.aws.amazon.com/sagemaker/latest/dg/processing-job.html) and [training](https://docs.aws.amazon.com/sagemaker/latest/dg/train-model.html) jobs with the [`@remote` decorator](https://docs.aws.amazon.com/sagemaker/latest/dg/train-remote-decorator.html) and `ModelTrainer`, and SageMaker AI MLOps features such as [SageMaker Pipelines](https://aws.amazon.com/sagemaker/pipelines/), [SageMaker Model Registry](https://docs.aws.amazon.com/sagemaker/latest/dg/model-registry.html), [SageMaker managed MLflow](https://docs.aws.amazon.com/sagemaker/latest/dg/mlflow.html), and [SageMaker projects](https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-projects.html). Optional notebooks show [SageMaker Feature Store](https://aws.amazon.com/sagemaker/feature-store/) and [SageMaker Model Monitor](https://aws.amazon.com/sagemaker/model-monitor/).
+The notebooks use SageMaker AI [processing](https://docs.aws.amazon.com/sagemaker/latest/dg/processing-job.html) and [training](https://docs.aws.amazon.com/sagemaker/latest/dg/train-model.html) jobs with the [`@remote` decorator](https://docs.aws.amazon.com/sagemaker/latest/dg/train-remote-decorator.html) and `ModelTrainer`, and SageMaker AI MLOps features such as [SageMaker Pipelines](https://aws.amazon.com/sagemaker/pipelines/), [SageMaker Model Registry](https://docs.aws.amazon.com/sagemaker/latest/dg/model-registry.html), [SageMaker managed MLflow](https://docs.aws.amazon.com/sagemaker/latest/dg/mlflow.html), and [SageMaker projects](https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-projects.html). Optional notebooks show A/B testing with production variants and a SageMaker project with GitHub repositories.
 
 You start with a notebook with basic ML code for data preprocessing, feature engineering, and model training, all in the notebook. Each next notebook builds on the previous one and adds one or more SageMaker AI MLOps features.
 
@@ -25,9 +25,6 @@ The `additional-topics` folder has optional notebooks that extend the main steps
 
 |Notebook|What|
 |---|---|
-|[03b-quality-checks-batch-transform](additional-topics/03b-quality-checks-batch-transform.ipynb)|Add data quality checks, model quality checks, and batch transform to the pipeline|
-|[03c-feature-store](additional-topics/03c-feature-store.ipynb)|Manage the features in SageMaker Feature Store and use them in the pipeline|
-|[04-monitoring-sagemaker-native](additional-topics/04-monitoring-sagemaker-native.ipynb)|Monitor the endpoint with SageMaker Model Monitor|
 |[A-B-testing](additional-topics/A-B-testing.ipynb)|Test model variants on one endpoint with [production variants](https://docs.aws.amazon.com/sagemaker/latest/dg/model-validation.html)|
 |[05-sagemaker-project](additional-topics/05-sagemaker-project.ipynb) and [06-deploy](additional-topics/06-deploy.ipynb)|A SageMaker project with CI/CD pipelines for model building and model deployment, connected to your own GitHub repositories|
 
@@ -143,20 +140,12 @@ Note: we recommend you read and then execute each cell by using the `Shift + Ent
 After executing the `00-start-here.ipynb` notebook, you can move to the first notebook [`01-idea-development`](01-idea-development.ipynb).
 
 ## How to use this workshop
-You can do this workshop in two ways:
-- **Execution mode**: go through the notebooks, run the code cells in order, and follow the instructions
-- **Assignment mode**: write your own code with the hands-on exercises in the `assignments` folder
-
-The following diagram shows the flow of the workshop:
+Go through the notebooks, run the code cells in order, and follow the instructions. The following diagram shows the flow of the workshop:
 
 ![Workshop flow: 00 setup, steps 01 to 05, optional notebooks, and 99 clean-up](design/workshop-flow.svg)
 
-### Execution mode
-Use this mode if you're new to Python or to Jupyter notebooks. Go through the notebooks `00-...`, `01-...`, ..., `05-...` and run all code cells with `Shift` + `Enter`. The instructions explain what the code does and why. You need about two and a half hours for all notebooks.
+Go through the notebooks `00-...`, `01-...`, ..., `05-...` and run all code cells with `Shift` + `Enter`. The instructions explain what the code does and why. You need about two and a half hours for all notebooks.
 All notebooks are idempotent. Run the code cells in order, from top to bottom.
-
-### Assignment mode
-Use this mode if you want to write the code yourself. Each notebook in the `assignments` folder describes the tasks of one step and links to the documentation. The assignments follow an earlier version of the workshop flow, so their numbers after step 4 differ from the main notebooks.
 
 ## Clean-up
 ❗ You don't need to perform a clean-up if you run an AWS-instructor led workshop.

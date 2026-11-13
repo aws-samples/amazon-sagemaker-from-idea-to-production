@@ -19,7 +19,7 @@ def workshop_flow():
     d = Diagram(1800, 760, "Workshop flow",
                 "Run 00-start-here first. The main path goes through steps 01 to 05. A fast track goes from "
                 "00 directly to step 03 and continues with steps 04 and 05. Optional notebooks in the "
-                "additional-topics folder extend steps 03 and 05. Always finish with 99-clean-up.")
+                "additional-topics folder extend steps 04 and 05. Always finish with 99-clean-up.")
     d.heading("Workshop flow")
     # legend
     d.add('<rect x="1060" y="34" width="34" height="24" rx="5" class="node-required"/>')
@@ -50,13 +50,13 @@ def workshop_flow():
             "Fast track: pipelines only, 00 → 03 → 04 → 05", 526, 106, label_cls="highlight-label")
 
     optional = [
-        (721, 360, "Extend the pipeline", ["03b: quality checks, batch transform", "03c: SageMaker Feature Store"], 901),
-        (1231, 340, "Build and deploy CI/CD", ["05, 06: SageMaker project with", "GitHub repositories"], 1401),
+        (1033, 236, "A/B testing", ["A-B-testing: model", "variants on one endpoint"], 1151),
+        (1283, 236, "Build and deploy", ["05, 06: CI/CD project", "with GitHub repositories"], 1401),
     ]
     for x, w2, label, detail, source_x in optional:
         d.node(x, 520, w2, 140, label, detail, None, None, cls="node-optional")
         d.arrow(f"M {source_x} {y + h} L {x + w2 / 2} 516", "arrow-dashed")
-    d.text(721, 700, "Optional notebooks are in the additional-topics folder. Run them after the step they extend.", "node-detail")
+    d.text(1033, 700, "Optional notebooks are in the additional-topics folder. Run them after the step they extend.", "node-detail")
     d.save(ROOT / "design/workshop-flow.svg")
 
 
