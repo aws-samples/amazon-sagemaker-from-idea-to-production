@@ -1,4 +1,6 @@
 # The BYOC image already ships xgboost, pandas, numpy, mlflow and s3fs.
 # The explainability job only needs these two extra libraries.
-shap
-matplotlib
+# 00-start-here.ipynb installs this same file into the notebook kernel, so the
+# local explain() test in notebook 03 and the managed job use the same versions.
+shap==0.54.1
+matplotlib==3.11.2
