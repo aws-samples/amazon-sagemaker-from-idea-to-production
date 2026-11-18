@@ -1,7 +1,10 @@
 # Python dependencies for the BYOC XGBoost image.
-# Pinned where the rest of the workshop pins them; left open where transitive
-# resolution is safer. If a resolver conflict shows up during build, pin the
-# offending package here and rebuild.
+#
+# SINGLE SOURCE OF TRUTH for the SageMaker SDK, MLflow and ML-stack versions.
+# 00-start-here.ipynb installs this same file into the notebook kernel, so the
+# client that serializes @remote / @step functions and the container that runs
+# them use identical versions. Change a version here, then rebuild and push
+# the image (bump the image tag in 00-start-here.ipynb) so both sides match.
 
 # CPU-only PyTorch wheel. sagemaker-serve (pulled transitively by sagemaker-train
 # and friends) depends on torch. Without this extra index, pip resolves to the
@@ -20,13 +23,14 @@ numpy
 boto3
 s3fs
 
-# SageMaker Python SDK (matches versions used by the workshop notebooks)
-sagemaker>=3,<4
-sagemaker-core>=2,<3
-sagemaker-train>=1,<2
-sagemaker-mlops>=1,<2
-sagemaker-serve>=1,<2
+# SageMaker Python SDK. sagemaker 3.x is a meta-package; its sub-packages are
+# released together with matching minor versions (3.28.0 -> 2.28.0 / 1.28.0).
+sagemaker==3.28.0
+sagemaker-core==2.28.0
+sagemaker-train==1.28.0
+sagemaker-mlops==1.28.0
+sagemaker-serve==1.28.0
 
 # Experiment tracking
-mlflow<4
-sagemaker-mlflow>=0.3,<1
+mlflow==3.18.0
+sagemaker-mlflow==0.5.0
